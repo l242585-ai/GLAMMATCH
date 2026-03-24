@@ -490,5 +490,5 @@ def serve(p):
 
 if __name__ == "__main__":
     init_db()
-    print("✅ GlamMatch Sprint 1 — http://localhost:5001")
-app.run(debug=True, port=5001, host='0.0.0.0')
+    print("✅ GlamMatch Sprint 1 — http://localhost:5000")
+app.run(debug=True, port=5000, host='0.0.0.0')
