@@ -10,9 +10,9 @@ GlamMatch is an AI-powered web application that provides personalized colour pal
 
 | Name | Roll Number | Role |
 |------|------------|------|
-| Anoushay Fatima | 24L-2585 | Project Lead & Requirements Engineer |
+| Ayza Ahmed | 24L-2577 | Project Lead & Requirements Engineer |
 | Eman Adil | 24L-2589 | Backend & Database Developer |
-| Ayza Ahmed | 24L-2577 | Frontend Developer & UI/UX & QA Tester |
+| Anoushay Fatima | 24L-2585 | Frontend Developer & UI/UX & QA Tester |
 
 ---
 
