@@ -115,122 +115,68 @@ def auth(f):
 
 # ── Undertone quiz ───────────────────────────────────────────────
 UT_QUESTIONS = [
-    {"id":1,"q":"Look at the inner side of your wrist in natural light — what tone does your skin appear?",
-     "opts":[{"id":"a","t":"Pinkish or reddish","score":{"cool":2}},
-             {"id":"b","t":"Yellowish or golden","score":{"warm":2}},
-             {"id":"c","t":"A mix of both pink and yellow","score":{"neutral":2}}]},
-    {"id":2,"q":"When you hold a pure white fabric near your face, how does your face look?",
-     "opts":[{"id":"a","t":"Fresh and bright — pure white suits me well","score":{"cool":2}},
-             {"id":"b","t":"Off-white or cream looks better — pure white feels too harsh","score":{"warm":2}},
-             {"id":"c","t":"Both look fine, I can't notice much difference","score":{"neutral":2}}]},
-    {"id":3,"q":"Which jewellery makes your face look more glowing?",
-     "opts":[{"id":"a","t":"Silver — my face looks brighter","score":{"cool":2}},
-             {"id":"b","t":"Gold — my skin looks warm and vibrant","score":{"warm":2}},
-             {"id":"c","t":"Both look equally good on me","score":{"neutral":2}}]},
-    {"id":4,"q":"Which group of colours gets you the most compliments when you wear them?",
-     "opts":[{"id":"a","t":"Royal blue, deep purple, hot pink, burgundy","score":{"cool":2}},
-             {"id":"b","t":"Orange, terracotta, olive green, camel, mustard","score":{"warm":2}},
-             {"id":"c","t":"Dusty rose, teal, mauve, soft grey","score":{"neutral":2}}]},
-    {"id":5,"q":"After spending 2–3 hours in the sun, what usually happens to your skin?",
-     "opts":[{"id":"a","t":"It turns red or I notice redness on my face","score":{"cool":2}},
-             {"id":"b","t":"It looks a little golden or bronzed","score":{"warm":2}},
-             {"id":"c","t":"Sometimes red, sometimes tan — it varies","score":{"neutral":2}}]},
-    {"id":6,"q":"Which lipstick shades look most natural and flattering on you?",
-     "opts":[{"id":"a","t":"Berry, mauve, cool pink or plum shades","score":{"cool":2}},
-             {"id":"b","t":"Coral, peach, warm red or terracotta shades","score":{"warm":2}},
-             {"id":"c","t":"Nude pink or rose gold — middle-ground shades","score":{"neutral":2}}]},
+    {"id":1,"q":"What colour are the veins on your inner wrist?",
+     "opts":[{"id":"a","t":"Bluish / purple","score":{"cool":2}},
+             {"id":"b","t":"Greenish","score":{"warm":2}},
+             {"id":"c","t":"Blue-green mix","score":{"neutral":2}}]},
+    {"id":2,"q":"How does your skin react to sun exposure?",
+     "opts":[{"id":"a","t":"I burn easily, rarely tan","score":{"cool":2}},
+             {"id":"b","t":"I tan easily, rarely burn","score":{"warm":2}},
+             {"id":"c","t":"Sometimes burn then tan","score":{"neutral":2}}]},
+    {"id":3,"q":"Which jewellery flatters you most?",
+     "opts":[{"id":"a","t":"Silver looks best","score":{"cool":2}},
+             {"id":"b","t":"Gold looks best","score":{"warm":2}},
+             {"id":"c","t":"Both look equally good","score":{"neutral":2}}]},
+    {"id":4,"q":"Which neutral shades do you prefer wearing?",
+     "opts":[{"id":"a","t":"Bright white, navy, grey, black","score":{"cool":2}},
+             {"id":"b","t":"Off-white, camel, brown, olive","score":{"warm":2}},
+             {"id":"c","t":"Ivory, beige, taupe","score":{"neutral":2}}]},
+    {"id":5,"q":"What overall tone do you notice in your skin?",
+     "opts":[{"id":"a","t":"Pink, rosy or bluish","score":{"cool":2}},
+             {"id":"b","t":"Yellow, peachy or golden","score":{"warm":2}},
+             {"id":"c","t":"Mix of pink and yellow","score":{"neutral":2}}]},
+    {"id":6,"q":"Which colours make you look most vibrant?",
+     "opts":[{"id":"a","t":"Jewel tones: sapphire, emerald, ruby","score":{"cool":2}},
+             {"id":"b","t":"Earth tones: terracotta, coral, rust","score":{"warm":2}},
+             {"id":"c","t":"Muted tones: dusty rose, sage, mauve","score":{"neutral":2}}]},
 ]
 
 def classify_ut(answers):
-    s = {"warm": 0, "cool": 0, "neutral": 0}
-    for qid, oid in answers.items():
-        q = next((x for x in UT_QUESTIONS if str(x["id"]) == str(qid)), None)
+    s={"warm":0,"cool":0,"neutral":0}
+    for qid,oid in answers.items():
+        q=next((x for x in UT_QUESTIONS if str(x["id"])==str(qid)),None)
         if q:
-            o = next((x for x in q["opts"] if x["id"] == oid), None)
+            o=next((x for x in q["opts"] if x["id"]==oid),None)
             if o:
-                for k, v in o["score"].items():
-                    s[k] += v
-    sorted_scores = sorted(s.values(), reverse=True)
-    if sorted_scores[0] == sorted_scores[1]:
-        return "neutral"
-    return max(s, key=s.get)
+                for k,v in o["score"].items(): s[k]+=v
+    return max(s,key=s.get)
 
 # ── Body type quiz ───────────────────────────────────────────────
 BT_QUESTIONS = [
-    {
-        "id": 1,
-        "q": "Stand in front of a mirror. How do your shoulders compare to your hips?",
-        "opts": [
-            {"id":"a","t":"Shoulders are clearly broader — hips are narrower","score":{"inverted_triangle":3}},
-            {"id":"b","t":"Hips are clearly wider — shoulders are narrower","score":{"pear":3}},
-            {"id":"c","t":"Both shoulders and hips look roughly the same width","score":{"rectangle":2,"hourglass":2}},
-        ],
-    },
-    {
-        "id": 2,
-        "q": "Look at your waist — how defined is it compared to your hips and shoulders?",
-        "opts": [
-            {"id":"a","t":"Clearly defined — noticeably smaller, curves inward","score":{"hourglass":3}},
-            {"id":"b","t":"Slightly defined — a little curve but not dramatic","score":{"pear":1,"inverted_triangle":1}},
-            {"id":"c","t":"Not defined — sides are fairly straight up and down","score":{"rectangle":3}},
-            {"id":"d","t":"The waist area is the widest part — pushes outward","score":{"apple":3}},
-        ],
-    },
-    {
-        "id": 3,
-        "q": "Where does most of your body fullness sit?",
-        "opts": [
-            {"id":"a","t":"Shoulders and bust — I have a fuller upper body","score":{"inverted_triangle":3}},
-            {"id":"b","t":"Stomach and tummy area — my middle is the most prominent","score":{"apple":3}},
-            {"id":"c","t":"Hips, thighs and bottom — lower body is fuller","score":{"pear":3}},
-            {"id":"d","t":"Evenly — hips and bust are similar, waist is smaller","score":{"hourglass":3}},
-            {"id":"e","t":"Evenly all over — no single area is noticeably fuller","score":{"rectangle":3}},
-        ],
-    },
-    {
-        "id": 4,
-        "q": "When you look at photos of yourself from the front, what stands out most?",
-        "opts": [
-            {"id":"a","t":"My shoulders and upper body look strong and broad","score":{"inverted_triangle":2}},
-            {"id":"b","t":"My hips and lower body look fuller than my top","score":{"pear":2}},
-            {"id":"c","t":"My waist is clearly smaller between my hips and shoulders","score":{"hourglass":2}},
-            {"id":"d","t":"My tummy or midsection looks fuller than hips and shoulders","score":{"apple":2}},
-            {"id":"e","t":"My body looks straight — similar width from top to bottom","score":{"rectangle":2}},
-        ],
-    },
-    {
-        "id": 5,
-        "q": "If you traced your body outline from shoulders down to hips, which shape does it look most like?",
-        "opts": [
-            {"id":"a","t":"▽  Wide at top, narrows toward the hips","score":{"inverted_triangle":3}},
-            {"id":"b","t":"△  Narrow at top, widens toward the hips","score":{"pear":3}},
-            {"id":"c","t":"( )  Widest in the middle — oval or round shape","score":{"apple":3}},
-            {"id":"d","t":"⬡  Wide at shoulders, narrow waist, wide at hips — hourglass","score":{"hourglass":3}},
-            {"id":"e","t":"▭  Same width all the way — straight rectangle","score":{"rectangle":3}},
-        ],
-    },
+    {"id":1,"q":"How do your shoulders compare to your hips?",
+     "opts":[{"id":"a","t":"Shoulders wider than hips","score":{"inverted_triangle":3,"hourglass":1}},
+             {"id":"b","t":"Roughly equal","score":{"rectangle":2,"hourglass":1}},
+             {"id":"c","t":"Hips wider than shoulders","score":{"pear":3,"hourglass":1}}]},
+    {"id":2,"q":"How defined is your waist?",
+     "opts":[{"id":"a","t":"Very defined — clearly smaller","score":{"hourglass":3}},
+             {"id":"b","t":"Slightly defined","score":{"pear":1,"inverted_triangle":1}},
+             {"id":"c","t":"Not very defined — straight","score":{"rectangle":3}},
+             {"id":"d","t":"Wider midsection","score":{"apple":3}}]},
+    {"id":3,"q":"Where do you gain weight first?",
+     "opts":[{"id":"a","t":"Hips, thighs and bottom","score":{"pear":3}},
+             {"id":"b","t":"Stomach and midsection","score":{"apple":3}},
+             {"id":"c","t":"Evenly all over","score":{"rectangle":2,"hourglass":1}},
+             {"id":"d","t":"Upper body and bust","score":{"inverted_triangle":3}}]},
+    {"id":4,"q":"Which area is the widest on your body?",
+     "opts":[{"id":"a","t":"Shoulders / bust","score":{"inverted_triangle":3}},
+             {"id":"b","t":"Hips / thighs","score":{"pear":3}},
+             {"id":"c","t":"Midsection / waist","score":{"apple":3}},
+             {"id":"d","t":"All roughly similar","score":{"rectangle":2,"hourglass":1}}]},
+    {"id":5,"q":"Describe your hips / bottom shape:",
+     "opts":[{"id":"a","t":"Full and rounded","score":{"pear":2,"hourglass":2}},
+             {"id":"b","t":"Fairly flat","score":{"rectangle":2,"inverted_triangle":2}},
+             {"id":"c","t":"Weight in tummy, not hips","score":{"apple":3}}]},
 ]
-
-def classify_bt(answers):
-    s = {k: 0 for k in BT_INFO}
-    for qid, oid in answers.items():
-        q = next((x for x in BT_QUESTIONS if str(x["id"]) == str(qid)), None)
-        if q:
-            o = next((x for x in q["opts"] if x["id"] == oid), None)
-            if o:
-                weight = 2 if int(qid) in (1, 2) else 1
-                for k, v in o["score"].items():
-                    s[k] += v * weight
-    top_score = max(s.values())
-    top_types = [k for k, v in s.items() if v == top_score]
-    if len(top_types) == 1:
-        return top_types[0]
-    tie_set = set(top_types)
-    if tie_set == {"apple", "inverted_triangle"}:
-        return "apple"
-    if tie_set == {"rectangle", "hourglass"}:
-        return "hourglass"
-    return sorted(top_types)[0]
 
 BT_INFO = {
     "hourglass":         {"name":"Hourglass","emoji":"⏳","desc":"Balanced shoulders and hips with a well-defined waist.",
@@ -461,7 +407,14 @@ def bt_submit():
     answers = (request.get_json() or {}).get("answers",{})
     if len(answers) < len(BT_QUESTIONS):
         return jsonify({"error":"Please answer all questions"}), 400
-    result = classify_bt(answers)
+    scores = {k:0 for k in BT_INFO}
+    for qid,oid in answers.items():
+        q = next((x for x in BT_QUESTIONS if str(x["id"])==str(qid)),None)
+        if q:
+            o = next((x for x in q["opts"] if x["id"]==oid),None)
+            if o:
+                for k,v in o["score"].items(): scores[k]+=v
+    result = max(scores,key=scores.get)
     c = db()
     c.execute("INSERT INTO quiz_log(user_id,type,answers,result) VALUES(?,?,?,?)",
               (request.uid,"bodytype",json.dumps(answers),result))
@@ -537,5 +490,5 @@ def serve(p):
 
 if __name__ == "__main__":
     init_db()
-    print("✅ GlamMatch Sprint 1 — http://localhost:5000")
-    app.run(debug=True, port=5000)
+    print("✅ GlamMatch Sprint 1 — http://localhost:5001")
+app.run(debug=True, port=5001, host='0.0.0.0')

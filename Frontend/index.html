@@ -6,174 +6,406 @@
 <title>GlamMatch</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
 <style>
+/* ═══════════════════════════════════════
+   TOKENS  — match prototype colour palette
+═══════════════════════════════════════ */
 :root{
-  --rose:#C0546A;--rose-mid:#CC6B80;--rose-light:#E8A0B0;--rose-pale:#F2C8D0;
-  --rose-bg:#F9EEF0;--cream:#FAF5F0;--cream2:#F5EDE8;--mauve:#B08090;
-  --text:#2A1820;--text-med:#5A3040;--text-light:#9A7080;--border:#DEC8CE;
-  --white:#FFFFFF;--purple-nav:#7A5A8A;--sidebar-sel:#D4607A;--sidebar-num:#C05070;
-  --font-s:'Playfair Display',Georgia,serif;--font-b:'Lato',sans-serif;
-  --r:8px;--r-pill:50px;
+  --rose:        #C0546A;
+  --rose-mid:    #CC6B80;
+  --rose-light:  #E8A0B0;
+  --rose-pale:   #F2C8D0;
+  --rose-bg:     #F9EEF0;
+  --cream:       #FAF5F0;
+  --cream2:      #F5EDE8;
+  --mauve:       #B08090;
+  --text:        #2A1820;
+  --text-med:    #5A3040;
+  --text-light:  #9A7080;
+  --border:      #DEC8CE;
+  --white:       #FFFFFF;
+  --purple-nav:  #7A5A8A;
+  --sidebar-sel: #D4607A;
+  --sidebar-num: #C05070;
+  --teal-card:   #C4EAE6;
+  --grey-card:   #D8D8D8;
+  --font-s:      'Playfair Display',Georgia,serif;
+  --font-b:      'Lato',sans-serif;
+  --r:           8px;
+  --r-pill:      50px;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:var(--font-b);background:var(--cream);color:var(--text);min-height:100vh;}
 a{text-decoration:none;color:inherit;}
 input,select,button{font-family:var(--font-b);}
+
+/* ── Screens ── */
 .screen{display:none;min-height:100vh;flex-direction:column;}
 .screen.active{display:flex;}
-.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(8px);background:#fff;border:1.5px solid var(--border);border-radius:var(--r-pill);padding:.55rem 1.4rem;font-size:.82rem;z-index:9999;opacity:0;transition:.3s;pointer-events:none;box-shadow:0 4px 18px rgba(0,0,0,.1);}
+
+/* ── Toast ── */
+.toast{
+  position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(8px);
+  background:#fff;border:1.5px solid var(--border);border-radius:var(--r-pill);
+  padding:.55rem 1.4rem;font-size:.82rem;z-index:9999;opacity:0;
+  transition:.3s;pointer-events:none;box-shadow:0 4px 18px rgba(0,0,0,.1);
+}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast.err{border-color:var(--rose);color:var(--rose);}
 .toast.ok{border-color:#4caf50;color:#2e7d32;}
+
+/* ── Spinner ── */
 .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;}
 @keyframes spin{to{transform:rotate(360deg);}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
 .fade{animation:fadeUp .4s ease both;}
-.topnav{display:flex;align-items:center;gap:0;background:var(--cream2);border-bottom:2px solid var(--rose-pale);padding:0 1.5rem;height:52px;}
+
+
+/* ═══════════════════════════════════════
+   TOP NAV  (Screens 2,3,4,5)
+═══════════════════════════════════════ */
+.topnav{
+  display:flex;align-items:center;gap:0;
+  background:var(--cream2);border-bottom:2px solid var(--rose-pale);
+  padding:0 1.5rem;height:52px;
+}
 .nav-logo{font-family:var(--font-s);font-size:1.5rem;color:var(--rose);margin-right:2rem;cursor:pointer;}
 .nav-logo span{font-style:italic;}
-.nav-link{padding:.4rem .9rem;font-size:.82rem;color:var(--text-med);cursor:pointer;border-radius:var(--r) var(--r) 0 0;transition:background .15s;}
+.nav-link{
+  padding:.4rem .9rem;font-size:.82rem;color:var(--text-med);cursor:pointer;
+  border-radius:var(--r) var(--r) 0 0;transition:background .15s;
+}
 .nav-link:hover,.nav-link.active{background:var(--rose-pale);color:var(--rose);}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:.6rem;}
-.btn-nav-outline{padding:.35rem 1rem;border:1.5px solid var(--rose);border-radius:var(--r-pill);background:transparent;color:var(--rose);font-size:.8rem;cursor:pointer;transition:background .15s,color .15s;}
+.btn-nav-outline{
+  padding:.35rem 1rem;border:1.5px solid var(--rose);border-radius:var(--r-pill);
+  background:transparent;color:var(--rose);font-size:.8rem;cursor:pointer;
+  transition:background .15s,color .15s;
+}
 .btn-nav-outline:hover{background:var(--rose);color:#fff;}
-.btn-nav-fill{padding:.38rem 1.1rem;border:none;border-radius:var(--r-pill);background:var(--rose);color:#fff;font-size:.8rem;cursor:pointer;transition:opacity .15s;}
+.btn-nav-fill{
+  padding:.38rem 1.1rem;border:none;border-radius:var(--r-pill);
+  background:var(--rose);color:#fff;font-size:.8rem;cursor:pointer;
+  transition:opacity .15s;
+}
 .btn-nav-fill:hover{opacity:.88;}
-#screen-login{flex-direction:row;background:linear-gradient(170deg,#C85070 0%,#D97A90 35%,#EBB0BC 65%,#F5D0D8 100%);}
+
+
+/* ═══════════════════════════════════════
+   SCREEN 1 — LOGIN
+   Prototype: left = wave pink panels + GlamMatch box + WELCOME text
+              right = white card with Log In form
+═══════════════════════════════════════ */
+#screen-login{
+  flex-direction:row;
+  background:linear-gradient(170deg,#C85070 0%,#D97A90 35%,#EBB0BC 65%,#F5D0D8 100%);
+}
 #screen-login.active{display:flex;}
-.login-left{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:3rem 3.5rem;gap:2rem;position:relative;overflow:hidden;}
-.login-left::after{content:'';position:absolute;bottom:-60px;left:-60px;width:340px;height:260px;background:rgba(255,255,255,.18);border-radius:60% 40% 50% 50%;}
-.login-logo-panel{background:rgba(160,40,65,.55);border-radius:12px;padding:1.2rem 2.5rem;font-family:var(--font-s);font-size:1.9rem;color:#fff;letter-spacing:.02em;border:1.5px solid rgba(255,255,255,.25);}
+
+.login-left{
+  flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;
+  padding:3rem 3.5rem;gap:2rem;position:relative;overflow:hidden;
+}
+/* wavy white shape bottom-left — matches prototype wave */
+.login-left::after{
+  content:'';position:absolute;bottom:-60px;left:-60px;
+  width:340px;height:260px;
+  background:rgba(255,255,255,.18);border-radius:60% 40% 50% 50%;
+}
+.login-logo-panel{
+  background:rgba(160,40,65,.55);border-radius:12px;padding:1.2rem 2.5rem;
+  font-family:var(--font-s);font-size:1.9rem;color:#fff;letter-spacing:.02em;
+  border:1.5px solid rgba(255,255,255,.25);
+}
 .login-logo-panel em{font-style:italic;}
-.login-welcome-panel{background:rgba(255,255,255,.82);border-radius:12px;padding:1.4rem 2rem;max-width:320px;}
+.login-welcome-panel{
+  background:rgba(255,255,255,.82);border-radius:12px;padding:1.4rem 2rem;
+  max-width:320px;
+}
 .login-welcome-panel h3{font-family:var(--font-b);font-size:1rem;font-weight:700;margin-bottom:.6rem;color:var(--text);}
 .login-welcome-panel p{font-size:.82rem;color:var(--text-med);line-height:1.55;font-style:italic;}
-.login-right{width:340px;display:flex;align-items:center;justify-content:center;padding:2rem;}
-.login-card{background:rgba(245,220,228,.92);border-radius:14px;padding:2rem 2rem 2.2rem;width:100%;box-shadow:0 4px 28px rgba(0,0,0,.12);}
+
+.login-right{
+  width:340px;display:flex;align-items:center;justify-content:center;
+  padding:2rem;
+}
+.login-card{
+  background:rgba(245,220,228,.92);border-radius:14px;padding:2rem 2rem 2.2rem;
+  width:100%;box-shadow:0 4px 28px rgba(0,0,0,.12);
+}
 .login-card h2{font-family:var(--font-s);font-size:1.5rem;text-align:center;margin-bottom:.3rem;color:var(--text);}
 .login-card .sub{text-align:center;font-size:.8rem;color:var(--text-med);margin-bottom:1.3rem;}
 .login-card .sub a{color:var(--rose);font-weight:700;cursor:pointer;}
 .login-card .sub a:hover{text-decoration:underline;}
-.field{width:100%;padding:.6rem .9rem;margin-bottom:.85rem;border:1.5px solid #C8A0A8;border-radius:var(--r);background:#fff;font-size:.88rem;color:var(--text);outline:none;}
+.field{
+  width:100%;padding:.6rem .9rem;margin-bottom:.85rem;
+  border:1.5px solid #C8A0A8;border-radius:var(--r);
+  background:#fff;font-size:.88rem;color:var(--text);outline:none;
+}
 .field:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(192,84,106,.12);}
 .field::placeholder{color:#B09098;}
-
-/* ── UPDATED: btn-submit active vs disabled states ── */
 .btn-submit{
   width:100%;padding:.65rem;border:none;border-radius:var(--r);
   background:linear-gradient(135deg,#9A8A9A,#B0A0B0);
-  color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;
-  letter-spacing:.05em;transition:background .25s,opacity .2s;
+  color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;letter-spacing:.05em;
+  transition:opacity .2s;
 }
-.btn-submit:not(:disabled):hover{opacity:.88;}
-/* When disabled: stays greyed/muted — same as before */
+.btn-submit:hover{opacity:.88;}
 .btn-submit:disabled{opacity:.5;cursor:not-allowed;}
-/* When enabled (both fields filled): goes dark rose */
-.btn-submit.ready{
-  background:linear-gradient(135deg,#A03050,#C0546A);
-  opacity:1;
-}
-
 .err-msg{color:var(--rose);font-size:.78rem;margin-bottom:.6rem;}
-#screen-register{flex-direction:row;background:linear-gradient(160deg,#C85070 0%,#D97A90 30%,#EBB0BC 60%,#F5D0D8 100%);}
+
+
+/* ═══════════════════════════════════════
+   SCREEN 2 — REGISTER
+   Prototype: gradient bg, left = feature list, right = Create Account card
+═══════════════════════════════════════ */
+#screen-register{
+  flex-direction:row;
+  background:linear-gradient(160deg,#C85070 0%,#D97A90 30%,#EBB0BC 60%,#F5D0D8 100%);
+}
 #screen-register.active{display:flex;}
-.reg-left{flex:1;display:flex;flex-direction:column;justify-content:center;padding:3rem 3rem;gap:1.8rem;}
+
+.reg-left{
+  flex:1;display:flex;flex-direction:column;justify-content:center;
+  padding:3rem 3rem;gap:1.8rem;
+}
 .reg-title{font-family:var(--font-s);font-size:2.6rem;color:#fff;font-weight:700;line-height:1.1;}
 .reg-title em{color:rgba(255,255,255,.85);font-style:italic;}
 .feature-row{display:flex;align-items:center;gap:1rem;}
-.feature-icon-box{width:52px;height:52px;border-radius:10px;background:rgba(180,40,60,.55);display:flex;align-items:center;justify-content:center;font-size:1.4rem;border:1.5px solid rgba(255,255,255,.25);flex-shrink:0;}
+.feature-icon-box{
+  width:52px;height:52px;border-radius:10px;background:rgba(180,40,60,.55);
+  display:flex;align-items:center;justify-content:center;font-size:1.4rem;
+  border:1.5px solid rgba(255,255,255,.25);flex-shrink:0;
+}
 .feature-row span{font-size:.9rem;color:#fff;font-weight:400;}
-.reg-right{width:340px;display:flex;align-items:center;justify-content:center;padding:2rem;}
-.reg-card{background:rgba(245,220,228,.92);border-radius:14px;padding:2rem 2rem 2.2rem;width:100%;box-shadow:0 4px 28px rgba(0,0,0,.12);}
+
+.reg-right{
+  width:340px;display:flex;align-items:center;justify-content:center;padding:2rem;
+}
+.reg-card{
+  background:rgba(245,220,228,.92);border-radius:14px;padding:2rem 2rem 2.2rem;
+  width:100%;box-shadow:0 4px 28px rgba(0,0,0,.12);
+}
 .reg-card h2{font-family:var(--font-s);font-size:1.4rem;text-align:center;margin-bottom:.25rem;color:var(--text);}
 .reg-card .sub{text-align:center;font-size:.8rem;color:var(--text-med);margin-bottom:1.2rem;}
 .reg-card .sub a{color:var(--rose);font-weight:700;cursor:pointer;}
+
+
+/* ═══════════════════════════════════════
+   SCREEN 3 — HOME / LANDING
+   Prototype: navbar + hero left text + right seasonal colour chart image
+═══════════════════════════════════════ */
 #screen-home.active{display:flex;}
 .home-body{flex:1;display:flex;overflow:hidden;}
-.home-hero-left{flex:1;display:flex;flex-direction:column;justify-content:center;padding:3rem 3rem 3rem 4rem;gap:1.4rem;}
-.ai-badge{display:inline-flex;align-items:center;gap:.4rem;background:var(--cream2);border:1.5px solid var(--border);border-radius:var(--r-pill);padding:.3rem .9rem;font-size:.78rem;color:var(--text-med);width:fit-content;}
+.home-hero-left{
+  flex:1;display:flex;flex-direction:column;justify-content:center;
+  padding:3rem 3rem 3rem 4rem;gap:1.4rem;
+}
+.ai-badge{
+  display:inline-flex;align-items:center;gap:.4rem;
+  background:var(--cream2);border:1.5px solid var(--border);border-radius:var(--r-pill);
+  padding:.3rem .9rem;font-size:.78rem;color:var(--text-med);width:fit-content;
+}
 .hero-title{font-family:var(--font-s);font-size:2.6rem;line-height:1.2;color:var(--text);}
 .hero-title .glam{color:var(--rose);font-style:italic;}
 .hero-desc{font-size:.82rem;color:var(--text-light);max-width:340px;line-height:1.6;}
 .hero-btns{display:flex;gap:.85rem;flex-wrap:wrap;}
-.btn-hero-fill{padding:.6rem 1.4rem;border:none;border-radius:var(--r-pill);background:var(--rose);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:.4rem;transition:opacity .2s;}
+.btn-hero-fill{
+  padding:.6rem 1.4rem;border:none;border-radius:var(--r-pill);
+  background:var(--rose);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;gap:.4rem;transition:opacity .2s;
+}
 .btn-hero-fill:hover{opacity:.88;}
-.btn-hero-outline{padding:.58rem 1.4rem;border:1.5px solid var(--rose);border-radius:var(--r-pill);background:transparent;color:var(--rose);font-size:.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:.4rem;transition:background .2s,color .2s;}
+.btn-hero-outline{
+  padding:.58rem 1.4rem;border:1.5px solid var(--rose);border-radius:var(--r-pill);
+  background:transparent;color:var(--rose);font-size:.85rem;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;gap:.4rem;transition:background .2s,color .2s;
+}
 .btn-hero-outline:hover{background:var(--rose);color:#fff;}
 .hero-stats{display:flex;gap:2.5rem;margin-top:.5rem;}
 .stat-item{display:flex;flex-direction:column;}
 .stat-num{font-size:1.5rem;font-weight:700;color:var(--rose);}
 .stat-num span{font-size:1rem;}
 .stat-label{font-size:.75rem;color:var(--text-light);}
-.home-hero-right{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;gap:1rem;position:relative;}
+
+.home-hero-right{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:2rem;gap:1rem;position:relative;
+}
+/* Seasonal colour chart — 2×2 grid mimicking prototype illustration */
 .season-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;width:100%;max-width:420px;}
-.season-card{border-radius:var(--r);overflow:hidden;background:#fff;border:1px solid var(--border);}
-.season-header{display:flex;align-items:center;gap:.5rem;padding:.45rem .7rem;font-size:.78rem;font-weight:700;color:var(--text-med);}
+.season-card{
+  border-radius:var(--r);overflow:hidden;background:#fff;
+  border:1px solid var(--border);
+}
+.season-header{
+  display:flex;align-items:center;gap:.5rem;padding:.45rem .7rem;
+  font-size:.78rem;font-weight:700;color:var(--text-med);
+}
 .season-face{font-size:1.8rem;line-height:1;}
 .swatches-row{display:flex;gap:3px;padding:0 .7rem .55rem;}
 .sw{width:18px;height:18px;border-radius:3px;flex-shrink:0;}
-.makeup-banner{width:100%;max-width:420px;height:110px;border-radius:var(--r);background:linear-gradient(135deg,#D4607A 0%,#E8A0B0 40%,#F2C8A0 70%,#E8B070 100%);display:flex;align-items:center;justify-content:center;gap:1rem;overflow:hidden;}
-.makeup-swatch{width:55px;height:75px;border-radius:var(--r);box-shadow:0 2px 8px rgba(0,0,0,.15);}
-.parlour-booked-badge{position:absolute;top:2rem;right:2.2rem;background:rgba(255,255,255,.9);border:1.5px solid var(--border);border-radius:var(--r);padding:.4rem .7rem;font-size:.72rem;color:var(--text-med);}
+
+/* Makeup photo panel below seasonal grid */
+.makeup-banner{
+  width:100%;max-width:420px;height:110px;border-radius:var(--r);
+  background:linear-gradient(135deg,#D4607A 0%,#E8A0B0 40%,#F2C8A0 70%,#E8B070 100%);
+  display:flex;align-items:center;justify-content:center;gap:1rem;overflow:hidden;
+}
+.makeup-swatch{
+  width:55px;height:75px;border-radius:var(--r);
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+.parlour-booked-badge{
+  position:absolute;top:2rem;right:2.2rem;background:rgba(255,255,255,.9);
+  border:1.5px solid var(--border);border-radius:var(--r);padding:.4rem .7rem;font-size:.72rem;
+  color:var(--text-med);
+}
+
+
+/* ═══════════════════════════════════════
+   SCREEN 4 — STYLE ANALYSIS
+   Prototype: topnav + page title pill + left sidebar (3 items) + right panel
+═══════════════════════════════════════ */
 #screen-analysis.active{display:flex;}
-.page-title-bar{text-align:center;padding:.6rem;}
-.page-title-pill{display:inline-block;padding:.45rem 2.5rem;border:2px solid var(--rose);border-radius:var(--r-pill);font-family:var(--font-s);font-size:1.1rem;color:var(--rose);}
+.page-title-bar{
+  text-align:center;padding:.6rem;
+}
+.page-title-pill{
+  display:inline-block;padding:.45rem 2.5rem;
+  border:2px solid var(--rose);border-radius:var(--r-pill);
+  font-family:var(--font-s);font-size:1.1rem;color:var(--rose);
+}
 .analysis-body{flex:1;display:flex;overflow:hidden;padding:.8rem 1rem 1rem;}
-.sidebar{width:160px;flex-shrink:0;display:flex;flex-direction:column;gap:.5rem;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;align-self:flex-start;background:#fff;overflow-y:auto;max-height:420px;}
-.sidebar-item{padding:.65rem .7rem;cursor:pointer;border-left:4px solid transparent;transition:background .15s,border-color .15s;}
+/* Left sidebar */
+.sidebar{
+  width:160px;flex-shrink:0;display:flex;flex-direction:column;gap:.5rem;
+  border:1px solid var(--border);border-radius:var(--r);overflow:hidden;
+  align-self:flex-start;background:#fff;
+  /* scrollable if many items */
+  overflow-y:auto;max-height:420px;
+}
+.sidebar-item{
+  padding:.65rem .7rem;cursor:pointer;border-left:4px solid transparent;
+  transition:background .15s,border-color .15s;
+}
 .sidebar-item:hover{background:var(--rose-bg);}
 .sidebar-item.active{background:var(--sidebar-sel);border-left-color:#8A2040;}
-.sidebar-num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--rose);color:#fff;font-size:.65rem;font-weight:700;margin-right:.4rem;flex-shrink:0;}
+.sidebar-num{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:20px;height:20px;border-radius:50%;background:var(--rose);
+  color:#fff;font-size:.65rem;font-weight:700;margin-right:.4rem;flex-shrink:0;
+}
 .sidebar-item.active .sidebar-num{background:#fff;color:var(--rose);}
 .sidebar-label{font-size:.75rem;font-weight:700;color:#fff;}
 .sidebar-item:not(.active) .sidebar-label{color:var(--rose);}
 .sidebar-sub{font-size:.65rem;color:rgba(255,255,255,.8);margin-top:.15rem;line-height:1.3;}
 .sidebar-item:not(.active) .sidebar-sub{color:var(--text-light);}
-.panel{flex:1;margin-left:.9rem;border:1px solid var(--border);border-radius:var(--r);background:#fff;overflow-y:auto;}
-.panel-title-pill{display:block;text-align:center;padding:.5rem;border:2px solid var(--rose-light);border-radius:var(--r-pill);font-family:var(--font-s);font-size:1rem;color:var(--rose);margin:.8rem 1rem .6rem;}
+
+/* Right panel */
+.panel{
+  flex:1;margin-left:.9rem;border:1px solid var(--border);border-radius:var(--r);
+  background:#fff;overflow-y:auto;
+}
+.panel-title-pill{
+  display:block;text-align:center;padding:.5rem;
+  border:2px solid var(--rose-light);border-radius:var(--r-pill);
+  font-family:var(--font-s);font-size:1rem;color:var(--rose);
+  margin:.8rem 1rem .6rem;
+}
 .panel-body{padding:.5rem 1rem 1rem;display:flex;flex-direction:column;gap:.6rem;}
-.action-row{display:flex;align-items:center;justify-content:space-between;border:1.5px solid var(--border);border-radius:var(--r);padding:.55rem .8rem;background:#fafafa;cursor:pointer;transition:border-color .2s,background .2s;}
+
+/* Action rows (Upload picture / Manually identify / Get Colour Analysis) */
+.action-row{
+  display:flex;align-items:center;justify-content:space-between;
+  border:1.5px solid var(--border);border-radius:var(--r);
+  padding:.55rem .8rem;background:#fafafa;cursor:pointer;
+  transition:border-color .2s,background .2s;
+}
 .action-row:hover{border-color:var(--rose);background:var(--rose-bg);}
 .action-row span{font-size:.85rem;color:var(--text-med);}
-.action-arrow{width:26px;height:26px;background:var(--rose-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.85rem;flex-shrink:0;}
-.privacy-box{border:1.5px solid var(--border);border-radius:var(--r);padding:.8rem;background:#f9f9f9;font-size:.78rem;color:var(--text-med);}
+.action-arrow{
+  width:26px;height:26px;background:var(--rose-light);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:.85rem;flex-shrink:0;
+}
+
+/* Privacy dialog (inline) */
+.privacy-box{
+  border:1.5px solid var(--border);border-radius:var(--r);padding:.8rem;
+  background:#f9f9f9;font-size:.78rem;color:var(--text-med);
+}
 .privacy-box strong{display:block;margin-bottom:.35rem;font-size:.82rem;color:var(--text);}
 .privacy-btns{display:flex;gap:.5rem;margin-top:.6rem;}
-.btn-keep,.btn-delete{padding:.3rem .9rem;border-radius:var(--r);border:none;cursor:pointer;font-size:.8rem;font-weight:700;background:#B0B0C0;color:#fff;}
+.btn-keep,.btn-delete{
+  padding:.3rem .9rem;border-radius:var(--r);border:none;cursor:pointer;font-size:.8rem;font-weight:700;
+}
+.btn-keep{background:#B0B0C0;color:#fff;}
+.btn-delete{background:#B0B0C0;color:#fff;}
+
+/* Upload image box (right side of panel) */
 .upload-box-area{display:flex;flex-direction:column;align-items:center;gap:.4rem;}
-.upload-img-box{width:90px;height:90px;border:2px solid var(--border);border-radius:var(--r);display:flex;align-items:center;justify-content:center;background:#f5f5f5;overflow:hidden;}
+.upload-img-box{
+  width:90px;height:90px;border:2px solid var(--border);border-radius:var(--r);
+  display:flex;align-items:center;justify-content:center;background:#f5f5f5;overflow:hidden;
+}
 .upload-img-box img{width:100%;height:100%;object-fit:cover;}
-.btn-upload{padding:.3rem .8rem;border:none;border-radius:var(--r);background:linear-gradient(135deg,#9A8A9A,#B0A0B0);color:#fff;font-size:.78rem;cursor:pointer;}
+.btn-upload{
+  padding:.3rem .8rem;border:none;border-radius:var(--r);
+  background:linear-gradient(135deg,#9A8A9A,#B0A0B0);
+  color:#fff;font-size:.78rem;cursor:pointer;
+}
 .btn-upload:hover{opacity:.88;}
+
+/* Panel two-column layout (actions left, upload right) */
 .panel-2col{display:flex;gap:.8rem;}
 .panel-2col-left{flex:1;display:flex;flex-direction:column;gap:.5rem;}
 .panel-2col-right{width:110px;flex-shrink:0;}
+
+/* Quiz inside panel */
 .quiz-q{font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:.6rem;}
 .quiz-prog{font-size:.72rem;color:var(--text-light);margin-bottom:.5rem;}
 .quiz-progress-bar{height:5px;background:var(--border);border-radius:50px;margin-bottom:.9rem;}
 .quiz-progress-fill{height:100%;background:var(--rose);border-radius:50px;transition:width .35s;}
-.opt-card{display:flex;align-items:center;gap:.65rem;padding:.55rem .8rem;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:.4rem;font-size:.85rem;}
+.opt-card{
+  display:flex;align-items:center;gap:.65rem;padding:.55rem .8rem;
+  border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;
+  transition:border-color .2s,background .2s;margin-bottom:.4rem;font-size:.85rem;
+}
 .opt-card:hover{border-color:var(--rose);background:var(--rose-bg);}
 .opt-card.sel{border-color:var(--rose);background:var(--rose-pale);color:var(--rose);}
 .opt-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;}
 .opt-card.sel .opt-dot{background:var(--rose);border-color:var(--rose);}
-.opt-swatches{display:flex;gap:3px;margin-left:auto;flex-shrink:0;}
-.opt-sw{width:22px;height:22px;border-radius:5px;border:1.5px solid rgba(0,0,0,.08);box-shadow:0 1px 3px rgba(0,0,0,.12);flex-shrink:0;}
 .quiz-nav{display:flex;justify-content:space-between;margin-top:.6rem;}
-.btn-qnav{padding:.4rem 1rem;border-radius:var(--r);border:1.5px solid var(--border);background:#fff;font-size:.8rem;cursor:pointer;color:var(--text-med);}
+.btn-qnav{
+  padding:.4rem 1rem;border-radius:var(--r);border:1.5px solid var(--border);
+  background:#fff;font-size:.8rem;cursor:pointer;color:var(--text-med);
+}
 .btn-qnav.primary{background:var(--rose);border-color:var(--rose);color:#fff;}
 .btn-qnav:disabled{opacity:.4;cursor:not-allowed;}
+
+/* Result inside panel */
 .result-box{text-align:center;padding:1rem;}
 .result-emoji-big{font-size:2.5rem;margin-bottom:.5rem;}
-.result-badge{display:inline-block;padding:.35rem 1.2rem;border-radius:var(--r-pill);font-weight:700;font-size:1rem;margin-bottom:.6rem;}
+.result-badge{
+  display:inline-block;padding:.35rem 1.2rem;border-radius:var(--r-pill);
+  font-weight:700;font-size:1rem;margin-bottom:.6rem;
+}
 .warm-badge{background:#FFF0E8;color:#B87040;border:1.5px solid #F0C0A0;}
 .cool-badge{background:#E8F0FF;color:#4060B8;border:1.5px solid #A0B8F0;}
 .neutral-badge{background:#E8F5EE;color:#407060;border:1.5px solid #A0C8B0;}
 .body-badge{background:var(--rose-pale);color:var(--rose);border:1.5px solid var(--rose-light);}
 .result-desc{font-size:.8rem;color:var(--text-light);max-width:320px;margin:0 auto .8rem;line-height:1.5;}
-.btn-action{padding:.45rem 1.2rem;border-radius:var(--r-pill);border:none;background:var(--rose);color:#fff;font-size:.82rem;cursor:pointer;margin:.2rem;}
+.btn-action{
+  padding:.45rem 1.2rem;border-radius:var(--r-pill);border:none;
+  background:var(--rose);color:#fff;font-size:.82rem;cursor:pointer;margin:.2rem;
+}
 .btn-action.outline{background:transparent;border:1.5px solid var(--rose);color:var(--rose);}
+
+/* Palette inside panel */
 .palette-tabs{display:flex;gap:.5rem;margin-bottom:.8rem;}
-.ptab{padding:.3rem .85rem;border-radius:var(--r-pill);font-size:.78rem;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--text-med);transition:all .15s;}
+.ptab{
+  padding:.3rem .85rem;border-radius:var(--r-pill);font-size:.78rem;cursor:pointer;
+  border:1.5px solid var(--border);background:#fff;color:var(--text-med);transition:all .15s;
+}
 .ptab.active{background:var(--rose-pale);border-color:var(--rose);color:var(--rose);}
 .swatch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:.5rem;margin-bottom:.8rem;}
 .swatch-item{border-radius:var(--r);overflow:hidden;border:1px solid var(--border);}
@@ -183,44 +415,96 @@ input,select,button{font-family:var(--font-b);}
 .swatch-hex{color:var(--text-light);}
 .avoid-reason{font-size:.62rem;color:#d44;white-space:normal;line-height:1.2;}
 .sec-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-light);font-weight:700;margin-bottom:.4rem;}
-.tip-item{display:flex;align-items:flex-start;gap:.7rem;padding:.6rem .7rem;border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:.4rem;background:#fafafa;}
+
+/* Tips inside panel */
+.tip-item{
+  display:flex;align-items:flex-start;gap:.7rem;padding:.6rem .7rem;
+  border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:.4rem;background:#fafafa;
+}
 .tip-emo{font-size:1.2rem;flex-shrink:0;}
 .tip-cat{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-light);font-weight:700;}
 .tip-txt{font-size:.82rem;color:var(--text);line-height:1.4;}
 .bm-btn{background:none;border:none;cursor:pointer;font-size:.95rem;color:#CCC;margin-left:auto;flex-shrink:0;}
 .bm-btn.on{color:#FFB800;}
+
+/* Body type result tips list */
 .bt-tips{list-style:none;margin-top:.5rem;}
 .bt-tips li{font-size:.8rem;padding:.3rem .5rem;background:var(--rose-bg);border-radius:var(--r);margin-bottom:.3rem;display:flex;gap:.4rem;}
 .bt-tips li::before{content:'✦';color:var(--rose);flex-shrink:0;}
 .bt-avoid li::before{content:'✗';color:#d44;}
+
+
+/* ═══════════════════════════════════════
+   SCREEN 5 — WARDROBE  (same layout as Style Analysis)
+═══════════════════════════════════════ */
 #screen-wardrobe.active{display:flex;}
+
+/* Wardrobe panel body */
 .wardrobe-2col{display:flex;gap:1rem;margin-top:.4rem;}
 .wardrobe-left{flex:1;display:flex;flex-direction:column;gap:.5rem;}
 .wardrobe-right{width:160px;flex-shrink:0;display:flex;flex-direction:column;gap:.5rem;}
-.wardrobe-select{width:100%;padding:.4rem .6rem;border:1.5px solid var(--border);border-radius:var(--r);background:#fff;font-size:.82rem;color:var(--text);outline:none;}
+.wardrobe-select-label{font-size:.75rem;color:var(--text-med);font-weight:700;margin-bottom:.2rem;}
+.wardrobe-select{
+  width:100%;padding:.4rem .6rem;border:1.5px solid var(--border);border-radius:var(--r);
+  background:#fff;font-size:.82rem;color:var(--text);outline:none;
+}
 .wardrobe-select:focus{border-color:var(--rose);}
+
+/* Wardrobe item grid */
 .wardrobe-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:.6rem;margin-top:.5rem;}
-.wardrobe-card{border-radius:var(--r);border:1.5px solid var(--border);overflow:hidden;background:#fafafa;position:relative;cursor:pointer;transition:border-color .2s;}
+.wardrobe-card{
+  border-radius:var(--r);border:1.5px solid var(--border);overflow:hidden;
+  background:#fafafa;position:relative;cursor:pointer;transition:border-color .2s;
+}
 .wardrobe-card:hover{border-color:var(--rose);}
 .wardrobe-card-img{width:100%;height:70px;object-fit:cover;background:var(--rose-pale);display:flex;align-items:center;justify-content:center;font-size:1.6rem;}
 .wardrobe-card-info{padding:.3rem .4rem;font-size:.68rem;}
 .wardrobe-card-name{font-weight:700;color:var(--text);}
 .wardrobe-card-cat{color:var(--text-light);}
-.wardrobe-del{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(200,80,80,.8);color:#fff;border:none;cursor:pointer;font-size:.65rem;display:flex;align-items:center;justify-content:center;}
-.outfit-result{border:1.5px solid var(--rose-light);border-radius:var(--r);padding:.7rem;background:var(--rose-bg);margin-top:.5rem;}
+.wardrobe-del{
+  position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;
+  background:rgba(200,80,80,.8);color:#fff;border:none;cursor:pointer;
+  font-size:.65rem;display:flex;align-items:center;justify-content:center;
+}
+
+/* Outfit result */
+.outfit-result{
+  border:1.5px solid var(--rose-light);border-radius:var(--r);padding:.7rem;
+  background:var(--rose-bg);margin-top:.5rem;
+}
 .outfit-result-title{font-size:.8rem;font-weight:700;color:var(--rose);margin-bottom:.4rem;}
 .outfit-items{display:flex;gap:.5rem;flex-wrap:wrap;}
-.outfit-chip{padding:.25rem .7rem;border-radius:var(--r-pill);background:#fff;border:1.5px solid var(--rose-light);font-size:.75rem;color:var(--text-med);}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:500;align-items:center;justify-content:center;}
+.outfit-chip{
+  padding:.25rem .7rem;border-radius:var(--r-pill);background:#fff;
+  border:1.5px solid var(--rose-light);font-size:.75rem;color:var(--text-med);
+}
+
+
+/* ═══════════════════════════════════════
+   MODALS
+═══════════════════════════════════════ */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:500;
+  align-items:center;justify-content:center;
+}
 .modal-overlay.open{display:flex;}
-.modal{background:#fff;border-radius:14px;padding:1.8rem;max-width:420px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.15);animation:fadeUp .3s ease;}
+.modal{
+  background:#fff;border-radius:14px;padding:1.8rem;max-width:420px;width:90%;
+  box-shadow:0 8px 40px rgba(0,0,0,.15);animation:fadeUp .3s ease;
+}
+.modal h3{font-family:var(--font-s);font-size:1.2rem;margin-bottom:.8rem;color:var(--text);}
+.modal p{font-size:.85rem;color:var(--text-med);margin-bottom:1rem;line-height:1.5;}
+.modal-btns{display:flex;gap:.6rem;justify-content:flex-end;}
 </style>
 </head>
 <body>
 
+<!-- ═══ TOAST ═══ -->
 <div class="toast" id="toast"></div>
 
-<!-- SCREEN 1 — LOGIN -->
+<!-- ══════════════════════════════════════════════════════════════
+     SCREEN 1 — LOGIN
+══════════════════════════════════════════════════════════════ -->
 <div class="screen" id="screen-login">
   <div class="login-left fade">
     <div class="login-logo-panel">Glam<em>Match</em></div>
@@ -233,17 +517,17 @@ input,select,button{font-family:var(--font-b);}
     <div class="login-card">
       <h2>Log In</h2>
       <p class="sub">Don't have an account? <a onclick="go('screen-register')">sign in</a></p>
-      <!-- CHANGE 1: oninput added to both fields -->
-      <input class="field" type="email" id="li-email" placeholder="Email" oninput="checkLoginBtn()"/>
-      <input class="field" type="password" id="li-pw" placeholder="Password" oninput="checkLoginBtn()" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <input class="field" type="email"    id="li-email" placeholder="Email"/>
+      <input class="field" type="password" id="li-pw"    placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/>
       <div id="li-err" class="err-msg" style="display:none"></div>
-      <!-- CHANGE 2: disabled attribute added initially -->
-      <button class="btn-submit" id="li-btn" onclick="doLogin()" disabled>LOG IN</button>
+      <button class="btn-submit" id="li-btn" onclick="doLogin()">LOG IN</button>
     </div>
   </div>
 </div>
 
-<!-- SCREEN 2 — REGISTER -->
+<!-- ══════════════════════════════════════════════════════════════
+     SCREEN 2 — REGISTER
+══════════════════════════════════════════════════════════════ -->
 <div class="screen" id="screen-register">
   <div class="reg-left fade">
     <div class="reg-title">JOIN GLAM<em>MATCH</em></div>
@@ -257,18 +541,18 @@ input,select,button{font-family:var(--font-b);}
     <div class="reg-card">
       <h2>Create Account</h2>
       <p class="sub">Already have an account? <a onclick="go('screen-login')">sign in</a></p>
-      <!-- CHANGE 3: oninput added to all three register fields -->
-      <input class="field" type="text" id="rg-name" placeholder="Name" oninput="checkRegisterBtn()"/>
-      <input class="field" type="email" id="rg-email" placeholder="Email" oninput="checkRegisterBtn()"/>
-      <input class="field" type="password" id="rg-pw" placeholder="Password" oninput="checkRegisterBtn()" onkeydown="if(event.key==='Enter')doRegister()"/>
+      <input class="field" type="text"     id="rg-name"  placeholder="Name"/>
+      <input class="field" type="email"    id="rg-email" placeholder="Email"/>
+      <input class="field" type="password" id="rg-pw"    placeholder="Password" onkeydown="if(event.key==='Enter')doRegister()"/>
       <div id="rg-err" class="err-msg" style="display:none"></div>
-      <!-- CHANGE 4: disabled attribute added initially -->
-      <button class="btn-submit" id="rg-btn" onclick="doRegister()" disabled>sign up</button>
+      <button class="btn-submit" id="rg-btn" onclick="doRegister()">sign up</button>
     </div>
   </div>
 </div>
 
-<!-- SCREEN 3 — HOME -->
+<!-- ══════════════════════════════════════════════════════════════
+     SCREEN 3 — HOME / LANDING
+══════════════════════════════════════════════════════════════ -->
 <div class="screen" id="screen-home">
   <nav class="topnav">
     <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
@@ -278,7 +562,7 @@ input,select,button{font-family:var(--font-b);}
     <div class="nav-link" onclick="go('screen-parlour')">Parlour</div>
     <div class="nav-right">
       <button class="btn-nav-outline" onclick="doLogout()">Sign In</button>
-      <button class="btn-nav-fill" onclick="go('screen-analysis')">Get Started ✦</button>
+      <button class="btn-nav-fill"    onclick="go('screen-analysis')">Get Started ✦</button>
     </div>
   </nav>
   <div class="home-body fade">
@@ -287,7 +571,7 @@ input,select,button{font-family:var(--font-b);}
       <div class="hero-title">Your Personal<br><span class="glam">Glam</span> stylist<br>Always On</div>
       <div class="hero-desc">Discover your perfect colours, style, and look — powered by AI analysis of your skin tone, body type &amp; face shape. Book top parlours nearby.</div>
       <div class="hero-btns">
-        <button class="btn-hero-fill" onclick="go('screen-analysis')">🎨 Analyze My Style</button>
+        <button class="btn-hero-fill"    onclick="go('screen-analysis')">🎨 Analyze My Style</button>
         <button class="btn-hero-outline" onclick="go('screen-parlour')">📍 Find Parlour</button>
       </div>
       <div class="hero-stats">
@@ -298,24 +582,46 @@ input,select,button{font-family:var(--font-b);}
     </div>
     <div class="home-hero-right">
       <div class="parlour-booked-badge">Parlour Booked<br><small>Glow salon at 2:30</small></div>
+      <!-- Seasonal colour grid — matches prototype illustration -->
       <div class="season-grid">
         <div class="season-card">
           <div class="season-header"><span class="season-face">👱‍♀️</span><strong>SPRING</strong></div>
-          <div class="swatches-row"><div class="sw" style="background:#C8E0A0"></div><div class="sw" style="background:#F0C870"></div><div class="sw" style="background:#E8A058"></div><div class="sw" style="background:#A0C858"></div><div class="sw" style="background:#D0A870"></div><div class="sw" style="background:#F0D0A0"></div><div class="sw" style="background:#B8D890"></div><div class="sw" style="background:#E8C060"></div></div>
+          <div class="swatches-row">
+            <div class="sw" style="background:#C8E0A0"></div><div class="sw" style="background:#F0C870"></div>
+            <div class="sw" style="background:#E8A058"></div><div class="sw" style="background:#A0C858"></div>
+            <div class="sw" style="background:#D0A870"></div><div class="sw" style="background:#F0D0A0"></div>
+            <div class="sw" style="background:#B8D890"></div><div class="sw" style="background:#E8C060"></div>
+          </div>
         </div>
         <div class="season-card">
           <div class="season-header"><span class="season-face">👩</span><strong>SUMMER</strong></div>
-          <div class="swatches-row"><div class="sw" style="background:#A0C8D0"></div><div class="sw" style="background:#80B0C8"></div><div class="sw" style="background:#C0D0E0"></div><div class="sw" style="background:#98B8D0"></div><div class="sw" style="background:#D0C0D8"></div><div class="sw" style="background:#B0A8C8"></div><div class="sw" style="background:#88A8C0"></div><div class="sw" style="background:#C8D8E8"></div></div>
+          <div class="swatches-row">
+            <div class="sw" style="background:#A0C8D0"></div><div class="sw" style="background:#80B0C8"></div>
+            <div class="sw" style="background:#C0D0E0"></div><div class="sw" style="background:#98B8D0"></div>
+            <div class="sw" style="background:#D0C0D8"></div><div class="sw" style="background:#B0A8C8"></div>
+            <div class="sw" style="background:#88A8C0"></div><div class="sw" style="background:#C8D8E8"></div>
+          </div>
         </div>
         <div class="season-card">
           <div class="season-header"><span class="season-face">👩‍🦰</span><strong>AUTUMN</strong></div>
-          <div class="swatches-row"><div class="sw" style="background:#C87840"></div><div class="sw" style="background:#A86030"></div><div class="sw" style="background:#D09050"></div><div class="sw" style="background:#806028"></div><div class="sw" style="background:#C0A050"></div><div class="sw" style="background:#985030"></div><div class="sw" style="background:#B87840"></div><div class="sw" style="background:#E0A060"></div></div>
+          <div class="swatches-row">
+            <div class="sw" style="background:#C87840"></div><div class="sw" style="background:#A86030"></div>
+            <div class="sw" style="background:#D09050"></div><div class="sw" style="background:#806028"></div>
+            <div class="sw" style="background:#C0A050"></div><div class="sw" style="background:#985030"></div>
+            <div class="sw" style="background:#B87840"></div><div class="sw" style="background:#E0A060"></div>
+          </div>
         </div>
         <div class="season-card">
           <div class="season-header"><span class="season-face">🧕</span><strong>WINTER</strong></div>
-          <div class="swatches-row"><div class="sw" style="background:#1840A0"></div><div class="sw" style="background:#C01840"></div><div class="sw" style="background:#101828"></div><div class="sw" style="background:#A81830"></div><div class="sw" style="background:#2850C0"></div><div class="sw" style="background:#E0E8F8"></div><div class="sw" style="background:#801028"></div><div class="sw" style="background:#3060D0"></div></div>
+          <div class="swatches-row">
+            <div class="sw" style="background:#1840A0"></div><div class="sw" style="background:#C01840"></div>
+            <div class="sw" style="background:#101828"></div><div class="sw" style="background:#A81830"></div>
+            <div class="sw" style="background:#2850C0"></div><div class="sw" style="background:#E0E8F8"></div>
+            <div class="sw" style="background:#801028"></div><div class="sw" style="background:#3060D0"></div>
+          </div>
         </div>
       </div>
+      <!-- Makeup photo banner -->
       <div class="makeup-banner">
         <div class="makeup-swatch" style="background:linear-gradient(135deg,#F8E0D8,#E8C8C0)"></div>
         <div class="makeup-swatch" style="background:linear-gradient(135deg,#F0D0B8,#E0B898)"></div>
@@ -325,7 +631,9 @@ input,select,button{font-family:var(--font-b);}
   </div>
 </div>
 
-<!-- SCREEN 4 — STYLE ANALYSIS -->
+<!-- ══════════════════════════════════════════════════════════════
+     SCREEN 4 — STYLE ANALYSIS
+══════════════════════════════════════════════════════════════ -->
 <div class="screen" id="screen-analysis">
   <nav class="topnav">
     <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
@@ -340,6 +648,7 @@ input,select,button{font-family:var(--font-b);}
   </nav>
   <div class="page-title-bar"><span class="page-title-pill">Style Analysis &amp; Wardrobe</span></div>
   <div class="analysis-body fade">
+    <!-- Sidebar -->
     <div class="sidebar" id="analysis-sidebar">
       <div class="sidebar-item active" id="sb-skin" onclick="setAnalysisTab('skin')">
         <div><span class="sidebar-num">1</span><span class="sidebar-label">Skin Tone Detection</span></div>
@@ -354,11 +663,16 @@ input,select,button{font-family:var(--font-b);}
         <div class="sidebar-sub">Take a quiz to find out your body shape and silhouette</div>
       </div>
     </div>
-    <div class="panel" id="analysis-panel"></div>
+    <!-- Panel -->
+    <div class="panel" id="analysis-panel">
+      <!-- content injected by JS -->
+    </div>
   </div>
 </div>
 
-<!-- SCREEN 5 — WARDROBE -->
+<!-- ══════════════════════════════════════════════════════════════
+     SCREEN 5 — WARDROBE
+══════════════════════════════════════════════════════════════ -->
 <div class="screen" id="screen-wardrobe">
   <nav class="topnav">
     <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
@@ -373,6 +687,7 @@ input,select,button{font-family:var(--font-b);}
   </nav>
   <div class="page-title-bar"><span class="page-title-pill">Style Analysis &amp; Wardrobe</span></div>
   <div class="analysis-body fade">
+    <!-- Sidebar — wardrobe is item 4, so 2,3,4 shown -->
     <div class="sidebar">
       <div class="sidebar-item" onclick="go('screen-analysis');setAnalysisTab('face')">
         <div><span class="sidebar-num">2</span><span class="sidebar-label">Face Shape Mapping</span></div>
@@ -387,41 +702,64 @@ input,select,button{font-family:var(--font-b);}
         <div class="sidebar-sub">Upload your dresses, tag them and get an outfit automatically generated</div>
       </div>
     </div>
+    <!-- Wardrobe Panel -->
     <div class="panel">
       <span class="panel-title-pill">My Wardrobe</span>
       <div class="panel-body">
         <div class="panel-2col wardrobe-2col">
           <div class="wardrobe-left">
-            <div class="action-row" onclick="loadWardrobe()"><span>View My Wardrobe</span><div class="action-arrow">›</div></div>
-            <div class="action-row" onclick="showAddWardrobeForm()"><span>Upload a clothing item</span><div class="action-arrow">›</div></div>
-            <div class="action-row" onclick="generateOutfit()"><span>Generate an Outfit</span><div class="action-arrow">›</div></div>
+            <!-- action rows matching prototype -->
+            <div class="action-row" onclick="loadWardrobe()">
+              <span>View My Wardrobe</span><div class="action-arrow">›</div>
+            </div>
+            <div class="action-row" onclick="showAddWardrobeForm()">
+              <span>Upload a clothing item</span><div class="action-arrow">›</div>
+            </div>
+            <div class="action-row" onclick="generateOutfit()">
+              <span>Generate an Outfit</span><div class="action-arrow">›</div>
+            </div>
             <div id="wardrobe-add-form" style="display:none;margin-top:.5rem;">
               <div style="font-size:.78rem;font-weight:700;color:var(--text-med);margin-bottom:.4rem;">Select type of Clothing</div>
-              <select class="wardrobe-select" id="wd-cat"><option>Top</option><option>Shirt</option><option>Blouse</option><option>Bottom</option><option>Skirt</option><option>Trousers</option><option>Jeans</option><option>Dress</option><option>Jacket</option></select>
-              <select class="wardrobe-select" style="margin-top:.4rem;" id="wd-style"><option>Casual</option><option>Formal</option><option>Party</option><option>Traditional</option><option>Sports</option></select>
+              <select class="wardrobe-select" id="wd-cat">
+                <option>Top</option><option>Shirt</option><option>Blouse</option>
+                <option>Bottom</option><option>Skirt</option><option>Trousers</option>
+                <option>Jeans</option><option>Dress</option><option>Jacket</option>
+              </select>
+              <select class="wardrobe-select" style="margin-top:.4rem;" id="wd-style">
+                <option>Casual</option><option>Formal</option><option>Party</option>
+                <option>Traditional</option><option>Sports</option>
+              </select>
               <button class="btn-action" style="margin-top:.6rem;width:100%;" onclick="doAddItem()">Add Item</button>
             </div>
             <div id="outfit-result-area"></div>
           </div>
           <div class="panel-2col-right">
             <div style="font-size:.72rem;font-weight:700;color:var(--text-med);margin-bottom:.3rem;">Select type of Clothing</div>
-            <select class="wardrobe-select" id="wd-cat2"><option>Item</option><option>Top</option><option>Bottom</option><option>Dress</option><option>Jacket</option></select>
-            <select class="wardrobe-select" style="margin-top:.35rem;" id="wd-style2"><option>Item</option><option>Casual</option><option>Formal</option><option>Party</option></select>
+            <select class="wardrobe-select" id="wd-cat2">
+              <option>Item</option><option>Top</option><option>Bottom</option>
+              <option>Dress</option><option>Jacket</option>
+            </select>
+            <select class="wardrobe-select" style="margin-top:.35rem;" id="wd-style2">
+              <option>Item</option><option>Casual</option><option>Formal</option><option>Party</option>
+            </select>
             <div class="upload-box-area" style="margin-top:.6rem;">
-              <div class="upload-img-box" id="wd-img-preview"><span style="font-size:2rem;color:var(--border);">🖼️</span></div>
+              <div class="upload-img-box" id="wd-img-preview">
+                <span style="font-size:2rem;color:var(--border);">🖼️</span>
+              </div>
               <div style="font-size:.7rem;color:var(--text-light);">Upload Image</div>
               <input type="file" id="wd-file" accept="image/*" style="display:none" onchange="previewWardrobeImg(this)"/>
               <button class="btn-upload" onclick="document.getElementById('wd-file').click()">Upload</button>
             </div>
           </div>
         </div>
+        <!-- Wardrobe grid -->
         <div id="wardrobe-grid-area"></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- PARLOUR PLACEHOLDER -->
+<!-- Parlour screens placeholder (Sprint 3) -->
 <div class="screen" id="screen-parlour">
   <nav class="topnav">
     <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
@@ -429,7 +767,9 @@ input,select,button{font-family:var(--font-b);}
     <div class="nav-link" onclick="go('screen-analysis')">Style Analysis</div>
     <div class="nav-link" onclick="go('screen-wardrobe')">Wardrobe</div>
     <div class="nav-link active">Parlour</div>
-    <div class="nav-right"><button class="btn-nav-outline" onclick="doLogout()">Sign Out</button></div>
+    <div class="nav-right">
+      <button class="btn-nav-outline" onclick="doLogout()">Sign Out</button>
+    </div>
   </nav>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;color:var(--text-light);">
     <div style="font-size:2.5rem;">💅</div>
@@ -439,67 +779,24 @@ input,select,button{font-family:var(--font-b);}
   </div>
 </div>
 
+
+<!-- ══════════════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════════ -->
 <script>
-const API="http://localhost:5000/api";
-let token=localStorage.getItem("gm_tok")||null;
-let userName="",userUndertone=null,userBodyType=null;
-let bookmarks=new Set();
-let utQs=[],utAns={},utIdx=0;
-let btQs=[],btAns={},btIdx=0;
-let paletteData=null,palTab="clothing";
+const API = "http://localhost:5001/api";
+let token = localStorage.getItem("gm_tok") || null;
+let userName = "", userUndertone = null, userBodyType = null;
+let bookmarks = new Set();
+
+// quiz state
+let utQs=[], utAns={}, utIdx=0;
+let btQs=[], btAns={}, btIdx=0;
+let paletteData=null, palTab="clothing";
 let analysisTab="skin";
 let wardrobeItems=[];
 
-// ════════════════════════════════════════════════════
-// CHANGE 5: checkLoginBtn & checkRegisterBtn functions
-// Button goes dark (ready class) when fields are filled
-// ════════════════════════════════════════════════════
-function checkLoginBtn(){
-  const email=document.getElementById("li-email").value.trim();
-  const pw=document.getElementById("li-pw").value;
-  const btn=document.getElementById("li-btn");
-  const ready=email.length>0 && pw.length>0;
-  btn.disabled=!ready;
-  btn.classList.toggle("ready",ready);
-}
-
-function checkRegisterBtn(){
-  const name=document.getElementById("rg-name").value.trim();
-  const email=document.getElementById("rg-email").value.trim();
-  const pw=document.getElementById("rg-pw").value;
-  const btn=document.getElementById("rg-btn");
-  const ready=name.length>0 && email.length>0 && pw.length>0;
-  btn.disabled=!ready;
-  btn.classList.toggle("ready",ready);
-}
-
-// Colour swatches map for undertone quiz
-const UT_SWATCHES={
-  "1-a":["#F4A0B0","#E07088","#C85870"],
-  "1-b":["#F5D08A","#E8B860","#D49840"],
-  "1-c":["#F0C4A8","#E0A882","#C89070"],
-  "2-a":["#F0F8FF","#E0EEF8","#D0E4F0"],
-  "2-b":["#FFF8E7","#F5EACE","#EDE0B8"],
-  "2-c":["#FAF5F0","#F0E8DC","#E5D8C8"],
-  "3-a":["#E8E8F0","#C8C8D8","#A8A8C0"],
-  "3-b":["#FFD700","#E8B830","#C89820"],
-  "3-c":["#D8D8D8","#E8C060","#C0A030"],
-  "4-a":["#0F52BA","#7851A9","#FF66CC","#800020"],
-  "4-b":["#C45C3A","#CC5500","#E1AD01","#808000"],
-  "4-c":["#DCAE96","#8CA67B","#C0909A","#008080"],
-  "5-a":["#F08080","#E06070","#C84060"],
-  "5-b":["#D4A060","#C89050","#B87840"],
-  "5-c":["#E88080","#D09060","#C07850"],
-  "6-a":["#8E2D56","#967BB6","#C0909A"],
-  "6-b":["#FF6B6B","#FFAE87","#B7410E"],
-  "6-c":["#C68642","#B76E79","#E8B8A8"],
-};
-function getSwatchesHTML(qid,oid){
-  const colors=UT_SWATCHES[`${qid}-${oid}`];
-  if(!colors)return"";
-  return`<div class="opt-swatches">${colors.map(c=>`<div class="opt-sw" style="background:${c}" title="${c}"></div>`).join("")}</div>`;
-}
-
+// ── helpers ──────────────────────────────────────────────────
 function go(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -507,297 +804,579 @@ function go(id){
 }
 function toast(msg,type="ok"){
   const t=document.getElementById("toast");
-  t.textContent=msg;t.className=`toast ${type} show`;
+  t.textContent=msg; t.className=`toast ${type} show`;
   setTimeout(()=>t.classList.remove("show"),2600);
 }
 async function api(ep,method="GET",body=null){
   const h={"Content-Type":"application/json"};
-  if(token)h["Authorization"]="Bearer "+token;
+  if(token) h["Authorization"]="Bearer "+token;
   const r=await fetch(API+ep,{method,headers:h,body:body?JSON.stringify(body):null});
-  return{data:await r.json(),ok:r.ok};
+  return {data:await r.json(),ok:r.ok};
 }
 function setLoading(id,on,label){
-  const b=document.getElementById(id);if(!b)return;
+  const b=document.getElementById(id); if(!b)return;
   b.disabled=on;
   b.innerHTML=on?'<span class="spinner"></span>':(label||b.dataset.label||b.innerHTML);
-  if(!on&&label)b.dataset.label=label;
+  if(!on&&label) b.dataset.label=label;
 }
 
+// ── init ─────────────────────────────────────────────────────
 window.onload=async()=>{
   if(token){
-    const{data,ok}=await api("/profile");
-    if(ok){userName=data.name;userUndertone=data.undertone;userBodyType=data.body_type;bookmarks=new Set(data.bookmarks||[]);setNavNames();go("screen-home");}
-    else{clearSession();go("screen-login");}
-  }else{go("screen-login");}
+    const {data,ok}=await api("/profile");
+    if(ok){
+      userName=data.name; userUndertone=data.undertone;
+      userBodyType=data.body_type; bookmarks=new Set(data.bookmarks||[]);
+      setNavNames(); go("screen-home");
+    } else { clearSession(); go("screen-login"); }
+  } else { go("screen-login"); }
 };
-function setNavNames(){["nav-name-a","nav-name-w"].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=userName;});}
-function clearSession(){token=null;localStorage.removeItem("gm_tok");userUndertone=null;userBodyType=null;}
+function setNavNames(){
+  const els=["nav-name-a","nav-name-w"];
+  els.forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=userName;});
+}
+function clearSession(){
+  token=null; localStorage.removeItem("gm_tok");
+  userUndertone=null; userBodyType=null;
+}
 
+// ── AUTH ─────────────────────────────────────────────────────
 async function doLogin(){
   const email=document.getElementById("li-email").value.trim();
   const pw=document.getElementById("li-pw").value;
-  const errEl=document.getElementById("li-err");errEl.style.display="none";
+  const errEl=document.getElementById("li-err");
+  errEl.style.display="none";
   if(!email||!pw){errEl.textContent="Please fill in all fields";errEl.style.display="block";return;}
   setLoading("li-btn",true,"LOG IN");
-  const{data,ok}=await api("/login","POST",{email,password:pw});
+  const {data,ok}=await api("/login","POST",{email,password:pw});
   setLoading("li-btn",false,"LOG IN");
   if(!ok){errEl.textContent=data.error;errEl.style.display="block";return;}
-  token=data.token;userName=data.name;userUndertone=data.undertone;userBodyType=data.body_type;
+  token=data.token; userName=data.name;
+  userUndertone=data.undertone; userBodyType=data.body_type;
   localStorage.setItem("gm_tok",token);
-  toast("Welcome back, "+userName+" ✨");setNavNames();go("screen-home");
+  toast("Welcome back, "+userName+" ✨");
+  setNavNames(); go("screen-home");
 }
 
 async function doRegister(){
-  const name=document.getElementById("rg-name").value.trim();
-  const email=document.getElementById("rg-email").value.trim();
-  const pw=document.getElementById("rg-pw").value;
-  const errEl=document.getElementById("rg-err");errEl.style.display="none";
-  if(!name||!email||!pw){errEl.textContent="All fields are required";errEl.style.display="block";return;}
-  setLoading("rg-btn",true,"sign up");
-  const{data,ok}=await api("/register","POST",{name,email,password:pw});
-  setLoading("rg-btn",false,"sign up");
-  if(!ok){errEl.textContent=data.error;errEl.style.display="block";return;}
-  token=data.token;userName=data.name;userUndertone=null;userBodyType=null;
-  localStorage.setItem("gm_tok",token);
-  toast("Welcome to GlamMatch, "+userName+" 💄");setNavNames();go("screen-home");
+    const name = document.getElementById("rg-name").value.trim();
+    const email = document.getElementById("rg-email").value.trim();
+    const pw = document.getElementById("rg-pw").value;
+    const errEl = document.getElementById("rg-err");
+    
+    // Clear previous errors
+    errEl.style.display = "none";
+    errEl.textContent = "";
+    
+    // Validation
+    if (!name || !email || !pw) {
+        errEl.textContent = "All fields are required";
+        errEl.style.display = "block";
+        return;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        errEl.textContent = "Please enter a valid email address";
+        errEl.style.display = "block";
+        return;
+    }
+    
+    // Password validation (matches backend requirement)
+    if (pw.length < 8) {
+        errEl.textContent = "Password must be at least 8 characters";
+        errEl.style.display = "block";
+        return;
+    }
+    
+    if (!/\d/.test(pw)) {
+        errEl.textContent = "Password must contain at least one number";
+        errEl.style.display = "block";
+        return;
+    }
+    
+    setLoading("rg-btn", true, "sign up");
+    
+    try {
+        console.log("Sending registration request to:", API + "/register");
+        console.log("Data:", { name, email, password: pw });
+        
+        const response = await fetch(API + "/register", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ 
+                name: name,
+                email: email, 
+                password: pw 
+            })
+        });
+        
+        console.log("Response status:", response.status);
+        const data = await response.json();
+        console.log("Response data:", data);
+        
+        if (!response.ok) {
+            errEl.textContent = data.error || "Registration failed";
+            errEl.style.display = "block";
+            setLoading("rg-btn", false, "sign up");
+            return;
+        }
+        token = data.token;
+        userName = data.name;
+        userUndertone = null;
+        userBodyType = null;
+        localStorage.setItem("gm_tok", token);
+        
+        toast("Welcome to GlamMatch, " + userName + " 💄");
+        setNavNames();
+        go("screen-home");
+        
+    }
+    catch (error)
+    {
+        console.error("Registration error:", error);
+        errEl.textContent = "Cannot connect to server. Make sure backend is running on port 5001";
+        errEl.style.display = "block";
+    }
+    setLoading("rg-btn", false, "sign up");
 }
-function doLogout(){clearSession();go("screen-login");}
 
+function doLogout(){
+  clearSession(); go("screen-login");
+}
+
+// ── ANALYSIS TAB SWITCHING ────────────────────────────────────
 function setAnalysisTab(tab){
   analysisTab=tab;
-  ["skin","face","body"].forEach(t=>{document.getElementById("sb-"+t)?.classList.toggle("active",t===tab);});
+  ["skin","face","body"].forEach(t=>{
+    document.getElementById("sb-"+t)?.classList.toggle("active",t===tab);
+  });
   renderAnalysisPanel();
 }
+
 function renderAnalysisPanel(){
-  const p=document.getElementById("analysis-panel");if(!p)return;
-  if(analysisTab==="skin")renderSkinPanel(p);
-  else if(analysisTab==="face")renderFacePanel(p);
-  else if(analysisTab==="body")renderBodyPanel(p);
+  const p=document.getElementById("analysis-panel");
+  if(!p) return;
+  if(analysisTab==="skin")      renderSkinPanel(p);
+  else if(analysisTab==="face") renderFacePanel(p);
+  else if(analysisTab==="body") renderBodyPanel(p);
 }
 
-let skinState="menu",skinUploadFile=null;
+// ── SKIN TONE PANEL ───────────────────────────────────────────
+let skinState="menu"; // menu | quiz | uploading | privacy | result-quiz | palette | tips
+let skinUploadFile=null;
+
 function renderSkinPanel(p){
-  if(skinState==="menu")p.innerHTML=skinMenuHTML();
-  else if(skinState==="quiz")renderUTQuizInPanel(p);
-  else if(skinState==="privacy")p.innerHTML=skinPrivacyHTML();
-  else if(skinState==="result")renderUTResultInPanel(p);
-  else if(skinState==="palette")renderPaletteInPanel(p);
-  else if(skinState==="tips")renderTipsInPanel(p);
+  if(skinState==="menu")          p.innerHTML=skinMenuHTML();
+  else if(skinState==="quiz")     renderUTQuizInPanel(p);
+  else if(skinState==="privacy")  p.innerHTML=skinPrivacyHTML();
+  else if(skinState==="result")   renderUTResultInPanel(p);
+  else if(skinState==="palette")  renderPaletteInPanel(p);
+  else if(skinState==="tips")     renderTipsInPanel(p);
 }
-function skinMenuHTML(){
-  const hasDone=userUndertone;
-  return`<span class="panel-title-pill">Skin Tone Detection</span>
-    <div class="panel-body"><div class="panel-2col">
-      <div class="panel-2col-left">
-        <div class="action-row" onclick="skinUploadAction()"><span>Upload picture</span><div class="action-arrow">›</div></div>
-        <div class="action-row" onclick="startUTQuiz()"><span>Manually identify skin Tone</span><div class="action-arrow">›</div></div>
-        ${hasDone?`<div class="action-row" onclick="skinState='palette';renderAnalysisPanel()"><span>Get Colour Analysis</span><div class="action-arrow">›</div></div>`:`<div class="action-row" style="opacity:.5;cursor:not-allowed;"><span>Get Colour Analysis</span><div class="action-arrow">›</div></div>`}
-        ${hasDone?`<div style="font-size:.75rem;color:green;margin-top:.3rem;">✓ Undertone saved: <strong>${userUndertone}</strong></div>`:""}
-      </div>
-      <div class="panel-2col-right"><div class="upload-box-area">
-        <div class="upload-img-box" id="skin-img-box"><span style="font-size:2rem;color:var(--border);">🖼️</span></div>
-        <div style="font-size:.7rem;color:var(--text-light);">Upload Image</div>
-        <input type="file" id="skin-file" accept="image/*" style="display:none" onchange="previewSkinImg(this)"/>
-        <button class="btn-upload" onclick="document.getElementById('skin-file').click()">Upload</button>
-      </div></div>
-    </div></div>`;
-}
-function previewSkinImg(input){
-  if(!input.files[0])return;skinUploadFile=input.files[0];
-  const reader=new FileReader();
-  reader.onload=e=>{const box=document.getElementById("skin-img-box");if(box)box.innerHTML=`<img src="${e.target.result}" alt="preview"/>`;};
-  reader.readAsDataURL(input.files[0]);
-  skinState="privacy";renderSkinPanel(document.getElementById("analysis-panel"));
-}
-function skinUploadAction(){document.getElementById("skin-file")?.click();}
-function skinPrivacyHTML(){return`<span class="panel-title-pill">Skin Tone Detection</span>
-  <div class="panel-body"><div class="panel-2col"><div class="panel-2col-left">
-  <div class="action-row" style="opacity:.6;"><span>Upload picture</span><div class="action-arrow">›</div></div>
-  <div class="action-row" style="opacity:.6;"><span>Manually identify skin Tone</span><div class="action-arrow">›</div></div>
-  <div class="action-row" style="opacity:.6;"><span>Get Colour Analysis</span><div class="action-arrow">›</div></div>
-  <div class="privacy-box"><strong>Privacy and Security</strong> After detecting your skin tone do you want to keep this picture here or do you want us to delete it for privacy purposes.
-  <div class="privacy-btns"><button class="btn-keep" onclick="privacyChoice('keep')">Keep</button><button class="btn-delete" onclick="privacyChoice('delete')">Delete</button></div></div>
-  </div><div class="panel-2col-right"><div class="upload-box-area">
-  <div class="upload-img-box" style="background:var(--rose-pale);"><span style="font-size:1rem;color:var(--rose);">📷</span></div>
-  <div style="font-size:.7rem;color:var(--text-light);">Upload Image</div><button class="btn-upload">Upload</button>
-  </div></div></div></div>`;}
-function privacyChoice(choice){toast(choice==="keep"?"Photo saved 🔒":"Photo deleted ✓");startUTQuiz();}
 
-async function startUTQuiz(){
-  const{data,ok}=await api("/quiz/undertone/questions");
-  if(!ok){toast("Failed to load quiz","err");return;}
-  utQs=data.questions;utAns={};utIdx=0;skinState="quiz";renderAnalysisPanel();
+function skinMenuHTML(){
+  const hasDone = userUndertone;
+  return `
+    <span class="panel-title-pill">Skin Tone Detection</span>
+    <div class="panel-body">
+      <div class="panel-2col">
+        <div class="panel-2col-left">
+          <div class="action-row" onclick="skinUploadAction()">
+            <span>Upload picture</span><div class="action-arrow">›</div>
+          </div>
+          <div class="action-row" onclick="startUTQuiz()">
+            <span>Manually identify skin Tone</span><div class="action-arrow">›</div>
+          </div>
+          ${hasDone?`
+          <div class="action-row" onclick="skinState='palette';renderAnalysisPanel()">
+            <span>Get Colour Analysis</span><div class="action-arrow">›</div>
+          </div>`:`
+          <div class="action-row" style="opacity:.5;cursor:not-allowed;">
+            <span>Get Colour Analysis</span><div class="action-arrow">›</div>
+          </div>`}
+          ${hasDone?`<div style="font-size:.75rem;color:green;margin-top:.3rem;">✓ Undertone saved: <strong>${userUndertone}</strong></div>`:""}
+        </div>
+        <div class="panel-2col-right">
+          <div class="upload-box-area">
+            <div class="upload-img-box" id="skin-img-box">
+              <span style="font-size:2rem;color:var(--border);">🖼️</span>
+            </div>
+            <div style="font-size:.7rem;color:var(--text-light);">Upload Image</div>
+            <input type="file" id="skin-file" accept="image/*" style="display:none" onchange="previewSkinImg(this)"/>
+            <button class="btn-upload" onclick="document.getElementById('skin-file').click()">Upload</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
 }
+
+function previewSkinImg(input){
+  if(!input.files[0]) return;
+  skinUploadFile=input.files[0];
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const box=document.getElementById("skin-img-box");
+    if(box) box.innerHTML=`<img src="${e.target.result}" alt="preview"/>`;
+  };
+  reader.readAsDataURL(input.files[0]);
+  // show privacy dialog
+  const p=document.getElementById("analysis-panel");
+  skinState="privacy"; renderSkinPanel(p);
+}
+
+function skinUploadAction(){
+  document.getElementById("skin-file")?.click();
+}
+
+function skinPrivacyHTML(){
+  return `
+    <span class="panel-title-pill">Skin Tone Detection</span>
+    <div class="panel-body">
+      <div class="panel-2col">
+        <div class="panel-2col-left">
+          <div class="action-row" style="opacity:.6;"><span>Upload picture</span><div class="action-arrow">›</div></div>
+          <div class="action-row" style="opacity:.6;"><span>Manually identify skin Tone</span><div class="action-arrow">›</div></div>
+          <div class="action-row" style="opacity:.6;"><span>Get Colour Analysis</span><div class="action-arrow">›</div></div>
+          <div class="privacy-box">
+            <strong>Privacy and Security</strong>
+            After detecting your skin tone do you want to keep this picture here or do you want us to delete it for privacy purposes.
+            <div class="privacy-btns">
+              <button class="btn-keep" onclick="privacyChoice('keep')">Keep</button>
+              <button class="btn-delete" onclick="privacyChoice('delete')">Delete</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel-2col-right">
+          <div class="upload-box-area">
+            <div class="upload-img-box" id="skin-img-box2" style="background:var(--rose-pale);">
+              <span style="font-size:1rem;color:var(--rose);">📷</span>
+            </div>
+            <div style="font-size:.7rem;color:var(--text-light);">Upload Image</div>
+            <button class="btn-upload">Upload</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function privacyChoice(choice){
+  toast(choice==="keep"?"Photo saved to your profile 🔒":"Photo deleted for privacy ✓");
+  // Trigger quiz as fallback since we don't have real image AI
+  startUTQuiz();
+}
+
+// ── UNDERTONE QUIZ ────────────────────────────────────────────
+async function startUTQuiz(){
+  const {data,ok}=await api("/quiz/undertone/questions");
+  if(!ok){toast("Failed to load quiz","err");return;}
+  utQs=data.questions; utAns={}; utIdx=0;
+  skinState="quiz";
+  renderAnalysisPanel();
+}
+
 function renderUTQuizInPanel(p){
-  const q=utQs[utIdx];if(!q){utSubmit();return;}
+  const q=utQs[utIdx]; if(!q){utSubmit();return;}
   const pct=Math.round((utIdx/utQs.length)*100);
-  p.innerHTML=`<span class="panel-title-pill">Skin Tone Detection — Quiz</span>
+  p.innerHTML=`
+    <span class="panel-title-pill">Skin Tone Detection — Quiz</span>
     <div class="panel-body">
       <div class="quiz-prog">Question ${utIdx+1} of ${utQs.length}</div>
       <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:${pct}%"></div></div>
       <div class="quiz-q">${q.q}</div>
-      ${q.opts.map(o=>`<div class="opt-card ${utAns[q.id]===o.id?'sel':''}" onclick="selectUT('${o.id}')">
-        <div class="opt-dot"></div><span style="flex:1;">${o.t}</span>${getSwatchesHTML(q.id,o.id)}</div>`).join("")}
+      ${q.opts.map(o=>`
+        <div class="opt-card ${utAns[q.id]===o.id?'sel':''}" onclick="selectUT('${o.id}')">
+          <div class="opt-dot"></div><span>${o.t}</span>
+        </div>`).join("")}
       <div class="quiz-nav">
         <button class="btn-qnav" onclick="utBack()" ${utIdx===0?"style='visibility:hidden'":""}>← Back</button>
-        ${utIdx<utQs.length-1?`<button class="btn-qnav primary" onclick="utNext()" ${utAns[q.id]?"":"disabled"}>Next →</button>`:`<button class="btn-qnav primary" onclick="utSubmit()" ${utAns[q.id]?"":"disabled"}>See Results ✨</button>`}
+        ${utIdx<utQs.length-1
+          ?`<button class="btn-qnav primary" onclick="utNext()" ${utAns[q.id]?"":"disabled"}>Next →</button>`
+          :`<button class="btn-qnav primary" id="ut-submit-btn" onclick="utSubmit()" ${utAns[q.id]?"":"disabled"}>See Results ✨</button>`}
       </div>
     </div>`;
 }
-function selectUT(oid){const q=utQs[utIdx];utAns[q.id]=oid;renderAnalysisPanel();}
-function utBack(){if(utIdx>0){utIdx--;renderAnalysisPanel();}}
-function utNext(){if(utIdx<utQs.length-1){utIdx++;renderAnalysisPanel();}}
+
+function selectUT(oid){ const q=utQs[utIdx]; utAns[q.id]=oid; renderAnalysisPanel(); }
+function utBack(){ if(utIdx>0){utIdx--;renderAnalysisPanel();} }
+function utNext(){ if(utIdx<utQs.length-1){utIdx++;renderAnalysisPanel();} }
+
 async function utSubmit(){
-  const{data,ok}=await api("/quiz/undertone/submit","POST",{answers:utAns});
+  const {data,ok}=await api("/quiz/undertone/submit","POST",{answers:utAns});
   if(!ok){toast(data.error||"Submission failed","err");return;}
-  userUndertone=data.undertone;skinState="result";renderAnalysisPanel();
+  userUndertone=data.undertone;
+  skinState="result";
+  renderAnalysisPanel();
 }
+
 function renderUTResultInPanel(p){
   const labels={warm:"Warm ☀️",cool:"Cool 🌙",neutral:"Neutral ✨"};
   const badges={warm:"warm-badge",cool:"cool-badge",neutral:"neutral-badge"};
-  const descs={warm:"Your skin has golden, peachy or yellow undertones. Earth tones, warm browns and corals will flatter you most.",cool:"Your skin has pink, rosy or bluish undertones. Jewel tones, cool pastels and berry shades will look stunning on you.",neutral:"You have a balanced mix of warm and cool undertones. Lucky you — most colour families work beautifully on you!"};
+  const descs={
+    warm:"Your skin has golden, peachy or yellow undertones. Earth tones, warm browns and corals will flatter you most.",
+    cool:"Your skin has pink, rosy or bluish undertones. Jewel tones, cool pastels and berry shades will look stunning on you.",
+    neutral:"You have a balanced mix of warm and cool undertones. Lucky you — most colour families work beautifully on you!"
+  };
   const ut=userUndertone;
-  p.innerHTML=`<span class="panel-title-pill">Skin Tone Detection — Result</span>
-    <div class="panel-body"><div class="result-box">
-      <div class="result-emoji-big">🎨</div>
-      <p style="font-size:.78rem;color:var(--text-light);margin-bottom:.35rem;">Your skin undertone is</p>
-      <div class="result-badge ${badges[ut]}">${labels[ut]}</div>
-      <p class="result-desc">${descs[ut]}</p>
-      <button class="btn-action" onclick="skinState='palette';renderAnalysisPanel()">See My Colour Palette 🌈</button>
-      <button class="btn-action outline" onclick="renderTipsInPanel(document.getElementById('analysis-panel'))">Styling Tips 💡</button>
-      <button class="btn-action outline" onclick="skinState='menu';renderAnalysisPanel()">← Back</button>
-    </div></div>`;
+  p.innerHTML=`
+    <span class="panel-title-pill">Skin Tone Detection — Result</span>
+    <div class="panel-body">
+      <div class="result-box">
+        <div class="result-emoji-big">🎨</div>
+        <p style="font-size:.78rem;color:var(--text-light);margin-bottom:.35rem;">Your skin undertone is</p>
+        <div class="result-badge ${badges[ut]}">${labels[ut]}</div>
+        <p class="result-desc">${descs[ut]}</p>
+        <button class="btn-action" onclick="skinState='palette';renderAnalysisPanel()">See My Colour Palette 🌈</button>
+        <button class="btn-action outline" onclick="renderTipsInPanel(document.getElementById('analysis-panel'))">Styling Tips 💡</button>
+        <button class="btn-action outline" onclick="skinState='menu';renderAnalysisPanel()">← Back</button>
+      </div>
+    </div>`;
 }
+
+// ── PALETTE ───────────────────────────────────────────────────
 async function renderPaletteInPanel(p){
   if(!userUndertone){toast("Complete the undertone quiz first","err");skinState="quiz";startUTQuiz();return;}
-  if(!paletteData){const{data,ok}=await api("/palette");if(!ok){toast(data.error,"err");return;}paletteData=data.palette;}
-  palTab=palTab||"clothing";const pd=paletteData[palTab];
-  p.innerHTML=`<span class="panel-title-pill">Colour Analysis — ${userUndertone.charAt(0).toUpperCase()+userUndertone.slice(1)} Undertone</span>
+  if(!paletteData){
+    const {data,ok}=await api("/palette");
+    if(!ok){toast(data.error,"err");return;}
+    paletteData=data.palette;
+  }
+  palTab=palTab||"clothing";
+  const pd=paletteData[palTab];
+  p.innerHTML=`
+    <span class="panel-title-pill">Colour Analysis — ${userUndertone.charAt(0).toUpperCase()+userUndertone.slice(1)} Undertone</span>
     <div class="panel-body">
       <div class="palette-tabs">
         <button class="ptab ${palTab==='clothing'?'active':''}" onclick="palTab='clothing';renderPaletteInPanel(document.getElementById('analysis-panel'))">👗 Clothing</button>
-        <button class="ptab ${palTab==='makeup'?'active':''}" onclick="palTab='makeup';renderPaletteInPanel(document.getElementById('analysis-panel'))">💄 Makeup</button>
+        <button class="ptab ${palTab==='makeup'?'active':''}"   onclick="palTab='makeup';renderPaletteInPanel(document.getElementById('analysis-panel'))">💄 Makeup</button>
       </div>
       <div class="sec-label">✦ Recommended</div>
-      <div class="swatch-grid">${pd.rec.map(c=>`<div class="swatch-item"><div class="swatch-color" style="background:${c.h}"></div><div class="swatch-label"><div class="swatch-name">${c.n}</div><div class="swatch-hex">${c.h}</div></div></div>`).join("")}</div>
+      <div class="swatch-grid">
+        ${pd.rec.map(c=>`
+          <div class="swatch-item">
+            <div class="swatch-color" style="background:${c.h}"></div>
+            <div class="swatch-label"><div class="swatch-name">${c.n}</div><div class="swatch-hex">${c.h}</div></div>
+          </div>`).join("")}
+      </div>
       <div class="sec-label" style="color:#d44;">✗ Avoid</div>
-      <div class="swatch-grid">${pd.avoid.map(c=>`<div class="swatch-item"><div class="swatch-color" style="background:${c.h};opacity:.55;"></div><div class="swatch-label"><div class="swatch-name">${c.n}</div><div class="avoid-reason">${c.r}</div></div></div>`).join("")}</div>
+      <div class="swatch-grid">
+        ${pd.avoid.map(c=>`
+          <div class="swatch-item">
+            <div class="swatch-color" style="background:${c.h};opacity:.55;"></div>
+            <div class="swatch-label"><div class="swatch-name">${c.n}</div><div class="avoid-reason">${c.r}</div></div>
+          </div>`).join("")}
+      </div>
       <button class="btn-action outline" onclick="skinState='result';renderAnalysisPanel()">← Back</button>
     </div>`;
 }
+
+// ── TIPS ──────────────────────────────────────────────────────
 async function renderTipsInPanel(p){
   if(!userUndertone){toast("Complete the undertone quiz first","err");return;}
-  const{data,ok}=await api("/tips");if(!ok){toast(data.error,"err");return;}
+  const {data,ok}=await api("/tips");
+  if(!ok){toast(data.error,"err");return;}
   skinState="tips";
-  p.innerHTML=`<span class="panel-title-pill">Styling Tips — ${userUndertone.charAt(0).toUpperCase()+userUndertone.slice(1)}</span>
+  p.innerHTML=`
+    <span class="panel-title-pill">Styling Tips — ${userUndertone.charAt(0).toUpperCase()+userUndertone.slice(1)}</span>
     <div class="panel-body">
-      ${data.tips.map(t=>`<div class="tip-item"><span class="tip-emo">${t.emoji}</span><div style="flex:1;"><div class="tip-cat">${t.cat}</div><div class="tip-txt">${t.tip}</div></div><button class="bm-btn ${bookmarks.has(t.id)?'on':''}" onclick="toggleBM('${t.id}',this)">${bookmarks.has(t.id)?'★':'☆'}</button></div>`).join("")}
+      ${data.tips.map(t=>`
+        <div class="tip-item">
+          <span class="tip-emo">${t.emoji}</span>
+          <div style="flex:1;">
+            <div class="tip-cat">${t.cat}</div>
+            <div class="tip-txt">${t.tip}</div>
+          </div>
+          <button class="bm-btn ${bookmarks.has(t.id)?'on':''}" onclick="toggleBM('${t.id}',this)">${bookmarks.has(t.id)?'★':'☆'}</button>
+        </div>`).join("")}
       <button class="btn-action outline" onclick="skinState='result';renderAnalysisPanel()">← Back</button>
     </div>`;
 }
+
 async function toggleBM(tipId,btn){
-  const{data,ok}=await api("/bookmarks","POST",{tip_id:tipId});if(!ok)return;
+  const {data,ok}=await api("/bookmarks","POST",{tip_id:tipId});
+  if(!ok)return;
   if(data.bookmarked){bookmarks.add(tipId);btn.className="bm-btn on";btn.textContent="★";toast("Bookmarked ★");}
   else{bookmarks.delete(tipId);btn.className="bm-btn";btn.textContent="☆";toast("Removed bookmark");}
 }
-function renderFacePanel(p){p.innerHTML=`<span class="panel-title-pill">Face Shape Mapping</span>
-  <div class="panel-body"><div style="text-align:center;padding:2rem;color:var(--text-light);">
-  <div style="font-size:2rem;margin-bottom:.7rem;">🪞</div>
-  <div style="font-family:var(--font-s);font-size:1.1rem;color:var(--text-med);margin-bottom:.5rem;">Coming in Sprint 2</div>
-  <div style="font-size:.82rem;">Upload a selfie to map your face shape and get hairstyle, hijab &amp; earring recommendations.</div>
-  <button class="btn-action outline" style="margin-top:1rem;" onclick="setAnalysisTab('skin')">← Back to Skin Tone</button>
-  </div></div>`;}
+
+// ── FACE SHAPE PANEL (Sprint 2 placeholder) ───────────────────
+function renderFacePanel(p){
+  p.innerHTML=`
+    <span class="panel-title-pill">Face Shape Mapping</span>
+    <div class="panel-body">
+      <div style="text-align:center;padding:2rem;color:var(--text-light);">
+        <div style="font-size:2rem;margin-bottom:.7rem;">🪞</div>
+        <div style="font-family:var(--font-s);font-size:1.1rem;color:var(--text-med);margin-bottom:.5rem;">Coming in Sprint 2</div>
+        <div style="font-size:.82rem;">Upload a selfie to map your face shape and get hairstyle, hijab &amp; earring recommendations.</div>
+        <button class="btn-action outline" style="margin-top:1rem;" onclick="setAnalysisTab('skin')">← Back to Skin Tone</button>
+      </div>
+    </div>`;
+}
+
+// ── BODY TYPE PANEL ───────────────────────────────────────────
 function renderBodyPanel(p){
-  if(userBodyType){renderBTResultInPanel(p,null);return;}
-  if(btQs.length===0){loadBTQuiz(p);return;}
+  if(userBodyType){ renderBTResultInPanel(p,null); return; }
+  if(btQs.length===0){ loadBTQuiz(p); return; }
   renderBTQuizInPanel(p);
 }
+
 async function loadBTQuiz(p){
-  const{data,ok}=await api("/quiz/bodytype/questions");
+  const {data,ok}=await api("/quiz/bodytype/questions");
   if(!ok){toast("Failed to load quiz","err");return;}
-  btQs=data.questions;btAns={};btIdx=0;renderBTQuizInPanel(p);
+  btQs=data.questions; btAns={}; btIdx=0;
+  renderBTQuizInPanel(p);
 }
+
 function renderBTQuizInPanel(p){
-  const q=btQs[btIdx];if(!q)return;
+  const q=btQs[btIdx]; if(!q) return;
   const pct=Math.round((btIdx/btQs.length)*100);
-  p.innerHTML=`<span class="panel-title-pill">Body Type Assessment</span>
+  p.innerHTML=`
+    <span class="panel-title-pill">Body Type Assessment</span>
     <div class="panel-body">
       <div class="quiz-prog">Question ${btIdx+1} of ${btQs.length}</div>
       <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:${pct}%"></div></div>
       <div class="quiz-q">${q.q}</div>
-      ${q.opts.map(o=>`<div class="opt-card ${btAns[q.id]===o.id?'sel':''}" onclick="selectBT('${o.id}')"><div class="opt-dot"></div><span>${o.t}</span></div>`).join("")}
+      ${q.opts.map(o=>`
+        <div class="opt-card ${btAns[q.id]===o.id?'sel':''}" onclick="selectBT('${o.id}')">
+          <div class="opt-dot"></div><span>${o.t}</span>
+        </div>`).join("")}
       <div class="quiz-nav">
         <button class="btn-qnav" onclick="btBack()" ${btIdx===0?"style='visibility:hidden'":""}>← Back</button>
-        ${btIdx<btQs.length-1?`<button class="btn-qnav primary" onclick="btNext()" ${btAns[q.id]?"":"disabled"}>Next →</button>`:`<button class="btn-qnav primary" onclick="btSubmit()" ${btAns[q.id]?"":"disabled"}>Get My Body Type ✨</button>`}
+        ${btIdx<btQs.length-1
+          ?`<button class="btn-qnav primary" onclick="btNext()" ${btAns[q.id]?"":"disabled"}>Next →</button>`
+          :`<button class="btn-qnav primary" id="bt-submit-btn" onclick="btSubmit()" ${btAns[q.id]?"":"disabled"}>Get My Body Type ✨</button>`}
       </div>
     </div>`;
 }
-function selectBT(oid){const q=btQs[btIdx];btAns[q.id]=oid;renderBodyPanel(document.getElementById("analysis-panel"));}
-function btBack(){if(btIdx>0){btIdx--;renderBodyPanel(document.getElementById("analysis-panel"));}}
-function btNext(){if(btIdx<btQs.length-1){btIdx++;renderBodyPanel(document.getElementById("analysis-panel"));}}
+
+function selectBT(oid){ const q=btQs[btIdx]; btAns[q.id]=oid; renderBodyPanel(document.getElementById("analysis-panel")); }
+function btBack(){ if(btIdx>0){btIdx--;renderBodyPanel(document.getElementById("analysis-panel"));} }
+function btNext(){ if(btIdx<btQs.length-1){btIdx++;renderBodyPanel(document.getElementById("analysis-panel"));} }
+
 async function btSubmit(){
-  const{data,ok}=await api("/quiz/bodytype/submit","POST",{answers:btAns});
+  const {data,ok}=await api("/quiz/bodytype/submit","POST",{answers:btAns});
   if(!ok){toast(data.error||"Submission failed","err");return;}
-  userBodyType=data.body_type;renderBTResultInPanel(document.getElementById("analysis-panel"),data.info);
+  userBodyType=data.body_type;
+  renderBTResultInPanel(document.getElementById("analysis-panel"),data.info);
 }
+
 async function renderBTResultInPanel(p,info){
   if(!info){
-    const{data,ok}=await api("/profile");if(ok)userBodyType=data.body_type;
+    // fetch from profile
+    const {data,ok}=await api("/profile");
+    if(ok) userBodyType=data.body_type;
+    // use local BT info
     const BT={hourglass:{name:"Hourglass",emoji:"⏳",desc:"Balanced shoulders and hips with a well-defined waist.",tips:["Wrap dresses","High-waisted bottoms","Fitted silhouettes","Belted coats"],avoid:["Shapeless boxy cuts","Drop-waist styles"]},pear:{name:"Pear",emoji:"🍐",desc:"Hips wider than shoulders — create balance up top.",tips:["A-line skirts","Boat necks","Structured jackets","Dark bottoms + bright tops"],avoid:["Skinny jeans","Low-rise bottoms"]},apple:{name:"Apple",emoji:"🍎",desc:"Fullness around midsection — elongate the torso.",tips:["V-necks & wrap tops","Empire waist","Monochromatic","Flowy fabrics"],avoid:["Cropped tops","Waist belts"]},rectangle:{name:"Rectangle",emoji:"▬",desc:"Shoulders, waist and hips roughly the same width.",tips:["Peplum tops","Ruffles","Wrap styles","Layering"],avoid:["Boxy silhouettes","Straight tunics"]},inverted_triangle:{name:"Inverted Triangle",emoji:"🔻",desc:"Broader shoulders than hips — add volume below.",tips:["Wide-leg trousers","A-line skirts","Detailed bottoms","Minimal shoulder detail"],avoid:["Puff sleeves","Wide lapels"]}};
     info=BT[userBodyType]||{name:userBodyType,emoji:"✨",desc:"",tips:[],avoid:[]};
   }
-  p.innerHTML=`<span class="panel-title-pill">Body Type Assessment — Result</span>
-    <div class="panel-body"><div class="result-box">
-      <div class="result-emoji-big">${info.emoji}</div>
-      <p style="font-size:.78rem;color:var(--text-light);margin-bottom:.3rem;">Your body type is</p>
-      <div class="result-badge body-badge">${info.name}</div>
-      <p class="result-desc">${info.desc}</p>
-      <div style="text-align:left;margin-top:.5rem;">
-        <div class="sec-label">✦ Style Tips</div>
-        <ul class="bt-tips">${info.tips.map(t=>`<li>${t}</li>`).join("")}</ul>
-        <div class="sec-label" style="color:#d44;margin-top:.6rem;">✗ Avoid</div>
-        <ul class="bt-tips bt-avoid">${info.avoid.map(a=>`<li>${a}</li>`).join("")}</ul>
+  p.innerHTML=`
+    <span class="panel-title-pill">Body Type Assessment — Result</span>
+    <div class="panel-body">
+      <div class="result-box">
+        <div class="result-emoji-big">${info.emoji}</div>
+        <p style="font-size:.78rem;color:var(--text-light);margin-bottom:.3rem;">Your body type is</p>
+        <div class="result-badge body-badge">${info.name}</div>
+        <p class="result-desc">${info.desc}</p>
+        <div style="text-align:left;margin-top:.5rem;">
+          <div class="sec-label">✦ Style Tips</div>
+          <ul class="bt-tips">${info.tips.map(t=>`<li>${t}</li>`).join("")}</ul>
+          <div class="sec-label" style="color:#d44;margin-top:.6rem;">✗ Avoid</div>
+          <ul class="bt-tips bt-avoid">${info.avoid.map(a=>`<li>${a}</li>`).join("")}</ul>
+        </div>
+        <button class="btn-action outline" style="margin-top:.8rem;" onclick="userBodyType=null;btQs=[];renderBodyPanel(document.getElementById('analysis-panel'))">Retake Quiz</button>
       </div>
-      <button class="btn-action outline" style="margin-top:.8rem;" onclick="userBodyType=null;btQs=[];renderBodyPanel(document.getElementById('analysis-panel'))">Retake Quiz</button>
-    </div></div>`;
+    </div>`;
 }
+
+// ── WARDROBE ──────────────────────────────────────────────────
 async function loadWardrobe(){
-  const{data,ok}=await api("/wardrobe");if(!ok){toast("Could not load wardrobe","err");return;}
-  wardrobeItems=data.items;renderWardrobeGrid();
+  const {data,ok}=await api("/wardrobe");
+  if(!ok){toast("Could not load wardrobe","err");return;}
+  wardrobeItems=data.items;
+  renderWardrobeGrid();
 }
+
 function renderWardrobeGrid(){
-  const area=document.getElementById("wardrobe-grid-area");if(!area)return;
+  const area=document.getElementById("wardrobe-grid-area");
+  if(!area)return;
   if(!wardrobeItems.length){area.innerHTML='<div style="font-size:.82rem;color:var(--text-light);padding:.5rem 0;">Your wardrobe is empty. Add some items!</div>';return;}
-  area.innerHTML=`<div class="sec-label" style="margin-top:.6rem;">My Wardrobe (${wardrobeItems.length} items)</div>
-    <div class="wardrobe-grid">${wardrobeItems.map(it=>`<div class="wardrobe-card"><div class="wardrobe-card-img">👗</div><div class="wardrobe-card-info"><div class="wardrobe-card-name">${it.category}</div><div class="wardrobe-card-cat">${it.style_tag}</div></div><button class="wardrobe-del" onclick="delItem(${it.id})">✕</button></div>`).join("")}</div>`;
+  area.innerHTML=`
+    <div class="sec-label" style="margin-top:.6rem;">My Wardrobe (${wardrobeItems.length} items)</div>
+    <div class="wardrobe-grid">
+      ${wardrobeItems.map(it=>`
+        <div class="wardrobe-card">
+          <div class="wardrobe-card-img">👗</div>
+          <div class="wardrobe-card-info">
+            <div class="wardrobe-card-name">${it.category}</div>
+            <div class="wardrobe-card-cat">${it.style_tag}</div>
+          </div>
+          <button class="wardrobe-del" onclick="delItem(${it.id})">✕</button>
+        </div>`).join("")}
+    </div>`;
 }
-function showAddWardrobeForm(){const f=document.getElementById("wardrobe-add-form");if(f)f.style.display=f.style.display==="none"?"block":"none";}
+
+function showAddWardrobeForm(){
+  const f=document.getElementById("wardrobe-add-form");
+  if(f) f.style.display=f.style.display==="none"?"block":"none";
+}
+
 async function doAddItem(){
   const cat=document.getElementById("wd-cat")?.value||"Top";
   const style=document.getElementById("wd-style")?.value||"Casual";
-  const{data,ok}=await api("/wardrobe","POST",{filename:"item.jpg",category:cat,style_tag:style});
+  const {data,ok}=await api("/wardrobe","POST",{filename:"item.jpg",category:cat,style_tag:style});
   if(!ok){toast("Failed to add item","err");return;}
-  toast("Item added to wardrobe 👗");wardrobeItems.push(data);renderWardrobeGrid();
-  const f=document.getElementById("wardrobe-add-form");if(f)f.style.display="none";
+  toast("Item added to wardrobe 👗");
+  wardrobeItems.push(data);
+  renderWardrobeGrid();
+  const f=document.getElementById("wardrobe-add-form");
+  if(f) f.style.display="none";
 }
+
 async function delItem(id){
-  await api("/wardrobe/"+id,"DELETE");wardrobeItems=wardrobeItems.filter(i=>i.id!==id);renderWardrobeGrid();toast("Item removed");
+  await api("/wardrobe/"+id,"DELETE");
+  wardrobeItems=wardrobeItems.filter(i=>i.id!==id);
+  renderWardrobeGrid();
+  toast("Item removed");
 }
+
 async function generateOutfit(){
-  const{data,ok}=await api("/wardrobe/outfit","POST",{});
-  const area=document.getElementById("outfit-result-area");if(!area)return;
+  const {data,ok}=await api("/wardrobe/outfit","POST",{});
+  const area=document.getElementById("outfit-result-area");
+  if(!area) return;
   if(!ok){area.innerHTML=`<div style="font-size:.8rem;color:var(--rose);margin-top:.5rem;">${data.error}</div>`;return;}
-  area.innerHTML=`<div class="outfit-result"><div class="outfit-result-title">✦ Suggested Outfit</div><div class="outfit-items">${data.outfit.map(i=>`<div class="outfit-chip">👗 ${i.category} (${i.style_tag})</div>`).join("")}</div>${data.accessory_tip?`<div style="font-size:.75rem;color:var(--text-med);margin-top:.5rem;">💡 ${data.accessory_tip}</div>`:""}</div>`;
+  area.innerHTML=`
+    <div class="outfit-result">
+      <div class="outfit-result-title">✦ Suggested Outfit</div>
+      <div class="outfit-items">
+        ${data.outfit.map(i=>`<div class="outfit-chip">👗 ${i.category} (${i.style_tag})</div>`).join("")}
+      </div>
+      ${data.accessory_tip?`<div style="font-size:.75rem;color:var(--text-med);margin-top:.5rem;">💡 ${data.accessory_tip}</div>`:""}
+    </div>`;
 }
+
 function previewWardrobeImg(input){
   if(!input.files[0])return;
   const reader=new FileReader();
-  reader.onload=e=>{const box=document.getElementById("wd-img-preview");if(box)box.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" alt="preview"/>`;};
+  reader.onload=e=>{
+    const box=document.getElementById("wd-img-preview");
+    if(box) box.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" alt="preview"/>`;
+  };
   reader.readAsDataURL(input.files[0]);
 }
+
+// init analysis panel when screen opens
+document.getElementById("screen-analysis").addEventListener("click",function(){},true);
+// ensure panel renders when tab is clicked
 const origGo=go;
-window.go=function(id){origGo(id);if(id==="screen-analysis")renderAnalysisPanel();if(id==="screen-wardrobe")loadWardrobe();};
-window.addEventListener("load",()=>{renderAnalysisPanel();});
+window.go=function(id){
+  origGo(id);
+  if(id==="screen-analysis") renderAnalysisPanel();
+  if(id==="screen-wardrobe"){ loadWardrobe(); }
+};
+// initial render
+window.addEventListener("load",()=>{ renderAnalysisPanel(); });
 </script>
 </body>
 </html>
