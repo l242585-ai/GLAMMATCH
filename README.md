@@ -42,11 +42,13 @@ GlamMatch/
 ├── database/
 │   ├── schema.sql          ← Database tables (DDL)
 │   ├── seed.sql            ← Sample test data
-│   └── erd.png             ← Entity Relationship Diagram
+│            
 ├── docs/
+|   |___ Iteration_0.docx 
 │   ├── Iteration_1.docx    ← Sprint 1 report
 │   └── api-docs.md         ← API documentation
 ├── .gitignore
+|__ erd.png             ← Entity Relationship Diagram
 └── README.md
 ```
 
@@ -57,7 +59,7 @@ GlamMatch/
 | User Story | Feature | Status |
 |-----------|---------|--------|
 | US-01 | User Registration & Secure Login | ✅ Complete |
-| US-02 | Undertone Quiz (6 questions) | ✅ Complete |
+| US-02 | Undertone Quiz  | ✅ Complete |
 | US-03 | Personalized Colour Palette | ✅ Complete |
 | US-04 | Styling Tips + Bookmarks | ✅ Complete |
 | US-05 | Body Type Quiz & Recommendations | ✅ Complete |
