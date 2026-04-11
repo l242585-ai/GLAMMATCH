@@ -40,13 +40,14 @@ def init_db():
     c = db()
     c.executescript("""
         CREATE TABLE IF NOT EXISTS users(
-            id        INTEGER PRIMARY KEY AUTOINCREMENT,
-            name      TEXT NOT NULL,
-            email     TEXT UNIQUE NOT NULL,
-            password  TEXT NOT NULL,
-            undertone TEXT,
-            body_type TEXT,
-            created   TEXT DEFAULT(datetime('now'))
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            name       TEXT NOT NULL,
+            email      TEXT UNIQUE NOT NULL,
+            password   TEXT NOT NULL,
+            undertone  TEXT,
+            body_type  TEXT,
+            face_shape TEXT,
+            created    TEXT DEFAULT(datetime('now'))
         );
         CREATE TABLE IF NOT EXISTS wardrobe(
             id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,12 +59,12 @@ def init_db():
             FOREIGN KEY(user_id) REFERENCES users(id)
         );
         CREATE TABLE IF NOT EXISTS quiz_log(
-            id       INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id  INTEGER NOT NULL,
-            type     TEXT NOT NULL,
-            answers  TEXT NOT NULL,
-            result   TEXT NOT NULL,
-            taken    TEXT DEFAULT(datetime('now')),
+            id      INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            type    TEXT NOT NULL,
+            answers TEXT NOT NULL,
+            result  TEXT NOT NULL,
+            taken   TEXT DEFAULT(datetime('now')),
             FOREIGN KEY(user_id) REFERENCES users(id)
         );
         CREATE TABLE IF NOT EXISTS bookmarks(
@@ -72,6 +73,51 @@ def init_db():
             tip_id  TEXT NOT NULL,
             UNIQUE(user_id,tip_id),
             FOREIGN KEY(user_id) REFERENCES users(id)
+        );
+        CREATE TABLE IF NOT EXISTS photo_analysis(
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id     INTEGER NOT NULL,
+            skin_tone   TEXT,
+            undertone   TEXT,
+            face_shape  TEXT,
+            photo_saved INTEGER DEFAULT 0,
+            created_at  TEXT DEFAULT(datetime('now')),
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        );
+        CREATE TABLE IF NOT EXISTS product_recommendations(
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            category     TEXT NOT NULL,
+            sub_category TEXT,
+            undertone    TEXT NOT NULL,
+            brand        TEXT,
+            product_name TEXT NOT NULL,
+            shade_name   TEXT,
+            swatch_color TEXT,
+            product_link TEXT
+        );
+        CREATE TABLE IF NOT EXISTS wishlist(
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id    INTEGER NOT NULL,
+            product_id INTEGER NOT NULL,
+            saved_at   TEXT DEFAULT(datetime('now')),
+            UNIQUE(user_id,product_id),
+            FOREIGN KEY(user_id)    REFERENCES users(id),
+            FOREIGN KEY(product_id) REFERENCES product_recommendations(id)
+        );
+        CREATE TABLE IF NOT EXISTS style_suggestions(
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            face_shape      TEXT NOT NULL,
+            category        TEXT NOT NULL,
+            suggestion_name TEXT NOT NULL,
+            description     TEXT
+        );
+        CREATE TABLE IF NOT EXISTS style_bookmarks(
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id       INTEGER NOT NULL,
+            suggestion_id INTEGER NOT NULL,
+            UNIQUE(user_id,suggestion_id),
+            FOREIGN KEY(user_id)       REFERENCES users(id),
+            FOREIGN KEY(suggestion_id) REFERENCES style_suggestions(id)
         );
     """)
     c.commit(); c.close()
@@ -487,24 +533,44 @@ def del_wardrobe(item_id):
 @app.route("/api/wardrobe/outfit", methods=["POST"])
 @auth
 def gen_outfit():
-    """Generate a simple outfit combination from wardrobe items."""
-    c = db()
-    items = c.execute("SELECT * FROM wardrobe WHERE user_id=?", (request.uid,)).fetchall()
-    ut = c.execute("SELECT undertone FROM users WHERE id=?", (request.uid,)).fetchone()
+    c     = db()
+    items = list(c.execute("SELECT * FROM wardrobe WHERE user_id=?",
+                           (request.uid,)).fetchall())[:20]
+    ut    = c.execute("SELECT undertone FROM users WHERE id=?",
+                      (request.uid,)).fetchone()
     c.close()
+
     if len(items) < 2:
         return jsonify({"error":"Add at least 2 wardrobe items to generate an outfit"}), 400
+
+    d     = request.get_json() or {}
+    event = d.get("event_type","casual")
+
+    hijab_map   = {"warm":"#C9956C","cool":"#A8C5DA","neutral":"#D4C5B0"}
+    undertone   = ut["undertone"] if ut and ut["undertone"] else "neutral"
+    hijab_color = hijab_map.get(undertone,"#D4C5B0")
+
+    tips_map = {"warm":"Pair with gold accessories",
+                "cool":"Pair with silver accessories",
+                "neutral":"Mix metals freely"}
+
     tops  = [i for i in items if i["category"] in ("Top","Shirt","Blouse","Jacket")]
-    bots  = [i for i in items if i["category"] in ("Bottom","Skirt","Trousers","Jeans")]
+    bots  = [i for i in items if i["category"] in ("Bottom","Skirt","Trousers","Jeans","Dress")]
     combo = []
-    if tops:  combo.append(dict(tops[0]))
-    if bots:  combo.append(dict(bots[0]))
-    if not combo: combo = [dict(items[0]), dict(items[1])]
-    tip = ""
-    if ut and ut["undertone"]:
-        tips_map = {"warm":"Pair with gold accessories","cool":"Pair with silver accessories","neutral":"Mix metals freely"}
-        tip = tips_map.get(ut["undertone"],"")
-    return jsonify({"outfit":combo,"accessory_tip":tip})
+    if tops: combo.append(dict(tops[0]))
+    if bots: combo.append(dict(bots[0]))
+    if not combo: combo = [dict(items[0]),dict(items[1])]
+
+    outfits = []
+    for i in range(min(3, len(items)-1)):
+        t = dict(tops[i % len(tops)]) if tops else dict(items[i])
+        b = dict(bots[i % len(bots)]) if bots else dict(items[(i+1)%len(items)])
+        outfits.append({"items":[t,b],"event":event,
+                        "badge":"Perfect Match ✦","hijab_color":hijab_color})
+
+    return jsonify({"outfit":combo,"outfits":outfits,
+                    "accessory_tip":tips_map.get(undertone,""),
+                    "hijab_color":hijab_color,"badge":"Perfect Match ✦"})
 
 # ── Serve frontend ────────────────────────────────────────────────
 @app.route("/", defaults={"p":""})
@@ -514,6 +580,160 @@ def serve(p):
     if p and os.path.exists(fp):
         return send_from_directory(app.static_folder, p)
     return send_from_directory(app.template_folder, "index.html")
+
+# ══════════════════════════════════════════
+# SPRINT 2 ROUTES
+# ══════════════════════════════════════════
+
+# ── US-06 & US-07: Save photo analysis result (from face-api.js frontend)
+@app.route("/api/photo/save-result", methods=["POST"])
+@auth
+def save_photo_result():
+    d          = request.get_json() or {}
+    undertone  = d.get("undertone","neutral")
+    skin_tone  = d.get("skin_tone","medium")
+    face_shape = d.get("face_shape")
+    save_photo = d.get("save_photo", False)
+    swatch     = d.get("swatch_color","#C8A882")
+
+    c = db()
+    c.execute(
+        "INSERT INTO photo_analysis(user_id,skin_tone,undertone,face_shape,photo_saved) VALUES(?,?,?,?,?)",
+        (request.uid, skin_tone, undertone, face_shape, 1 if save_photo else 0)
+    )
+    c.execute("UPDATE users SET undertone=? WHERE id=?",  (undertone,  request.uid))
+    if face_shape:
+        c.execute("UPDATE users SET face_shape=? WHERE id=?", (face_shape, request.uid))
+    c.commit(); c.close()
+    return jsonify({"saved":True,"undertone":undertone,"face_shape":face_shape})
+
+# ── US-07: Get saved face shape
+@app.route("/api/face-shape", methods=["GET"])
+@auth
+def get_face_shape():
+    c  = db()
+    u  = c.execute("SELECT face_shape FROM users WHERE id=?", (request.uid,)).fetchone()
+    c.close()
+    fs = u["face_shape"] if u and u["face_shape"] else None
+    descriptions = {
+        "oval":   "Slightly wider at cheekbones — the most versatile shape.",
+        "round":  "Equal width and length with soft, curved edges.",
+        "square": "Strong angular jaw with roughly equal width and length.",
+        "heart":  "Wider at forehead, narrows to a pointed chin.",
+        "oblong": "Longer than wide with a straight cheek line."
+    }
+    return jsonify({"face_shape":fs,"description":descriptions.get(fs,"")})
+
+# ── US-07: Manual face shape quiz
+FACE_QUIZ = [
+    {"id":1,"q":"Is your forehead wider than your jaw?",
+     "opts":[{"id":"a","t":"Yes, noticeably wider"},{"id":"b","t":"About the same"},{"id":"c","t":"Jaw is wider"}]},
+    {"id":2,"q":"Is your face longer than it is wide?",
+     "opts":[{"id":"a","t":"Yes, quite long"},{"id":"b","t":"Roughly equal"},{"id":"c","t":"Very round"}]},
+    {"id":3,"q":"Do you have a strong angular jawline?",
+     "opts":[{"id":"a","t":"Yes, very angular"},{"id":"b","t":"Somewhat defined"},{"id":"c","t":"Soft and rounded"}]},
+    {"id":4,"q":"Are your cheekbones the widest part of your face?",
+     "opts":[{"id":"a","t":"Yes, prominent"},{"id":"b","t":"Somewhat"},{"id":"c","t":"No, jaw or forehead is wider"}]},
+]
+
+def classify_face(ans):
+    if ans.get("1")=="a" and ans.get("3")=="c": return "heart"
+    if ans.get("2")=="a" and ans.get("3")=="b": return "oblong"
+    if ans.get("3")=="a":                        return "square"
+    if ans.get("2")=="c" or ans.get("3")=="c":  return "round"
+    return "oval"
+
+@app.route("/api/face-shape/quiz/questions", methods=["GET"])
+@auth
+def face_quiz_q(): return jsonify({"questions":FACE_QUIZ})
+
+@app.route("/api/face-shape/quiz/submit", methods=["POST"])
+@auth
+def face_quiz_submit():
+    answers    = (request.get_json() or {}).get("answers",{})
+    face_shape = classify_face(answers)
+    c = db()
+    c.execute("UPDATE users SET face_shape=? WHERE id=?", (face_shape, request.uid))
+    c.execute("INSERT INTO photo_analysis(user_id,face_shape,photo_saved) VALUES(?,?,0)",
+              (request.uid, face_shape))
+    c.commit(); c.close()
+    return jsonify({"face_shape":face_shape})
+
+# ── US-08: Products
+@app.route("/api/products", methods=["GET"])
+@auth
+def get_products():
+    c         = db()
+    u         = c.execute("SELECT undertone FROM users WHERE id=?", (request.uid,)).fetchone()
+    undertone = u["undertone"] if u and u["undertone"] else "neutral"
+    category  = request.args.get("category")
+    q, p      = "SELECT * FROM product_recommendations WHERE undertone=?", [undertone]
+    if category: q += " AND category=?"; p.append(category)
+    products  = c.execute(q, p).fetchall()
+    c.close()
+    return jsonify({"products":[dict(x) for x in products],"undertone":undertone})
+
+# ── US-08: Wishlist
+@app.route("/api/wishlist", methods=["GET","POST"])
+@auth
+def wishlist():
+    c = db()
+    if request.method=="GET":
+        rows = c.execute(
+            "SELECT w.id as wishlist_id, p.* FROM wishlist w "
+            "JOIN product_recommendations p ON w.product_id=p.id WHERE w.user_id=?",
+            (request.uid,)).fetchall()
+        c.close()
+        return jsonify({"wishlist":[dict(r) for r in rows]})
+    pid = (request.get_json() or {}).get("product_id")
+    ex  = c.execute("SELECT id FROM wishlist WHERE user_id=? AND product_id=?",
+                    (request.uid,pid)).fetchone()
+    if ex:
+        c.execute("DELETE FROM wishlist WHERE id=?", (ex["id"],))
+        c.commit(); c.close(); return jsonify({"saved":False})
+    c.execute("INSERT INTO wishlist(user_id,product_id) VALUES(?,?)", (request.uid,pid))
+    c.commit(); c.close(); return jsonify({"saved":True})
+
+# ── US-09: Save favourite outfit
+@app.route("/api/wardrobe/favourite", methods=["POST"])
+@auth
+def save_fav():
+    d = request.get_json() or {}
+    c = db()
+    c.execute("INSERT INTO quiz_log(user_id,type,answers,result) VALUES(?,?,?,?)",
+              (request.uid,"outfit_fav",
+               json.dumps(d.get("item_ids",[])),"saved"))
+    c.commit(); c.close()
+    return jsonify({"message":"Outfit saved ⭐"})
+
+# ── US-10: Style suggestions
+@app.route("/api/style-suggestions", methods=["GET"])
+@auth
+def style_suggestions():
+    c  = db()
+    u  = c.execute("SELECT face_shape FROM users WHERE id=?", (request.uid,)).fetchone()
+    fs = u["face_shape"] if u and u["face_shape"] else "oval"
+    cat= request.args.get("category")
+    q, p = "SELECT * FROM style_suggestions WHERE face_shape=?", [fs]
+    if cat: q += " AND category=?"; p.append(cat)
+    rows = c.execute(q,p).fetchall()
+    c.close()
+    return jsonify({"face_shape":fs,"suggestions":[dict(r) for r in rows]})
+
+# ── US-10: Style bookmarks
+@app.route("/api/bookmarks/style", methods=["POST"])
+@auth
+def style_bookmark():
+    sid = (request.get_json() or {}).get("suggestion_id")
+    c   = db()
+    ex  = c.execute("SELECT id FROM style_bookmarks WHERE user_id=? AND suggestion_id=?",
+                    (request.uid,sid)).fetchone()
+    if ex:
+        c.execute("DELETE FROM style_bookmarks WHERE id=?", (ex["id"],))
+        c.commit(); c.close(); return jsonify({"bookmarked":False})
+    c.execute("INSERT INTO style_bookmarks(user_id,suggestion_id) VALUES(?,?)",
+              (request.uid,sid))
+    c.commit(); c.close(); return jsonify({"bookmarked":True})
 
 if __name__ == "__main__":
     init_db()

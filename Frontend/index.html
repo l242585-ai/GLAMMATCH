@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>GlamMatch</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<!-- SPRINT 2: face-api.js for real face analysis -->
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <style>
 :root{
   --rose:#C0546A;--rose-mid:#CC6B80;--rose-light:#E8A0B0;--rose-pale:#F2C8D0;
@@ -56,23 +58,10 @@ input,select,button{font-family:var(--font-b);}
 .field{width:100%;padding:.6rem .9rem;margin-bottom:.85rem;border:1.5px solid #C8A0A8;border-radius:var(--r);background:#fff;font-size:.88rem;color:var(--text);outline:none;}
 .field:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(192,84,106,.12);}
 .field::placeholder{color:#B09098;}
-
-/* ── UPDATED: btn-submit active vs disabled states ── */
-.btn-submit{
-  width:100%;padding:.65rem;border:none;border-radius:var(--r);
-  background:linear-gradient(135deg,#9A8A9A,#B0A0B0);
-  color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;
-  letter-spacing:.05em;transition:background .25s,opacity .2s;
-}
+.btn-submit{width:100%;padding:.65rem;border:none;border-radius:var(--r);background:linear-gradient(135deg,#9A8A9A,#B0A0B0);color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;letter-spacing:.05em;transition:background .25s,opacity .2s;}
 .btn-submit:not(:disabled):hover{opacity:.88;}
-/* When disabled: stays greyed/muted — same as before */
 .btn-submit:disabled{opacity:.5;cursor:not-allowed;}
-/* When enabled (both fields filled): goes dark rose */
-.btn-submit.ready{
-  background:linear-gradient(135deg,#A03050,#C0546A);
-  opacity:1;
-}
-
+.btn-submit.ready{background:linear-gradient(135deg,#A03050,#C0546A);opacity:1;}
 .err-msg{color:var(--rose);font-size:.78rem;margin-bottom:.6rem;}
 #screen-register{flex-direction:row;background:linear-gradient(160deg,#C85070 0%,#D97A90 30%,#EBB0BC 60%,#F5D0D8 100%);}
 #screen-register.active{display:flex;}
@@ -214,6 +203,10 @@ input,select,button{font-family:var(--font-b);}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:500;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
 .modal{background:#fff;border-radius:14px;padding:1.8rem;max-width:420px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.15);animation:fadeUp .3s ease;}
+.event-chip{padding:.3rem .8rem;border-radius:50px;border:1.5px solid var(--border);background:#fff;font-size:.75rem;cursor:pointer;transition:all .15s;}
+.event-chip:hover{border-color:var(--rose);background:var(--rose-bg);}
+.active-chip{background:var(--rose-pale);border-color:var(--rose);color:var(--rose);}
+.wardrobe-mini-item{font-size:.7rem;padding:.2rem .5rem;background:var(--rose-bg);border-radius:var(--r);margin-bottom:.2rem;display:flex;justify-content:space-between;align-items:center;}
 </style>
 </head>
 <body>
@@ -233,11 +226,9 @@ input,select,button{font-family:var(--font-b);}
     <div class="login-card">
       <h2>Log In</h2>
       <p class="sub">Don't have an account? <a onclick="go('screen-register')">sign in</a></p>
-      <!-- CHANGE 1: oninput added to both fields -->
       <input class="field" type="email" id="li-email" placeholder="Email" oninput="checkLoginBtn()"/>
       <input class="field" type="password" id="li-pw" placeholder="Password" oninput="checkLoginBtn()" onkeydown="if(event.key==='Enter')doLogin()"/>
       <div id="li-err" class="err-msg" style="display:none"></div>
-      <!-- CHANGE 2: disabled attribute added initially -->
       <button class="btn-submit" id="li-btn" onclick="doLogin()" disabled>LOG IN</button>
     </div>
   </div>
@@ -257,12 +248,10 @@ input,select,button{font-family:var(--font-b);}
     <div class="reg-card">
       <h2>Create Account</h2>
       <p class="sub">Already have an account? <a onclick="go('screen-login')">sign in</a></p>
-      <!-- CHANGE 3: oninput added to all three register fields -->
       <input class="field" type="text" id="rg-name" placeholder="Name" oninput="checkRegisterBtn()"/>
       <input class="field" type="email" id="rg-email" placeholder="Email" oninput="checkRegisterBtn()"/>
       <input class="field" type="password" id="rg-pw" placeholder="Password" oninput="checkRegisterBtn()" onkeydown="if(event.key==='Enter')doRegister()"/>
       <div id="rg-err" class="err-msg" style="display:none"></div>
-      <!-- CHANGE 4: disabled attribute added initially -->
       <button class="btn-submit" id="rg-btn" onclick="doRegister()" disabled>sign up</button>
     </div>
   </div>
@@ -275,6 +264,7 @@ input,select,button{font-family:var(--font-b);}
     <div class="nav-link" onclick="go('screen-home')">features</div>
     <div class="nav-link" onclick="go('screen-analysis')">Style Analysis</div>
     <div class="nav-link" onclick="go('screen-wardrobe')">Wardrobe</div>
+    <div class="nav-link" onclick="go('screen-products')">Products</div>
     <div class="nav-link" onclick="go('screen-parlour')">Parlour</div>
     <div class="nav-right">
       <button class="btn-nav-outline" onclick="doLogout()">Sign In</button>
@@ -332,6 +322,7 @@ input,select,button{font-family:var(--font-b);}
     <div class="nav-link" onclick="go('screen-home')">features</div>
     <div class="nav-link active">Style Analysis</div>
     <div class="nav-link" onclick="go('screen-wardrobe')">Wardrobe</div>
+    <div class="nav-link" onclick="go('screen-products')">Products</div>
     <div class="nav-link" onclick="go('screen-parlour')">Parlour</div>
     <div class="nav-right">
       <span style="font-size:.82rem;color:var(--text-light);margin-right:.4rem;" id="nav-name-a"></span>
@@ -365,6 +356,7 @@ input,select,button{font-family:var(--font-b);}
     <div class="nav-link" onclick="go('screen-home')">features</div>
     <div class="nav-link" onclick="go('screen-analysis')">Style Analysis</div>
     <div class="nav-link active">Wardrobe</div>
+    <div class="nav-link" onclick="go('screen-products')">Products</div>
     <div class="nav-link" onclick="go('screen-parlour')">Parlour</div>
     <div class="nav-right">
       <span style="font-size:.82rem;color:var(--text-light);margin-right:.4rem;" id="nav-name-w"></span>
@@ -388,46 +380,120 @@ input,select,button{font-family:var(--font-b);}
       </div>
     </div>
     <div class="panel">
-      <span class="panel-title-pill">My Wardrobe</span>
+  <span class="panel-title-pill">My Wardrobe</span>
+  <div class="panel-body">
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin-bottom:.6rem;">
+
+      <!-- Upper Body -->
+      <div style="border:1.5px solid var(--border);border-radius:var(--r);padding:.6rem;background:#fafafa;">
+        <div style="font-size:.72rem;font-weight:700;color:var(--rose);margin-bottom:.4rem;">👚 Upper Body</div>
+        <select class="wardrobe-select" id="wd-upper-cat">
+          <option>Top</option><option>Shirt</option><option>Blouse</option>
+          <option>Kurta</option><option>Sweater</option><option>Jacket</option>
+          <option>Coat</option><option>Abaya</option>
+        </select>
+        <select class="wardrobe-select" style="margin-top:.3rem;" id="wd-upper-style">
+          <option>Casual</option><option>Formal</option><option>Party</option>
+          <option>Traditional</option><option>Sports</option>
+        </select>
+        <button class="btn-action" style="margin-top:.4rem;width:100%;font-size:.75rem;"
+                onclick="addWardrobeItem('upper')">+ Add</button>
+        <div id="upper-items-list" style="margin-top:.4rem;"></div>
+      </div>
+
+      <!-- Lower Body -->
+      <div style="border:1.5px solid var(--border);border-radius:var(--r);padding:.6rem;background:#fafafa;">
+        <div style="font-size:.72rem;font-weight:700;color:var(--rose);margin-bottom:.4rem;">👖 Lower Body</div>
+        <select class="wardrobe-select" id="wd-lower-cat">
+          <option>Trousers</option><option>Jeans</option><option>Pants</option>
+          <option>Leggings</option><option>Skirt</option><option>Dress</option>
+          <option>Shalwar</option>
+        </select>
+        <select class="wardrobe-select" style="margin-top:.3rem;" id="wd-lower-style">
+          <option>Casual</option><option>Formal</option><option>Party</option>
+          <option>Traditional</option><option>Sports</option>
+        </select>
+        <button class="btn-action" style="margin-top:.4rem;width:100%;font-size:.75rem;"
+                onclick="addWardrobeItem('lower')">+ Add</button>
+        <div id="lower-items-list" style="margin-top:.4rem;"></div>
+      </div>
+
+      <!-- Accessories -->
+      <div style="border:1.5px solid var(--border);border-radius:var(--r);padding:.6rem;background:#fafafa;">
+        <div style="font-size:.72rem;font-weight:700;color:var(--rose);margin-bottom:.4rem;">👜 Accessories</div>
+        <select class="wardrobe-select" id="wd-acc-cat">
+          <option>Hijab</option><option>Dupatta</option><option>Bag</option>
+          <option>Shoes</option><option>Belt</option><option>Scarf</option>
+        </select>
+        <select class="wardrobe-select" style="margin-top:.3rem;" id="wd-acc-style">
+          <option>Casual</option><option>Formal</option><option>Party</option>
+          <option>Traditional</option>
+        </select>
+        <button class="btn-action" style="margin-top:.4rem;width:100%;font-size:.75rem;"
+                onclick="addWardrobeItem('acc')">+ Add</button>
+        <div id="acc-items-list" style="margin-top:.4rem;"></div>
+      </div>
+
+    </div>
+
+    <!-- Event selector + Generate -->
+    <div style="border:1.5px solid var(--border);border-radius:var(--r);padding:.7rem;background:#fff;">
+      <div style="font-size:.78rem;font-weight:700;color:var(--text-med);margin-bottom:.4rem;">Select Event Type</div>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem;">
+        <button class="event-chip active-chip" onclick="selectEventChip('casual',this)">👟 Casual</button>
+        <button class="event-chip" onclick="selectEventChip('formal',this)">👔 Formal</button>
+        <button class="event-chip" onclick="selectEventChip('party',this)">🎉 Party</button>
+        <button class="event-chip" onclick="selectEventChip('traditional',this)">🌸 Traditional</button>
+        <button class="event-chip" onclick="selectEventChip('sports',this)">🏃 Sports</button>
+      </div>
+      <button class="btn-action" style="width:100%;" onclick="generateOutfit()">✦ Generate Outfit Combination</button>
+    </div>
+
+    <div id="outfit-result-area"></div>
+    <div id="wardrobe-grid-area"></div>
+  </div>
+</div>
+  </div>
+</div>
+
+<!-- SCREEN 6 — PRODUCTS (SPRINT 2 NEW) -->
+<div class="screen" id="screen-products">
+  <nav class="topnav">
+    <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
+    <div class="nav-link" onclick="go('screen-home')">features</div>
+    <div class="nav-link" onclick="go('screen-analysis')">Style Analysis</div>
+    <div class="nav-link" onclick="go('screen-wardrobe')">Wardrobe</div>
+    <div class="nav-link active">Products</div>
+    <div class="nav-link" onclick="go('screen-parlour')">Parlour</div>
+    <div class="nav-right">
+      <button class="btn-nav-outline" onclick="doLogout()">Sign Out</button>
+    </div>
+  </nav>
+  <div class="page-title-bar"><span class="page-title-pill">Product Recommendations</span></div>
+  <div class="analysis-body fade">
+    <div class="panel" style="margin-left:0;">
+      <span class="panel-title-pill">Picks for Your Undertone</span>
       <div class="panel-body">
-        <div class="panel-2col wardrobe-2col">
-          <div class="wardrobe-left">
-            <div class="action-row" onclick="loadWardrobe()"><span>View My Wardrobe</span><div class="action-arrow">›</div></div>
-            <div class="action-row" onclick="showAddWardrobeForm()"><span>Upload a clothing item</span><div class="action-arrow">›</div></div>
-            <div class="action-row" onclick="generateOutfit()"><span>Generate an Outfit</span><div class="action-arrow">›</div></div>
-            <div id="wardrobe-add-form" style="display:none;margin-top:.5rem;">
-              <div style="font-size:.78rem;font-weight:700;color:var(--text-med);margin-bottom:.4rem;">Select type of Clothing</div>
-              <select class="wardrobe-select" id="wd-cat"><option>Top</option><option>Shirt</option><option>Blouse</option><option>Bottom</option><option>Skirt</option><option>Trousers</option><option>Jeans</option><option>Dress</option><option>Jacket</option></select>
-              <select class="wardrobe-select" style="margin-top:.4rem;" id="wd-style"><option>Casual</option><option>Formal</option><option>Party</option><option>Traditional</option><option>Sports</option></select>
-              <button class="btn-action" style="margin-top:.6rem;width:100%;" onclick="doAddItem()">Add Item</button>
-            </div>
-            <div id="outfit-result-area"></div>
-          </div>
-          <div class="panel-2col-right">
-            <div style="font-size:.72rem;font-weight:700;color:var(--text-med);margin-bottom:.3rem;">Select type of Clothing</div>
-            <select class="wardrobe-select" id="wd-cat2"><option>Item</option><option>Top</option><option>Bottom</option><option>Dress</option><option>Jacket</option></select>
-            <select class="wardrobe-select" style="margin-top:.35rem;" id="wd-style2"><option>Item</option><option>Casual</option><option>Formal</option><option>Party</option></select>
-            <div class="upload-box-area" style="margin-top:.6rem;">
-              <div class="upload-img-box" id="wd-img-preview"><span style="font-size:2rem;color:var(--border);">🖼️</span></div>
-              <div style="font-size:.7rem;color:var(--text-light);">Upload Image</div>
-              <input type="file" id="wd-file" accept="image/*" style="display:none" onchange="previewWardrobeImg(this)"/>
-              <button class="btn-upload" onclick="document.getElementById('wd-file').click()">Upload</button>
-            </div>
-          </div>
+        <div class="palette-tabs" id="prod-tabs">
+          <button class="ptab active" onclick="loadProducts('makeup',this)">💄 Makeup</button>
+          <button class="ptab" onclick="loadProducts('clothing',this)">👗 Clothing</button>
+          <button class="ptab" onclick="loadWishlist(this)">❤️ Wishlist</button>
         </div>
-        <div id="wardrobe-grid-area"></div>
+        <div id="products-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:.6rem;margin-top:.5rem;"></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- PARLOUR PLACEHOLDER -->
+<!-- SCREEN 7 — PARLOUR -->
 <div class="screen" id="screen-parlour">
   <nav class="topnav">
     <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
     <div class="nav-link" onclick="go('screen-home')">features</div>
     <div class="nav-link" onclick="go('screen-analysis')">Style Analysis</div>
     <div class="nav-link" onclick="go('screen-wardrobe')">Wardrobe</div>
+    <div class="nav-link" onclick="go('screen-products')">Products</div>
     <div class="nav-link active">Parlour</div>
     <div class="nav-right"><button class="btn-nav-outline" onclick="doLogout()">Sign Out</button></div>
   </nav>
@@ -450,49 +516,31 @@ let paletteData=null,palTab="clothing";
 let analysisTab="skin";
 let wardrobeItems=[];
 
-// ════════════════════════════════════════════════════
-// CHANGE 5: checkLoginBtn & checkRegisterBtn functions
-// Button goes dark (ready class) when fields are filled
-// ════════════════════════════════════════════════════
+// ── Login / Register button state ─────────────────────────────
 function checkLoginBtn(){
   const email=document.getElementById("li-email").value.trim();
   const pw=document.getElementById("li-pw").value;
   const btn=document.getElementById("li-btn");
-  const ready=email.length>0 && pw.length>0;
-  btn.disabled=!ready;
-  btn.classList.toggle("ready",ready);
+  const ready=email.length>0&&pw.length>0;
+  btn.disabled=!ready;btn.classList.toggle("ready",ready);
 }
-
 function checkRegisterBtn(){
   const name=document.getElementById("rg-name").value.trim();
   const email=document.getElementById("rg-email").value.trim();
   const pw=document.getElementById("rg-pw").value;
   const btn=document.getElementById("rg-btn");
-  const ready=name.length>0 && email.length>0 && pw.length>0;
-  btn.disabled=!ready;
-  btn.classList.toggle("ready",ready);
+  const ready=name.length>0&&email.length>0&&pw.length>0;
+  btn.disabled=!ready;btn.classList.toggle("ready",ready);
 }
 
-// Colour swatches map for undertone quiz
+// ── Colour swatches for undertone quiz ────────────────────────
 const UT_SWATCHES={
-  "1-a":["#F4A0B0","#E07088","#C85870"],
-  "1-b":["#F5D08A","#E8B860","#D49840"],
-  "1-c":["#F0C4A8","#E0A882","#C89070"],
-  "2-a":["#F0F8FF","#E0EEF8","#D0E4F0"],
-  "2-b":["#FFF8E7","#F5EACE","#EDE0B8"],
-  "2-c":["#FAF5F0","#F0E8DC","#E5D8C8"],
-  "3-a":["#E8E8F0","#C8C8D8","#A8A8C0"],
-  "3-b":["#FFD700","#E8B830","#C89820"],
-  "3-c":["#D8D8D8","#E8C060","#C0A030"],
-  "4-a":["#0F52BA","#7851A9","#FF66CC","#800020"],
-  "4-b":["#C45C3A","#CC5500","#E1AD01","#808000"],
-  "4-c":["#DCAE96","#8CA67B","#C0909A","#008080"],
-  "5-a":["#F08080","#E06070","#C84060"],
-  "5-b":["#D4A060","#C89050","#B87840"],
-  "5-c":["#E88080","#D09060","#C07850"],
-  "6-a":["#8E2D56","#967BB6","#C0909A"],
-  "6-b":["#FF6B6B","#FFAE87","#B7410E"],
-  "6-c":["#C68642","#B76E79","#E8B8A8"],
+  "1-a":["#F4A0B0","#E07088","#C85870"],"1-b":["#F5D08A","#E8B860","#D49840"],"1-c":["#F0C4A8","#E0A882","#C89070"],
+  "2-a":["#F0F8FF","#E0EEF8","#D0E4F0"],"2-b":["#FFF8E7","#F5EACE","#EDE0B8"],"2-c":["#FAF5F0","#F0E8DC","#E5D8C8"],
+  "3-a":["#E8E8F0","#C8C8D8","#A8A8C0"],"3-b":["#FFD700","#E8B830","#C89820"],"3-c":["#D8D8D8","#E8C060","#C0A030"],
+  "4-a":["#0F52BA","#7851A9","#FF66CC","#800020"],"4-b":["#C45C3A","#CC5500","#E1AD01","#808000"],"4-c":["#DCAE96","#8CA67B","#C0909A","#008080"],
+  "5-a":["#F08080","#E06070","#C84060"],"5-b":["#D4A060","#C89050","#B87840"],"5-c":["#E88080","#D09060","#C07850"],
+  "6-a":["#8E2D56","#967BB6","#C0909A"],"6-b":["#FF6B6B","#FFAE87","#B7410E"],"6-c":["#C68642","#B76E79","#E8B8A8"],
 };
 function getSwatchesHTML(qid,oid){
   const colors=UT_SWATCHES[`${qid}-${oid}`];
@@ -500,6 +548,7 @@ function getSwatchesHTML(qid,oid){
   return`<div class="opt-swatches">${colors.map(c=>`<div class="opt-sw" style="background:${c}" title="${c}"></div>`).join("")}</div>`;
 }
 
+// ── Navigation ────────────────────────────────────────────────
 function go(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -523,16 +572,20 @@ function setLoading(id,on,label){
   if(!on&&label)b.dataset.label=label;
 }
 
+// ── App init ──────────────────────────────────────────────────
 window.onload=async()=>{
   if(token){
     const{data,ok}=await api("/profile");
-    if(ok){userName=data.name;userUndertone=data.undertone;userBodyType=data.body_type;bookmarks=new Set(data.bookmarks||[]);setNavNames();go("screen-home");}
-    else{clearSession();go("screen-login");}
-  }else{go("screen-login");}
+    if(ok){
+      userName=data.name;userUndertone=data.undertone;userBodyType=data.body_type;
+      bookmarks=new Set(data.bookmarks||[]);setNavNames();go("screen-home");
+    } else{clearSession();go("screen-login");}
+  } else{go("screen-login");}
 };
 function setNavNames(){["nav-name-a","nav-name-w"].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=userName;});}
 function clearSession(){token=null;localStorage.removeItem("gm_tok");userUndertone=null;userBodyType=null;}
 
+// ── Auth ──────────────────────────────────────────────────────
 async function doLogin(){
   const email=document.getElementById("li-email").value.trim();
   const pw=document.getElementById("li-pw").value;
@@ -546,7 +599,6 @@ async function doLogin(){
   localStorage.setItem("gm_tok",token);
   toast("Welcome back, "+userName+" ✨");setNavNames();go("screen-home");
 }
-
 async function doRegister(){
   const name=document.getElementById("rg-name").value.trim();
   const email=document.getElementById("rg-email").value.trim();
@@ -563,6 +615,7 @@ async function doRegister(){
 }
 function doLogout(){clearSession();go("screen-login");}
 
+// ── Analysis tabs ─────────────────────────────────────────────
 function setAnalysisTab(tab){
   analysisTab=tab;
   ["skin","face","body"].forEach(t=>{document.getElementById("sb-"+t)?.classList.toggle("active",t===tab);});
@@ -575,7 +628,9 @@ function renderAnalysisPanel(){
   else if(analysisTab==="body")renderBodyPanel(p);
 }
 
+// ── SKIN TONE (US-06) ─────────────────────────────────────────
 let skinState="menu",skinUploadFile=null;
+
 function renderSkinPanel(p){
   if(skinState==="menu")p.innerHTML=skinMenuHTML();
   else if(skinState==="quiz")renderUTQuizInPanel(p);
@@ -593,6 +648,7 @@ function skinMenuHTML(){
         <div class="action-row" onclick="startUTQuiz()"><span>Manually identify skin Tone</span><div class="action-arrow">›</div></div>
         ${hasDone?`<div class="action-row" onclick="skinState='palette';renderAnalysisPanel()"><span>Get Colour Analysis</span><div class="action-arrow">›</div></div>`:`<div class="action-row" style="opacity:.5;cursor:not-allowed;"><span>Get Colour Analysis</span><div class="action-arrow">›</div></div>`}
         ${hasDone?`<div style="font-size:.75rem;color:green;margin-top:.3rem;">✓ Undertone saved: <strong>${userUndertone}</strong></div>`:""}
+        <button class="btn-action outline" style="margin-top:.5rem;" onclick="go('screen-home')">← Back to Home</button>
       </div>
       <div class="panel-2col-right"><div class="upload-box-area">
         <div class="upload-img-box" id="skin-img-box"><span style="font-size:2rem;color:var(--border);">🖼️</span></div>
@@ -603,14 +659,16 @@ function skinMenuHTML(){
     </div></div>`;
 }
 function previewSkinImg(input){
-  if(!input.files[0])return;skinUploadFile=input.files[0];
+  if(!input.files[0])return;
+  skinUploadFile=input.files[0];
   const reader=new FileReader();
   reader.onload=e=>{const box=document.getElementById("skin-img-box");if(box)box.innerHTML=`<img src="${e.target.result}" alt="preview"/>`;};
   reader.readAsDataURL(input.files[0]);
   skinState="privacy";renderSkinPanel(document.getElementById("analysis-panel"));
 }
 function skinUploadAction(){document.getElementById("skin-file")?.click();}
-function skinPrivacyHTML(){return`<span class="panel-title-pill">Skin Tone Detection</span>
+function skinPrivacyHTML(){
+  return`<span class="panel-title-pill">Skin Tone Detection</span>
   <div class="panel-body"><div class="panel-2col"><div class="panel-2col-left">
   <div class="action-row" style="opacity:.6;"><span>Upload picture</span><div class="action-arrow">›</div></div>
   <div class="action-row" style="opacity:.6;"><span>Manually identify skin Tone</span><div class="action-arrow">›</div></div>
@@ -620,9 +678,121 @@ function skinPrivacyHTML(){return`<span class="panel-title-pill">Skin Tone Detec
   </div><div class="panel-2col-right"><div class="upload-box-area">
   <div class="upload-img-box" style="background:var(--rose-pale);"><span style="font-size:1rem;color:var(--rose);">📷</span></div>
   <div style="font-size:.7rem;color:var(--text-light);">Upload Image</div><button class="btn-upload">Upload</button>
-  </div></div></div></div>`;}
-function privacyChoice(choice){toast(choice==="keep"?"Photo saved 🔒":"Photo deleted ✓");startUTQuiz();}
+  </div></div></div></div>`;
+}
 
+// SPRINT 2 CHANGE: privacyChoice now triggers real face-api analysis
+function privacyChoice(choice){
+  const save=choice==="keep";
+  toast(save?"Photo saved to profile 🔒":"Photo will be deleted after analysis ✓");
+  if(skinUploadFile){
+    analyzePhotoWithFaceAPI(skinUploadFile,save);
+  } else {
+    startUTQuiz();
+  }
+}
+
+// ── face-api.js: Load models ──────────────────────────────────
+let faceModelsLoaded=false;
+async function loadFaceModels(){
+  if(faceModelsLoaded)return;
+  try{
+    await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+    await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+    faceModelsLoaded=true;
+  }catch(e){console.error("Model load error:",e);}
+}
+
+// ── US-06: Get undertone from pixel RGB ───────────────────────
+function getRGBUndertone(canvas){
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width,h=canvas.height;
+  const x1=Math.floor(w*0.3),y1=Math.floor(h*0.2);
+  const x2=Math.floor(w*0.7),y2=Math.floor(h*0.8);
+  const data=ctx.getImageData(x1,y1,x2-x1,y2-y1).data;
+  let r=0,g=0,b=0,count=0;
+  for(let i=0;i<data.length;i+=4){
+    const brightness=(data[i]+data[i+1]+data[i+2])/3;
+    if(brightness<40||brightness>240)continue;
+    r+=data[i];g+=data[i+1];b+=data[i+2];count++;
+  }
+  if(!count)return{undertone:"neutral",skin_tone:"medium",swatch:"#C8A882",explanation:"Your undertone is Neutral — both warm and cool shades work well on you."};
+  r=Math.round(r/count);g=Math.round(g/count);b=Math.round(b/count);
+  const rb_diff=r-b;
+  let undertone,swatch,explanation;
+  if(rb_diff>25){
+    undertone="warm";swatch=`rgb(${r},${g},${b})`;
+    explanation="Your undertone is Warm — golden, peachy or yellow hues suit you best.";
+  } else if(rb_diff<8){
+    undertone="cool";swatch=`rgb(${r},${g},${b})`;
+    explanation="Your undertone is Cool — pink, rosy or bluish hues complement you most.";
+  } else {
+    undertone="neutral";swatch=`rgb(${r},${g},${b})`;
+    explanation="Your undertone is Neutral — both warm and cool shades work well on you.";
+  }
+  const brightness=(r+g+b)/3;
+  const skin_tone=brightness>210?"light":brightness>170?"medium":brightness>120?"deep":"rich";
+  return{undertone,skin_tone,swatch,explanation};
+}
+
+// ── US-07: Get face shape from landmarks ──────────────────────
+function getFaceShapeFromLandmarks(landmarks){
+  const pts=landmarks.positions;
+  const jawW=Math.abs(pts[16].x-pts[0].x);
+  const foreW=Math.abs(pts[26].x-pts[17].x);
+  const cheekW=Math.abs(pts[15].x-pts[1].x);
+  const faceLen=Math.abs(pts[8].y-pts[27].y);
+  const ratio=faceLen/cheekW;
+  if(foreW>jawW*1.2)return "heart";
+  if(ratio>1.5)return "oblong";
+  if(jawW>cheekW*0.9&&ratio<1.15)return "square";
+  if(ratio<1.05)return "round";
+  return "oval";
+}
+
+// ── Main photo analysis (US-06 + US-07 together) ──────────────
+async function analyzePhotoWithFaceAPI(file,savePhoto){
+  toast("Analyzing your photo... ✨");
+  await loadFaceModels();
+  const img=await createImageBitmap(file);
+  const canvas=document.createElement('canvas');
+  canvas.width=img.width;canvas.height=img.height;
+  canvas.getContext('2d').drawImage(img,0,0);
+  try{
+    const detection=await faceapi
+      .detectSingleFace(canvas,new faceapi.TinyFaceDetectorOptions())
+      .withFaceLandmarks();
+    // US-06: skin tone from pixels
+    const toneResult=getRGBUndertone(canvas);
+    userUndertone=toneResult.undertone;
+    // US-07: face shape from landmarks
+    let detectedFaceShape=null;
+    if(detection){
+      detectedFaceShape=getFaceShapeFromLandmarks(detection.landmarks);
+      faceShape=detectedFaceShape;
+    }
+    // Save to backend
+    await api("/photo/save-result","POST",{
+      undertone:toneResult.undertone,
+      skin_tone:toneResult.skin_tone,
+      face_shape:detectedFaceShape,
+      swatch_color:toneResult.swatch,
+      save_photo:savePhoto
+    });
+    skinState="result";
+    renderAnalysisPanel();
+    toast(detectedFaceShape
+      ?"Analysis done! Undertone: "+toneResult.undertone+", Face: "+detectedFaceShape+" ✨"
+      :"Undertone detected: "+toneResult.undertone+" ✨"
+    );
+  }catch(e){
+    console.error(e);
+    toast("Could not analyze — starting quiz instead","err");
+    startUTQuiz();
+  }
+}
+
+// ── Undertone quiz ────────────────────────────────────────────
 async function startUTQuiz(){
   const{data,ok}=await api("/quiz/undertone/questions");
   if(!ok){toast("Failed to load quiz","err");return;}
@@ -640,7 +810,9 @@ function renderUTQuizInPanel(p){
         <div class="opt-dot"></div><span style="flex:1;">${o.t}</span>${getSwatchesHTML(q.id,o.id)}</div>`).join("")}
       <div class="quiz-nav">
         <button class="btn-qnav" onclick="utBack()" ${utIdx===0?"style='visibility:hidden'":""}>← Back</button>
-        ${utIdx<utQs.length-1?`<button class="btn-qnav primary" onclick="utNext()" ${utAns[q.id]?"":"disabled"}>Next →</button>`:`<button class="btn-qnav primary" onclick="utSubmit()" ${utAns[q.id]?"":"disabled"}>See Results ✨</button>`}
+        ${utIdx<utQs.length-1
+          ?`<button class="btn-qnav primary" onclick="utNext()" ${utAns[q.id]?"":"disabled"}>Next →</button>`
+          :`<button class="btn-qnav primary" onclick="utSubmit()" ${utAns[q.id]?"":"disabled"}>See Results ✨</button>`}
       </div>
     </div>`;
 }
@@ -700,13 +872,178 @@ async function toggleBM(tipId,btn){
   if(data.bookmarked){bookmarks.add(tipId);btn.className="bm-btn on";btn.textContent="★";toast("Bookmarked ★");}
   else{bookmarks.delete(tipId);btn.className="bm-btn";btn.textContent="☆";toast("Removed bookmark");}
 }
-function renderFacePanel(p){p.innerHTML=`<span class="panel-title-pill">Face Shape Mapping</span>
-  <div class="panel-body"><div style="text-align:center;padding:2rem;color:var(--text-light);">
-  <div style="font-size:2rem;margin-bottom:.7rem;">🪞</div>
-  <div style="font-family:var(--font-s);font-size:1.1rem;color:var(--text-med);margin-bottom:.5rem;">Coming in Sprint 2</div>
-  <div style="font-size:.82rem;">Upload a selfie to map your face shape and get hairstyle, hijab &amp; earring recommendations.</div>
-  <button class="btn-action outline" style="margin-top:1rem;" onclick="setAnalysisTab('skin')">← Back to Skin Tone</button>
-  </div></div>`;}
+
+// ── FACE SHAPE MAPPING (US-07) — SPRINT 2 ────────────────────
+let faceState="menu",faceShape=null;
+let faceQuizQs=[],faceQuizAns={},faceQuizIdx=0;
+
+function renderFacePanel(p){
+  if(faceState==="menu")       renderFaceMenu(p);
+  else if(faceState==="quiz")  renderFaceQuizPanel(p);
+  else if(faceState==="result")renderFaceResultPanel(p);
+  else if(faceState==="styles")renderStyleSuggestionsPanel(p);
+}
+
+function renderFaceMenu(p){
+  p.innerHTML=`<span class="panel-title-pill">Face Shape Mapping</span>
+  <div class="panel-body">
+    <div class="panel-2col">
+      <div class="panel-2col-left">
+        <div class="action-row" onclick="document.getElementById('face-file-input').click()">
+          <span>📷 Upload selfie — auto detect face shape</span><div class="action-arrow">›</div>
+        </div>
+        <input type="file" id="face-file-input" accept="image/*" style="display:none" onchange="onFaceUpload(this)"/>
+        <div class="action-row" onclick="startFaceQuiz()">
+          <span>📝 Take manual face shape quiz</span><div class="action-arrow">›</div>
+        </div>
+        ${faceShape?`
+          <div class="action-row" onclick="faceState='result';renderAnalysisPanel()">
+            <span>View my face shape result</span><div class="action-arrow">›</div>
+          </div>
+          <div class="action-row" onclick="faceState='styles';renderAnalysisPanel()">
+            <span>💇 Get hairstyle, hijab &amp; earring suggestions</span><div class="action-arrow">›</div>
+          </div>
+          <div style="font-size:.75rem;color:green;margin-top:.3rem;">✓ Face shape: <strong>${faceShape}</strong></div>`
+        :""}
+      </div>
+      <div class="panel-2col-right">
+        <div class="upload-box-area">
+          <div class="upload-img-box" id="face-preview-box">
+            <span style="font-size:2rem;color:var(--border);">🪞</span>
+          </div>
+          <div style="font-size:.7rem;color:var(--text-light);">Upload Selfie</div>
+          <button class="btn-upload" onclick="document.getElementById('face-file-input').click()">Upload</button>
+        </div>
+      </div>
+    </div>
+    <button class="btn-action outline" style="margin-top:.8rem;" onclick="setAnalysisTab('skin')">← Back to Skin Tone</button>
+  </div>`;
+}
+
+async function onFaceUpload(input){
+  if(!input.files[0])return;
+  const file=input.files[0];
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const box=document.getElementById("face-preview-box");
+    if(box)box.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;" alt="selfie"/>`;
+  };
+  reader.readAsDataURL(file);
+  toast("Detecting face shape... 🪞");
+  await loadFaceModels();
+  const img=await createImageBitmap(file);
+  const canvas=document.createElement('canvas');
+  canvas.width=img.width;canvas.height=img.height;
+  canvas.getContext('2d').drawImage(img,0,0);
+  try{
+    const det=await faceapi
+      .detectSingleFace(canvas,new faceapi.TinyFaceDetectorOptions())
+      .withFaceLandmarks();
+    if(det){
+      faceShape=getFaceShapeFromLandmarks(det.landmarks);
+      await api("/photo/save-result","POST",{face_shape:faceShape,save_photo:false});
+      faceState="result";renderAnalysisPanel();
+      toast("Face shape detected: "+faceShape+" ✨");
+    } else {
+      toast("No face detected — please try manual quiz","err");
+      startFaceQuiz();
+    }
+  }catch(e){
+    toast("Detection failed — trying manual quiz","err");
+    startFaceQuiz();
+  }
+}
+
+async function startFaceQuiz(){
+  const{data,ok}=await api("/face-shape/quiz/questions");
+  if(!ok){toast("Failed to load quiz","err");return;}
+  faceQuizQs=data.questions;faceQuizAns={};faceQuizIdx=0;
+  faceState="quiz";renderAnalysisPanel();
+}
+
+function renderFaceQuizPanel(p){
+  const q=faceQuizQs[faceQuizIdx];if(!q)return;
+  const pct=Math.round((faceQuizIdx/faceQuizQs.length)*100);
+  p.innerHTML=`<span class="panel-title-pill">Face Shape Quiz</span>
+    <div class="panel-body">
+      <div class="quiz-prog">Question ${faceQuizIdx+1} of ${faceQuizQs.length}</div>
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:${pct}%"></div></div>
+      <div class="quiz-q">${q.q}</div>
+      ${q.opts.map(o=>`<div class="opt-card ${faceQuizAns[q.id]===o.id?'sel':''}"
+        onclick="faceQuizAns[${q.id}]='${o.id}';renderAnalysisPanel()">
+        <div class="opt-dot"></div><span>${o.t}</span></div>`).join("")}
+      <div class="quiz-nav">
+        <button class="btn-qnav" onclick="if(faceQuizIdx>0){faceQuizIdx--;renderAnalysisPanel();}"
+          ${faceQuizIdx===0?"style='visibility:hidden'":""}>← Back</button>
+        ${faceQuizIdx<faceQuizQs.length-1
+          ?`<button class="btn-qnav primary" onclick="faceQuizIdx++;renderAnalysisPanel()"
+              ${faceQuizAns[q.id]?"":"disabled"}>Next →</button>`
+          :`<button class="btn-qnav primary" onclick="submitFaceQuiz()"
+              ${faceQuizAns[q.id]?"":"disabled"}>See My Shape ✨</button>`}
+      </div>
+    </div>`;
+}
+
+async function submitFaceQuiz(){
+  const{data,ok}=await api("/face-shape/quiz/submit","POST",{answers:faceQuizAns});
+  if(!ok){toast(data.error||"Failed","err");return;}
+  faceShape=data.face_shape;faceState="result";renderAnalysisPanel();
+}
+
+const FACE_ICONS={oval:"🥚",round:"⭕",square:"🔲",heart:"💜",oblong:"🫱"};
+const FACE_DESC={
+  oval:"Slightly wider at cheekbones with a gently narrowing forehead and jaw — the most versatile shape.",
+  round:"Roughly equal in width and length with soft, curved edges and full cheeks.",
+  square:"Strong angular jaw with roughly equal width and length — very striking.",
+  heart:"Wider at the forehead and narrows to a pointed chin.",
+  oblong:"Longer than wide with a long, straight cheek line."
+};
+
+function renderFaceResultPanel(p){
+  if(!faceShape){faceState="menu";renderAnalysisPanel();return;}
+  p.innerHTML=`<span class="panel-title-pill">Face Shape — Result</span>
+    <div class="panel-body"><div class="result-box">
+      <div class="result-emoji-big">${FACE_ICONS[faceShape]||"🪞"}</div>
+      <p style="font-size:.78rem;color:var(--text-light);margin-bottom:.35rem;">Your face shape is</p>
+      <div class="result-badge body-badge">${faceShape.charAt(0).toUpperCase()+faceShape.slice(1)}</div>
+      <p class="result-desc">${FACE_DESC[faceShape]||""}</p>
+      <button class="btn-action" onclick="faceState='styles';renderAnalysisPanel()">💇 Get Style Suggestions</button>
+      <button class="btn-action outline" onclick="faceState='menu';renderAnalysisPanel()">← Back</button>
+    </div></div>`;
+}
+
+async function renderStyleSuggestionsPanel(p){
+  const{data,ok}=await api("/style-suggestions");
+  if(!ok){toast("Failed to load suggestions","err");return;}
+  const icons={hairstyle:"💇",hijab:"🧕",earring:"💎"};
+  const labels={hairstyle:"Hairstyles",hijab:"Hijab Styles",earring:"Earrings"};
+  p.innerHTML=`<span class="panel-title-pill">Style Suggestions — ${(data.face_shape||"").charAt(0).toUpperCase()+(data.face_shape||"").slice(1)} Face</span>
+    <div class="panel-body">
+      ${["hairstyle","hijab","earring"].map(cat=>{
+        const list=data.suggestions.filter(s=>s.category===cat);
+        return`<div class="sec-label">${icons[cat]} ${labels[cat]}</div>
+          ${list.map(s=>`<div class="tip-item">
+            <span class="tip-emo">${icons[cat]}</span>
+            <div style="flex:1;">
+              <div class="tip-cat">${s.suggestion_name}</div>
+              <div class="tip-txt">${s.description}</div>
+            </div>
+            <button class="bm-btn" onclick="toggleStyleBM(${s.id},this)">☆</button>
+          </div>`).join("")}`;
+      }).join("")}
+      <button class="btn-action outline" style="margin-top:.8rem;" onclick="faceState='result';renderAnalysisPanel()">← Back</button>
+    </div>`;
+}
+
+async function toggleStyleBM(id,btn){
+  const{data,ok}=await api("/bookmarks/style","POST",{suggestion_id:id});
+  if(!ok)return;
+  btn.className="bm-btn"+(data.bookmarked?" on":"");
+  btn.textContent=data.bookmarked?"★":"☆";
+  toast(data.bookmarked?"Bookmarked ★":"Removed");
+}
+
+// ── BODY TYPE ─────────────────────────────────────────────────
 function renderBodyPanel(p){
   if(userBodyType){renderBTResultInPanel(p,null);return;}
   if(btQs.length===0){loadBTQuiz(p);return;}
@@ -728,7 +1065,9 @@ function renderBTQuizInPanel(p){
       ${q.opts.map(o=>`<div class="opt-card ${btAns[q.id]===o.id?'sel':''}" onclick="selectBT('${o.id}')"><div class="opt-dot"></div><span>${o.t}</span></div>`).join("")}
       <div class="quiz-nav">
         <button class="btn-qnav" onclick="btBack()" ${btIdx===0?"style='visibility:hidden'":""}>← Back</button>
-        ${btIdx<btQs.length-1?`<button class="btn-qnav primary" onclick="btNext()" ${btAns[q.id]?"":"disabled"}>Next →</button>`:`<button class="btn-qnav primary" onclick="btSubmit()" ${btAns[q.id]?"":"disabled"}>Get My Body Type ✨</button>`}
+        ${btIdx<btQs.length-1
+          ?`<button class="btn-qnav primary" onclick="btNext()" ${btAns[q.id]?"":"disabled"}>Next →</button>`
+          :`<button class="btn-qnav primary" onclick="btSubmit()" ${btAns[q.id]?"":"disabled"}>Get My Body Type ✨</button>`}
       </div>
     </div>`;
 }
@@ -743,7 +1082,13 @@ async function btSubmit(){
 async function renderBTResultInPanel(p,info){
   if(!info){
     const{data,ok}=await api("/profile");if(ok)userBodyType=data.body_type;
-    const BT={hourglass:{name:"Hourglass",emoji:"⏳",desc:"Balanced shoulders and hips with a well-defined waist.",tips:["Wrap dresses","High-waisted bottoms","Fitted silhouettes","Belted coats"],avoid:["Shapeless boxy cuts","Drop-waist styles"]},pear:{name:"Pear",emoji:"🍐",desc:"Hips wider than shoulders — create balance up top.",tips:["A-line skirts","Boat necks","Structured jackets","Dark bottoms + bright tops"],avoid:["Skinny jeans","Low-rise bottoms"]},apple:{name:"Apple",emoji:"🍎",desc:"Fullness around midsection — elongate the torso.",tips:["V-necks & wrap tops","Empire waist","Monochromatic","Flowy fabrics"],avoid:["Cropped tops","Waist belts"]},rectangle:{name:"Rectangle",emoji:"▬",desc:"Shoulders, waist and hips roughly the same width.",tips:["Peplum tops","Ruffles","Wrap styles","Layering"],avoid:["Boxy silhouettes","Straight tunics"]},inverted_triangle:{name:"Inverted Triangle",emoji:"🔻",desc:"Broader shoulders than hips — add volume below.",tips:["Wide-leg trousers","A-line skirts","Detailed bottoms","Minimal shoulder detail"],avoid:["Puff sleeves","Wide lapels"]}};
+    const BT={
+      hourglass:{name:"Hourglass",emoji:"⏳",desc:"Balanced shoulders and hips with a well-defined waist.",tips:["Wrap dresses","High-waisted bottoms","Fitted silhouettes","Belted coats"],avoid:["Shapeless boxy cuts","Drop-waist styles"]},
+      pear:{name:"Pear",emoji:"🍐",desc:"Hips wider than shoulders — create balance up top.",tips:["A-line skirts","Boat necks","Structured jackets","Dark bottoms + bright tops"],avoid:["Skinny jeans","Low-rise bottoms"]},
+      apple:{name:"Apple",emoji:"🍎",desc:"Fullness around midsection — elongate the torso.",tips:["V-necks & wrap tops","Empire waist","Monochromatic","Flowy fabrics"],avoid:["Cropped tops","Waist belts"]},
+      rectangle:{name:"Rectangle",emoji:"▬",desc:"Shoulders, waist and hips roughly the same width.",tips:["Peplum tops","Ruffles","Wrap styles","Layering"],avoid:["Boxy silhouettes","Straight tunics"]},
+      inverted_triangle:{name:"Inverted Triangle",emoji:"🔻",desc:"Broader shoulders than hips — add volume below.",tips:["Wide-leg trousers","A-line skirts","Detailed bottoms","Minimal shoulder detail"],avoid:["Puff sleeves","Wide lapels"]}
+    };
     info=BT[userBodyType]||{name:userBodyType,emoji:"✨",desc:"",tips:[],avoid:[]};
   }
   p.innerHTML=`<span class="panel-title-pill">Body Type Assessment — Result</span>
@@ -761,6 +1106,8 @@ async function renderBTResultInPanel(p,info){
       <button class="btn-action outline" style="margin-top:.8rem;" onclick="userBodyType=null;btQs=[];renderBodyPanel(document.getElementById('analysis-panel'))">Retake Quiz</button>
     </div></div>`;
 }
+
+// ── WARDROBE ──────────────────────────────────────────────────
 async function loadWardrobe(){
   const{data,ok}=await api("/wardrobe");if(!ok){toast("Could not load wardrobe","err");return;}
   wardrobeItems=data.items;renderWardrobeGrid();
@@ -783,20 +1130,152 @@ async function doAddItem(){
 async function delItem(id){
   await api("/wardrobe/"+id,"DELETE");wardrobeItems=wardrobeItems.filter(i=>i.id!==id);renderWardrobeGrid();toast("Item removed");
 }
-async function generateOutfit(){
-  const{data,ok}=await api("/wardrobe/outfit","POST",{});
-  const area=document.getElementById("outfit-result-area");if(!area)return;
-  if(!ok){area.innerHTML=`<div style="font-size:.8rem;color:var(--rose);margin-top:.5rem;">${data.error}</div>`;return;}
-  area.innerHTML=`<div class="outfit-result"><div class="outfit-result-title">✦ Suggested Outfit</div><div class="outfit-items">${data.outfit.map(i=>`<div class="outfit-chip">👗 ${i.category} (${i.style_tag})</div>`).join("")}</div>${data.accessory_tip?`<div style="font-size:.75rem;color:var(--text-med);margin-top:.5rem;">💡 ${data.accessory_tip}</div>`:""}</div>`;
-}
 function previewWardrobeImg(input){
   if(!input.files[0])return;
   const reader=new FileReader();
   reader.onload=e=>{const box=document.getElementById("wd-img-preview");if(box)box.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" alt="preview"/>`;};
   reader.readAsDataURL(input.files[0]);
 }
+
+// ── OUTFIT SUGGESTIONS (US-09) — SPRINT 2 ────────────────────
+let selectedEvent="casual";
+function selectEventChip(e, btn){
+  selectedEvent = e;
+  document.querySelectorAll('.event-chip').forEach(b => b.classList.remove('active-chip'));
+  btn.classList.add('active-chip');
+}
+
+async function addWardrobeItem(type){
+  const catMap   = {upper:'wd-upper-cat',  lower:'wd-lower-cat',  acc:'wd-acc-cat'};
+  const styleMap = {upper:'wd-upper-style', lower:'wd-lower-style', acc:'wd-acc-style'};
+  const listMap  = {upper:'upper-items-list',lower:'lower-items-list',acc:'acc-items-list'};
+  const cat   = document.getElementById(catMap[type])?.value   || "Top";
+  const style = document.getElementById(styleMap[type])?.value || "Casual";
+  const{data,ok} = await api("/wardrobe","POST",{filename:"item.jpg",category:cat,style_tag:style});
+  if(!ok){toast("Failed to add item","err");return;}
+  wardrobeItems.push(data);
+  toast("Added: "+cat+" ("+style+") 👗");
+  const list = document.getElementById(listMap[type]);
+  if(list){
+    const div = document.createElement('div');
+    div.className = 'wardrobe-mini-item';
+    div.innerHTML = `<span>${cat} — ${style}</span>
+      <button onclick="delItem(${data.id});this.parentNode.remove()"
+        style="background:none;border:none;cursor:pointer;color:#d44;font-size:.75rem;">✕</button>`;
+    list.appendChild(div);
+  }
+}
+async function generateOutfit(){
+  const{data,ok}=await api("/wardrobe/outfit","POST",{event_type:selectedEvent});
+  const area=document.getElementById("outfit-result-area");if(!area)return;
+  if(!ok){
+    area.innerHTML=`<div style="font-size:.8rem;color:var(--rose);margin-top:.5rem;">${data.error}</div>`;
+    return;
+  }
+  const chips=["casual","formal","party","sporty"].map(e=>
+    `<button onclick="selectedEvent='${e}';generateOutfit()"
+     style="padding:.25rem .7rem;border-radius:50px;border:1.5px solid var(--border);
+            font-size:.75rem;cursor:pointer;margin:.2rem;
+            background:${selectedEvent===e?'var(--rose-pale)':'#fff'};">${e}</button>`
+  ).join("");
+  const outfits=(data.outfits||[]).map((o,i)=>`
+    <div class="outfit-result" style="margin-top:.5rem;">
+      <div class="outfit-result-title">✦ Outfit ${i+1} — ${o.event||selectedEvent}
+        <span style="float:right;font-size:.7rem;padding:.15rem .5rem;background:var(--rose-pale);border-radius:50px;color:var(--rose);">${o.badge||"Good Match"}</span>
+      </div>
+      <div class="outfit-items">
+        ${(o.items||[]).map(it=>`<div class="outfit-chip">👗 ${it.category} (${it.style_tag})</div>`).join("")}
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem;margin-top:.4rem;">
+        <div style="width:22px;height:22px;border-radius:50%;background:${o.hijab_color||"#D4C5B0"};border:1.5px solid #ccc;"></div>
+        <span style="font-size:.72rem;color:var(--text-light);">Hijab colour pairing</span>
+      </div>
+      <button onclick="saveFavourite([${(o.items||[]).map(it=>it.id).join(',')}],this)"
+        style="font-size:.75rem;margin-top:.4rem;padding:.2rem .6rem;border:1.5px solid var(--border);border-radius:50px;cursor:pointer;background:#fff;">
+        ⭐ Save Outfit
+      </button>
+    </div>`).join("");
+  area.innerHTML=`
+    <div style="margin:.3rem 0;font-size:.75rem;font-weight:700;color:var(--text-med);">Select Event:</div>
+    <div>${chips}</div>
+    ${outfits||`<div class="outfit-result"><div class="outfit-result-title">✦ Suggested Outfit</div>
+      <div class="outfit-items">${(data.outfit||[]).map(i=>`<div class="outfit-chip">👗 ${i.category} (${i.style_tag})</div>`).join("")}</div>
+      ${data.accessory_tip?`<div style="font-size:.75rem;color:var(--text-med);margin-top:.5rem;">💡 ${data.accessory_tip}</div>`:""}</div>`}
+    ${data.hijab_color?`<div style="display:flex;align-items:center;gap:.5rem;margin-top:.4rem;">
+      <div style="width:22px;height:22px;border-radius:50%;background:${data.hijab_color};border:1.5px solid #ccc;"></div>
+      <span style="font-size:.72rem;color:var(--text-light);">Hijab colour pairing</span></div>`:""}
+    ${data.accessory_tip?`<div style="font-size:.75rem;color:var(--text-med);margin-top:.4rem;">💡 ${data.accessory_tip}</div>`:""}`;
+}
+
+async function saveFavourite(itemIds,btn){
+  const{data,ok}=await api("/wardrobe/favourite","POST",{item_ids:itemIds,event_type:selectedEvent});
+  if(ok){btn.textContent="⭐ Saved!";btn.disabled=true;toast("Outfit saved ⭐");}
+}
+
+// ── PRODUCTS (US-08) — SPRINT 2 ──────────────────────────────
+async function loadProducts(category,btn){
+  if(btn){
+    document.querySelectorAll("#prod-tabs .ptab").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+  }
+  const{data,ok}=await api("/products?category="+category);
+  if(!ok){toast("Could not load products","err");return;}
+  const grid=document.getElementById("products-grid");if(!grid)return;
+  if(!data.products||!data.products.length){
+    grid.innerHTML='<div style="color:var(--text-light);font-size:.82rem;">No products found for your undertone yet.</div>';
+    return;
+  }
+  grid.innerHTML=data.products.map(p=>`
+    <div style="border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;background:#fff;">
+      <div style="height:55px;background:${p.swatch_color||'#EEE'};"></div>
+      <div style="padding:.4rem .5rem;">
+        <div style="font-size:.78rem;font-weight:700;color:var(--text);">${p.product_name}</div>
+        <div style="font-size:.68rem;color:var(--text-light);">${p.brand||""} ${p.shade_name?"— "+p.shade_name:""}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.4rem;">
+          <a href="${p.product_link}" target="_blank" style="font-size:.7rem;color:var(--rose);font-weight:700;">View →</a>
+          <button onclick="toggleWishlist(${p.id},this)" style="background:none;border:none;cursor:pointer;font-size:.9rem;">🤍</button>
+        </div>
+      </div>
+    </div>`).join("");
+}
+
+async function toggleWishlist(pid,btn){
+  const{data,ok}=await api("/wishlist","POST",{product_id:pid});
+  if(!ok)return;
+  btn.textContent=data.saved?"❤️":"🤍";
+  toast(data.saved?"Saved to wishlist ❤️":"Removed from wishlist");
+}
+
+async function loadWishlist(btn){
+  if(btn){
+    document.querySelectorAll("#prod-tabs .ptab").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+  }
+  const{data,ok}=await api("/wishlist");if(!ok)return;
+  const grid=document.getElementById("products-grid");if(!grid)return;
+  if(!data.wishlist||!data.wishlist.length){
+    grid.innerHTML='<div style="color:var(--text-light);font-size:.82rem;">Your wishlist is empty. Browse products to save items!</div>';
+    return;
+  }
+  grid.innerHTML=data.wishlist.map(p=>`
+    <div style="border:1.5px solid var(--rose-light);border-radius:var(--r);overflow:hidden;background:#fff;">
+      <div style="height:55px;background:${p.swatch_color||'#EEE'};"></div>
+      <div style="padding:.4rem .5rem;">
+        <div style="font-size:.78rem;font-weight:700;">${p.product_name}</div>
+        <div style="font-size:.68rem;color:var(--text-light);">${p.brand||""}</div>
+        <a href="${p.product_link}" target="_blank" style="font-size:.7rem;color:var(--rose);font-weight:700;">View →</a>
+      </div>
+    </div>`).join("");
+}
+
+// ── window.go override ────────────────────────────────────────
 const origGo=go;
-window.go=function(id){origGo(id);if(id==="screen-analysis")renderAnalysisPanel();if(id==="screen-wardrobe")loadWardrobe();};
+window.go=function(id){
+  origGo(id);
+  if(id==="screen-analysis")renderAnalysisPanel();
+  if(id==="screen-wardrobe")loadWardrobe();
+  if(id==="screen-products")loadProducts("makeup");
+};
 window.addEventListener("load",()=>{renderAnalysisPanel();});
 </script>
 </body>
