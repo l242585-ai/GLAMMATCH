@@ -901,6 +901,81 @@ def style_bookmark():
               (request.uid,sid))
     c.commit(); c.close(); return jsonify({"bookmarked":True})
 
+
+# ── Forgot / Reset Password ───────────────────────────────────────
+import secrets, datetime as dt
+
+PASSWORD_RESET_TOKENS = {}   # token -> {user_id, expires}
+
+@app.route("/api/forgot-password", methods=["POST"])
+def forgot_password():
+    email = ((request.get_json() or {}).get("email") or "").strip().lower()
+    if not email or "@" not in email:
+        return jsonify({"error": "Enter a valid email address"}), 400
+    c = db()
+    u = c.execute("SELECT id, name FROM users WHERE email=?", (email,)).fetchone()
+    c.close()
+    # Always return success to prevent email enumeration
+    if u:
+        token = secrets.token_urlsafe(32)
+        PASSWORD_RESET_TOKENS[token] = {
+            "user_id": u["id"],
+            "expires": dt.datetime.utcnow() + dt.timedelta(hours=1)
+        }
+        reset_link = f"http://localhost:5000/?reset_token={token}"
+        # In production send an email; for dev we print to console
+        print(f"\n🔑 PASSWORD RESET LINK for {email}:\n   {reset_link}\n")
+        # Optionally try to send email if smtplib is configured
+        try:
+            import smtplib
+            from email.mime.text import MIMEText
+            SMTP_HOST = os.getenv("SMTP_HOST", "")
+            SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
+            SMTP_USER = os.getenv("SMTP_USER", "")
+            SMTP_PASS = os.getenv("SMTP_PASS", "")
+            FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@glammatch.com")
+            if SMTP_HOST and SMTP_USER:
+                msg = MIMEText(
+                    f"Hi {u['name']},\n\n"
+                    f"Click the link below to reset your GlamMatch password:\n\n"
+                    f"{reset_link}\n\n"
+                    f"This link expires in 1 hour.\n\n"
+                    f"If you didn't request this, ignore this email.\n\n"
+                    f"— The GlamMatch Team"
+                )
+                msg["Subject"] = "GlamMatch — Reset Your Password"
+                msg["From"]    = FROM_EMAIL
+                msg["To"]      = email
+                with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as s:
+                    s.starttls()
+                    s.login(SMTP_USER, SMTP_PASS)
+                    s.sendmail(FROM_EMAIL, [email], msg.as_string())
+                print(f"✉️  Reset email sent to {email}")
+        except Exception as e:
+            print(f"Email send skipped: {e}")
+    return jsonify({"message": "If that email is registered, a reset link has been sent."})
+
+@app.route("/api/reset-password", methods=["POST"])
+def reset_password():
+    d        = request.get_json() or {}
+    token    = (d.get("token") or "").strip()
+    password = d.get("password") or ""
+    if not token or not password:
+        return jsonify({"error": "Token and password are required"}), 400
+    if len(password) < 8 or not any(c.isdigit() for c in password):
+        return jsonify({"error": "Password must be 8+ characters with at least one number"}), 400
+    entry = PASSWORD_RESET_TOKENS.get(token)
+    if not entry:
+        return jsonify({"error": "Invalid or expired reset link"}), 400
+    if dt.datetime.utcnow() > entry["expires"]:
+        del PASSWORD_RESET_TOKENS[token]
+        return jsonify({"error": "Reset link has expired. Please request a new one."}), 400
+    c = db()
+    c.execute("UPDATE users SET password=? WHERE id=?", (hp(password), entry["user_id"]))
+    c.commit(); c.close()
+    del PASSWORD_RESET_TOKENS[token]
+    return jsonify({"message": "Password reset successfully"})
+
 if __name__ == "__main__":
     init_db()
     print("✅ GlamMatch Sprint 1 — http://localhost:5000")
