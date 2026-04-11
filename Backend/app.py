@@ -55,6 +55,7 @@ def init_db():
             filename  TEXT NOT NULL,
             category  TEXT,
             style_tag TEXT,
+            color     TEXT,
             added     TEXT DEFAULT(datetime('now')),
             FOREIGN KEY(user_id) REFERENCES users(id)
         );
@@ -514,13 +515,19 @@ def add_wardrobe():
     filename  = d.get("filename","item.jpg")
     category  = d.get("category","Top")
     style_tag = d.get("style_tag","Casual")
+    color     = d.get("color","")
     c = db()
-    c.execute("INSERT INTO wardrobe(user_id,filename,category,style_tag) VALUES(?,?,?,?)",
-              (request.uid,filename,category,style_tag))
+    try:
+        c.execute("ALTER TABLE wardrobe ADD COLUMN color TEXT")
+        c.commit()
+    except Exception:
+        pass
+    c.execute("INSERT INTO wardrobe(user_id,filename,category,style_tag,color) VALUES(?,?,?,?,?)",
+              (request.uid,filename,category,style_tag,color))
     c.commit()
     item_id = c.execute("SELECT last_insert_rowid()").fetchone()[0]
     c.close()
-    return jsonify({"id":item_id,"filename":filename,"category":category,"style_tag":style_tag}), 201
+    return jsonify({"id":item_id,"filename":filename,"category":category,"style_tag":style_tag,"color":color}), 201
 
 @app.route("/api/wardrobe/<int:item_id>", methods=["DELETE"])
 @auth
@@ -554,23 +561,64 @@ def gen_outfit():
                 "cool":"Pair with silver accessories",
                 "neutral":"Mix metals freely"}
 
-    tops  = [i for i in items if i["category"] in ("Top","Shirt","Blouse","Jacket")]
-    bots  = [i for i in items if i["category"] in ("Bottom","Skirt","Trousers","Jeans","Dress")]
+    badge_map = {
+        "casual":      "Casual Chic ✦",
+        "formal":      "Office Ready ✦",
+        "party":       "Party Perfect ✦",
+        "traditional": "Elegant Traditional ✦",
+        "sports":      "Active Fit ✦"
+    }
+
+    def match_event(item):
+        tag = (item["style_tag"] or "").lower()
+        if event == "sports":      return tag in ("sports","casual")
+        if event == "formal":      return tag in ("formal","party")
+        if event == "party":       return tag in ("party","formal")
+        if event == "traditional": return tag in ("traditional","casual")
+        return True
+
+    event_items = [i for i in items if match_event(i)]
+    if len(event_items) < 2:
+        event_items = items
+
+    tops = [i for i in event_items if i["category"] in ("Top","Shirt","Blouse","Jacket","Kurta","Sweater","Coat","Abaya")]
+    bots = [i for i in event_items if i["category"] in ("Bottom","Skirt","Trousers","Jeans","Pants","Leggings","Dress","Shalwar")]
+    accs = [i for i in event_items if i["category"] in ("Hijab","Dupatta","Bag","Shoes","Belt","Scarf")]
+
     combo = []
     if tops: combo.append(dict(tops[0]))
     if bots: combo.append(dict(bots[0]))
-    if not combo: combo = [dict(items[0]),dict(items[1])]
+    if not combo: combo = [dict(event_items[0]),dict(event_items[1])]
 
+    import random
+    top_pool = tops if tops else event_items
+    bot_pool = bots if bots else event_items
     outfits = []
-    for i in range(min(3, len(items)-1)):
-        t = dict(tops[i % len(tops)]) if tops else dict(items[i])
-        b = dict(bots[i % len(bots)]) if bots else dict(items[(i+1)%len(items)])
-        outfits.append({"items":[t,b],"event":event,
-                        "badge":"Perfect Match ✦","hijab_color":hijab_color})
+    used = set()
+    for _ in range(min(3, max(1, len(event_items)-1))):
+        for attempt in range(10):
+            t = dict(random.choice(top_pool))
+            b = dict(random.choice(bot_pool))
+            key = (t["id"], b["id"])
+            if key not in used or attempt > 5:
+                used.add(key); break
+        outfit_items = [t, b]
+        if accs: outfit_items.append(dict(random.choice(accs)))
+        outfits.append({"items": outfit_items, "event": event,
+                        "badge": badge_map.get(event, "Perfect Match ✦"),
+                        "hijab_color": hijab_color})
 
     return jsonify({"outfit":combo,"outfits":outfits,
                     "accessory_tip":tips_map.get(undertone,""),
-                    "hijab_color":hijab_color,"badge":"Perfect Match ✦"})
+                    "hijab_color":hijab_color,"badge":badge_map.get(event,"Perfect Match ✦")})
+
+# ── Serve models for face-api.js ──────────────────────────────────
+@app.route("/models/<path:filename>")
+def serve_models(filename):
+    models_dir = os.path.join(os.path.dirname(__file__), "models")
+    if os.path.exists(os.path.join(models_dir, filename)):
+        return send_from_directory(models_dir, filename)
+    return jsonify({"error": "Model not found"}), 404
 
 # ── Serve frontend ────────────────────────────────────────────────
 @app.route("/", defaults={"p":""})

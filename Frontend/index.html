@@ -397,6 +397,10 @@ input,select,button{font-family:var(--font-b);}
           <option>Casual</option><option>Formal</option><option>Party</option>
           <option>Traditional</option><option>Sports</option>
         </select>
+        <div style="display:flex;align-items:center;gap:.3rem;margin-top:.3rem;">
+          <input type="color" id="wd-upper-color" value="#FFFFFF" style="width:32px;height:28px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;padding:1px;">
+          <input type="text" id="wd-upper-color-name" placeholder="Colour name" style="flex:1;padding:.3rem .5rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.75rem;outline:none;" oninput="syncColorPicker('upper')">
+        </div>
         <button class="btn-action" style="margin-top:.4rem;width:100%;font-size:.75rem;"
                 onclick="addWardrobeItem('upper')">+ Add</button>
         <div id="upper-items-list" style="margin-top:.4rem;"></div>
@@ -414,6 +418,10 @@ input,select,button{font-family:var(--font-b);}
           <option>Casual</option><option>Formal</option><option>Party</option>
           <option>Traditional</option><option>Sports</option>
         </select>
+        <div style="display:flex;align-items:center;gap:.3rem;margin-top:.3rem;">
+          <input type="color" id="wd-lower-color" value="#FFFFFF" style="width:32px;height:28px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;padding:1px;">
+          <input type="text" id="wd-lower-color-name" placeholder="Colour name" style="flex:1;padding:.3rem .5rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.75rem;outline:none;" oninput="syncColorPicker('lower')">
+        </div>
         <button class="btn-action" style="margin-top:.4rem;width:100%;font-size:.75rem;"
                 onclick="addWardrobeItem('lower')">+ Add</button>
         <div id="lower-items-list" style="margin-top:.4rem;"></div>
@@ -430,6 +438,10 @@ input,select,button{font-family:var(--font-b);}
           <option>Casual</option><option>Formal</option><option>Party</option>
           <option>Traditional</option>
         </select>
+        <div style="display:flex;align-items:center;gap:.3rem;margin-top:.3rem;">
+          <input type="color" id="wd-acc-color" value="#FFFFFF" style="width:32px;height:28px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;padding:1px;">
+          <input type="text" id="wd-acc-color-name" placeholder="Colour name" style="flex:1;padding:.3rem .5rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.75rem;outline:none;" oninput="syncColorPicker('acc')">
+        </div>
         <button class="btn-action" style="margin-top:.4rem;width:100%;font-size:.75rem;"
                 onclick="addWardrobeItem('acc')">+ Add</button>
         <div id="acc-items-list" style="margin-top:.4rem;"></div>
@@ -694,13 +706,31 @@ function privacyChoice(choice){
 
 // ── face-api.js: Load models ──────────────────────────────────
 let faceModelsLoaded=false;
+let faceModelsLoading=false;
 async function loadFaceModels(){
-  if(faceModelsLoaded)return;
-  try{
-    await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
-    await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-    faceModelsLoaded=true;
-  }catch(e){console.error("Model load error:",e);}
+  if(faceModelsLoaded)return true;
+  if(faceModelsLoading)return false;
+  faceModelsLoading=true;
+  // Try local models first (served by Flask at /models), then CDN fallback
+  const modelPaths=[
+    window.location.origin+'/models',
+    'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model'
+  ];
+  for(const path of modelPaths){
+    try{
+      await faceapi.nets.tinyFaceDetector.loadFromUri(path);
+      await faceapi.nets.faceLandmark68Net.loadFromUri(path);
+      faceModelsLoaded=true;
+      faceModelsLoading=false;
+      console.log("Face models loaded from:",path);
+      return true;
+    }catch(e){
+      console.warn("Could not load from",path,"— trying next...",e.message);
+    }
+  }
+  faceModelsLoading=false;
+  console.error("All model paths failed");
+  return false;
 }
 
 // ── US-06: Get undertone from pixel RGB ───────────────────────
@@ -758,38 +788,42 @@ async function analyzePhotoWithFaceAPI(file,savePhoto){
   const canvas=document.createElement('canvas');
   canvas.width=img.width;canvas.height=img.height;
   canvas.getContext('2d').drawImage(img,0,0);
+  // US-06: Always extract skin tone from pixels (no model needed)
+  const toneResult=getRGBUndertone(canvas);
+  userUndertone=toneResult.undertone;
+  let detectedFaceShape=null;
   try{
-    const detection=await faceapi
-      .detectSingleFace(canvas,new faceapi.TinyFaceDetectorOptions())
-      .withFaceLandmarks();
-    // US-06: skin tone from pixels
-    const toneResult=getRGBUndertone(canvas);
-    userUndertone=toneResult.undertone;
-    // US-07: face shape from landmarks
-    let detectedFaceShape=null;
-    if(detection){
-      detectedFaceShape=getFaceShapeFromLandmarks(detection.landmarks);
-      faceShape=detectedFaceShape;
+    const modelsOk=await loadFaceModels();
+    if(modelsOk){
+      const detection=await faceapi
+        .detectSingleFace(canvas,new faceapi.TinyFaceDetectorOptions({inputSize:512,scoreThreshold:0.3}))
+        .withFaceLandmarks();
+      if(detection){
+        detectedFaceShape=getFaceShapeFromLandmarks(detection.landmarks);
+        faceShape=detectedFaceShape;
+      } else {
+        toast("No face clearly detected — skin tone saved, take face quiz for shape","err");
+      }
+    } else {
+      toast("Face detection unavailable — skin tone saved ✓","err");
     }
-    // Save to backend
-    await api("/photo/save-result","POST",{
-      undertone:toneResult.undertone,
-      skin_tone:toneResult.skin_tone,
-      face_shape:detectedFaceShape,
-      swatch_color:toneResult.swatch,
-      save_photo:savePhoto
-    });
-    skinState="result";
-    renderAnalysisPanel();
-    toast(detectedFaceShape
-      ?"Analysis done! Undertone: "+toneResult.undertone+", Face: "+detectedFaceShape+" ✨"
-      :"Undertone detected: "+toneResult.undertone+" ✨"
-    );
   }catch(e){
-    console.error(e);
-    toast("Could not analyze — starting quiz instead","err");
-    startUTQuiz();
+    console.warn("Face detection error:",e);
   }
+  // Always save what we have
+  await api("/photo/save-result","POST",{
+    undertone:toneResult.undertone,
+    skin_tone:toneResult.skin_tone,
+    face_shape:detectedFaceShape,
+    swatch_color:toneResult.swatch,
+    save_photo:savePhoto
+  });
+  skinState="result";
+  renderAnalysisPanel();
+  toast(detectedFaceShape
+    ?"Analysis done! Undertone: "+toneResult.undertone+", Face: "+detectedFaceShape+" ✨"
+    :"Undertone detected: "+toneResult.undertone+" ✨"
+  );
 }
 
 // ── Undertone quiz ────────────────────────────────────────────
@@ -930,14 +964,19 @@ async function onFaceUpload(input){
   };
   reader.readAsDataURL(file);
   toast("Detecting face shape... 🪞");
-  await loadFaceModels();
   const img=await createImageBitmap(file);
   const canvas=document.createElement('canvas');
   canvas.width=img.width;canvas.height=img.height;
   canvas.getContext('2d').drawImage(img,0,0);
+  const modelsOk=await loadFaceModels();
+  if(!modelsOk){
+    toast("Face detection unavailable — using manual quiz instead","err");
+    startFaceQuiz();
+    return;
+  }
   try{
     const det=await faceapi
-      .detectSingleFace(canvas,new faceapi.TinyFaceDetectorOptions())
+      .detectSingleFace(canvas,new faceapi.TinyFaceDetectorOptions({inputSize:512,scoreThreshold:0.3}))
       .withFaceLandmarks();
     if(det){
       faceShape=getFaceShapeFromLandmarks(det.landmarks);
@@ -945,11 +984,12 @@ async function onFaceUpload(input){
       faceState="result";renderAnalysisPanel();
       toast("Face shape detected: "+faceShape+" ✨");
     } else {
-      toast("No face detected — please try manual quiz","err");
-      startFaceQuiz();
+      toast("No face clearly detected — try a front-facing photo with good lighting, or use the quiz","err");
+      renderFaceMenu(document.getElementById("analysis-panel"));
     }
   }catch(e){
-    toast("Detection failed — trying manual quiz","err");
+    console.warn("Detection error:",e);
+    toast("Detection failed — please use the manual quiz","err");
     startFaceQuiz();
   }
 }
@@ -1145,21 +1185,51 @@ function selectEventChip(e, btn){
   btn.classList.add('active-chip');
 }
 
+// Sync color picker with text name input
+function syncColorPicker(type){
+  const nameMap = {upper:'wd-upper-color-name', lower:'wd-lower-color-name', acc:'wd-acc-color-name'};
+  const colorMap= {upper:'wd-upper-color',      lower:'wd-lower-color',      acc:'wd-acc-color'};
+  const namedColors = {
+    'black':'#000000','white':'#FFFFFF','red':'#FF0000','blue':'#0000FF','green':'#008000',
+    'yellow':'#FFFF00','pink':'#FFC0CB','purple':'#800080','orange':'#FFA500','brown':'#8B4513',
+    'grey':'#808080','gray':'#808080','navy':'#000080','teal':'#008080','maroon':'#800000',
+    'olive':'#808000','coral':'#FF6B6B','peach':'#FFCBA4','lavender':'#E6E6FA','cream':'#FFFDD0',
+    'beige':'#F5F5DC','mustard':'#E1AD01','rust':'#B7410E','camel':'#C19A6B','mint':'#98FF98',
+    'turquoise':'#40E0D0','burgundy':'#800020','gold':'#FFD700','silver':'#C0C0C0',
+    'blush':'#F4C2C2','mauve':'#E0B0FF','sage':'#8CA67B','rose':'#FF007F','ivory':'#FFFFF0',
+    'charcoal':'#36454F','tan':'#D2B48C','khaki':'#F0E68C','fuchsia':'#FF00FF','lilac':'#C8A2C8'
+  };
+  const nameEl  = document.getElementById(nameMap[type]);
+  const colorEl = document.getElementById(colorMap[type]);
+  if(!nameEl||!colorEl)return;
+  const val = nameEl.value.trim().toLowerCase();
+  if(namedColors[val]) colorEl.value = namedColors[val];
+}
+
 async function addWardrobeItem(type){
-  const catMap   = {upper:'wd-upper-cat',  lower:'wd-lower-cat',  acc:'wd-acc-cat'};
-  const styleMap = {upper:'wd-upper-style', lower:'wd-lower-style', acc:'wd-acc-style'};
-  const listMap  = {upper:'upper-items-list',lower:'lower-items-list',acc:'acc-items-list'};
-  const cat   = document.getElementById(catMap[type])?.value   || "Top";
-  const style = document.getElementById(styleMap[type])?.value || "Casual";
-  const{data,ok} = await api("/wardrobe","POST",{filename:"item.jpg",category:cat,style_tag:style});
+  const catMap   = {upper:'wd-upper-cat',   lower:'wd-lower-cat',   acc:'wd-acc-cat'};
+  const styleMap = {upper:'wd-upper-style',  lower:'wd-lower-style',  acc:'wd-acc-style'};
+  const colorMap = {upper:'wd-upper-color',  lower:'wd-lower-color',  acc:'wd-acc-color'};
+  const nameMap  = {upper:'wd-upper-color-name',lower:'wd-lower-color-name',acc:'wd-acc-color-name'};
+  const listMap  = {upper:'upper-items-list', lower:'lower-items-list', acc:'acc-items-list'};
+  const cat    = document.getElementById(catMap[type])?.value   || "Top";
+  const style  = document.getElementById(styleMap[type])?.value || "Casual";
+  const color  = document.getElementById(colorMap[type])?.value || "#FFFFFF";
+  const colorName = document.getElementById(nameMap[type])?.value.trim() || color;
+  const{data,ok} = await api("/wardrobe","POST",{filename:"item.jpg",category:cat,style_tag:style,color:colorName||color});
   if(!ok){toast("Failed to add item","err");return;}
   wardrobeItems.push(data);
-  toast("Added: "+cat+" ("+style+") 👗");
+  toast("Added: "+colorName+" "+cat+" ("+style+") 👗");
+  // Reset color fields
+  const nameEl=document.getElementById(nameMap[type]); if(nameEl)nameEl.value="";
+  const colorEl=document.getElementById(colorMap[type]); if(colorEl)colorEl.value="#FFFFFF";
   const list = document.getElementById(listMap[type]);
   if(list){
     const div = document.createElement('div');
     div.className = 'wardrobe-mini-item';
-    div.innerHTML = `<span>${cat} — ${style}</span>
+    div.innerHTML = `<span style="display:flex;align-items:center;gap:.4rem;">
+        <span style="width:12px;height:12px;border-radius:50%;background:${color};border:1px solid #ccc;flex-shrink:0;"></span>
+        ${colorName} ${cat} — ${style}</span>
       <button onclick="delItem(${data.id});this.parentNode.remove()"
         style="background:none;border:none;cursor:pointer;color:#d44;font-size:.75rem;">✕</button>`;
     list.appendChild(div);
@@ -1172,11 +1242,13 @@ async function generateOutfit(){
     area.innerHTML=`<div style="font-size:.8rem;color:var(--rose);margin-top:.5rem;">${data.error}</div>`;
     return;
   }
-  const chips=["casual","formal","party","sporty"].map(e=>
+  const eventLabels={"casual":"👟 Casual","formal":"👔 Formal","party":"🎉 Party","traditional":"🌸 Traditional","sports":"🏃 Sports"};
+  const chips=Object.entries(eventLabels).map(([e,label])=>
     `<button onclick="selectedEvent='${e}';generateOutfit()"
-     style="padding:.25rem .7rem;border-radius:50px;border:1.5px solid var(--border);
+     style="padding:.25rem .7rem;border-radius:50px;border:1.5px solid ${selectedEvent===e?'var(--rose)':'var(--border)'};
             font-size:.75rem;cursor:pointer;margin:.2rem;
-            background:${selectedEvent===e?'var(--rose-pale)':'#fff'};">${e}</button>`
+            background:${selectedEvent===e?'var(--rose-pale)':'#fff'};
+            color:${selectedEvent===e?'var(--rose)':'inherit'};">${label}</button>`
   ).join("");
   const outfits=(data.outfits||[]).map((o,i)=>`
     <div class="outfit-result" style="margin-top:.5rem;">
@@ -1184,7 +1256,11 @@ async function generateOutfit(){
         <span style="float:right;font-size:.7rem;padding:.15rem .5rem;background:var(--rose-pale);border-radius:50px;color:var(--rose);">${o.badge||"Good Match"}</span>
       </div>
       <div class="outfit-items">
-        ${(o.items||[]).map(it=>`<div class="outfit-chip">👗 ${it.category} (${it.style_tag})</div>`).join("")}
+        ${(o.items||[]).map(it=>{
+          const colorDot=it.color?`<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${it.color.startsWith('#')?it.color:'#ccc'};border:1px solid #ccc;margin-right:3px;vertical-align:middle;"></span>`:'';
+          const colorLabel=it.color?` • ${it.color}`:'';
+          return `<div class="outfit-chip">${colorDot}${it.category}${colorLabel} (${it.style_tag})</div>`;
+        }).join("")}
       </div>
       <div style="display:flex;align-items:center;gap:.5rem;margin-top:.4rem;">
         <div style="width:22px;height:22px;border-radius:50%;background:${o.hijab_color||"#D4C5B0"};border:1.5px solid #ccc;"></div>
