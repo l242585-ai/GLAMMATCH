@@ -1,16 +1,37 @@
-💄 GlamMatch — Personalized Styling & Salon Connector App
+# 💄 GlamMatch — Personalized Styling & Salon Connector App
 
-Your personal glam stylist, always on.
+> *Your personal glam stylist, always on.*
 
 GlamMatch is an AI-powered web application that provides personalized colour palette recommendations, styling tips, wardrobe outfit suggestions, makeup product recommendations, and face shape analysis — all based on a user's skin undertone, body type, and facial structure. It also connects users with nearby beauty parlours for appointment booking.
 
-👩‍💻 Team Members
-NameRoll NumberRoleAyza Ahmed24L-2577Project Lead & Requirements EngineerEman Adil24L-2589Backend & Database DeveloperAnoushay Fatima24L-2585Frontend Developer, UI/UX & QA Tester
+---
 
-🛠️ Tech Stack
-LayerTechnologyBackendPython 3.8+, Flask (REST API)FrontendHTML5, CSS3, JavaScript (Single Page App)DatabaseSQLite (auto-created on first run)AuthJWT (JSON Web Tokens, 24-hour expiry)AI / Analysisface-api.js (TinyFaceDetector + FaceLandmark68Net)Version ControlGit & GitHub
+## 👩‍💻 Team Members
 
-📁 Project Structure
+| Name | Roll Number | Role |
+|------|------------|------|
+| Ayza Ahmed | 24L-2577 | Project Lead & Requirements Engineer |
+| Eman Adil | 24L-2589 | Backend & Database Developer |
+| Anoushay Fatima | 24L-2585 | Frontend Developer, UI/UX & QA Tester |
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Backend** | Python 3.8+, Flask (REST API) |
+| **Frontend** | HTML5, CSS3, JavaScript (Single Page App) |
+| **Database** | SQLite (auto-created on first run) |
+| **Auth** | JWT (JSON Web Tokens, 24-hour expiry) |
+| **AI / Analysis** | face-api.js (TinyFaceDetector + FaceLandmark68Net) |
+| **Version Control** | Git & GitHub |
+
+---
+
+## 📁 Project Structure
+
+```
 GlamMatch/
 ├── backend/
 │   ├── app.py                  ← Flask REST API (all routes, all sprints)
@@ -35,78 +56,200 @@ GlamMatch/
 ├── erd.png                     ← Entity Relationship Diagram
 ├── .gitignore
 └── README.md
+```
 
-✅ Sprint 1 Features
-User StoryFeatureStatusUS-01User Registration & Secure Login✅ CompleteUS-02Undertone Quiz (6 questions with colour swatches)✅ CompleteUS-03Personalized Colour Palette (clothing + makeup)✅ CompleteUS-04Styling Tips + Bookmarks✅ CompleteUS-05Body Type Quiz & Recommendations✅ CompleteUS-06Basic Wardrobe Management✅ Complete
+---
 
-✅ Sprint 2 Features
-User StoryFeatureStatusUS-07Photo Upload → Skin Tone Detection (pixel RGB analysis)✅ CompleteUS-08Face Shape Detection via Photo (face-api.js landmarks)✅ CompleteUS-09Manual Face Shape Quiz✅ CompleteUS-10Face Shape Style Suggestions (hairstyle, hijab, earrings)✅ CompleteUS-11Makeup & Clothing Product Recommendations by Undertone✅ CompleteUS-12Product Wishlist✅ CompleteUS-13Event-Based Outfit Generation from Wardrobe✅ CompleteUS-14Style Suggestion Bookmarks✅ Complete
+## ✅ Sprint 1 Features
 
-🔧 Sprint 3 — Bug Fixes
+| User Story | Feature | Status |
+|-----------|---------|--------|
+| US-01 | User Registration & Secure Login | ✅ Complete |
+| US-02 | Undertone Quiz (6 questions with colour swatches) | ✅ Complete |
+| US-03 | Personalized Colour Palette (clothing + makeup) | ✅ Complete |
+| US-04 | Styling Tips + Bookmarks | ✅ Complete |
+| US-05 | Body Type Quiz & Recommendations | ✅ Complete |
+| US-06 | Basic Wardrobe Management | ✅ Complete |
+
+---
+
+## ✅ Sprint 2 Features
+
+| User Story | Feature | Status |
+|-----------|---------|--------|
+| US-07 | Photo Upload → Skin Tone Detection (pixel RGB analysis) | ✅ Complete |
+| US-08 | Face Shape Detection via Photo (face-api.js landmarks) | ✅ Complete |
+| US-09 | Manual Face Shape Quiz | ✅ Complete |
+| US-10 | Face Shape Style Suggestions (hairstyle, hijab, earrings) | ✅ Complete |
+| US-11 | Makeup & Clothing Product Recommendations by Undertone | ✅ Complete |
+| US-12 | Product Wishlist | ✅ Complete |
+| US-13 | Event-Based Outfit Generation from Wardrobe | ✅ Complete |
+| US-14 | Style Suggestion Bookmarks | ✅ Complete |
+
+---
+
+## 🔧 Sprint 3 — Bug Fixes
+
 The following bugs from Sprint 2 were identified and resolved in Sprint 3:
-BugFixWardrobe had no colour fieldAdded colour picker + name input to all wardrobe sections; backend stores color columnOutfit generation returned the same combination for every event typeAdded event-type filtering and randomised selection with deduplicationFace shape photo detection always failedFixed model serving route (/models/) in Flask + added CDN fallback for face-api.js models
 
-🚀 How to Run
-Prerequisites
+| Bug | Fix |
+|-----|-----|
+| Wardrobe had no colour field | Added colour picker + name input to all wardrobe sections; backend stores `color` column |
+| Outfit generation returned the same combination for every event type | Added event-type filtering and randomised selection with deduplication |
+| Face shape photo detection always failed | Fixed model serving route (`/models/`) in Flask + added CDN fallback for face-api.js models |
 
-Python 3.8 or higher
-pip (Python package manager)
-The models/ folder must be inside backend/ (copy the four model files there — see Project Structure above)
+---
 
-Backend Setup
-bashcd backend
+## 🚀 How to Run
+
+### Prerequisites
+- Python 3.8 or higher
+- pip (Python package manager)
+- The `models/` folder must be inside `backend/` (copy the four model files there — see Project Structure above)
+
+### Backend Setup
+
+```bash
+cd backend
 pip install -r requirements.txt
 python app.py
+```
+
 You should see:
+
+```
 ✅ GlamMatch — http://localhost:5000
-Frontend
+```
+
+### Frontend
+
 The Flask server serves the frontend automatically. Open your browser and go to:
+
+```
 http://localhost:5000
+```
 
-Note on face-api.js models: Place the four model files in backend/models/. Flask serves them at /models/. If the local models are unavailable, the app automatically falls back to the vladmandic CDN, so face detection still works without local files.
+> **Note on face-api.js models:** Place the four model files in `backend/models/`. Flask serves them at `/models/`. If the local models are unavailable, the app automatically falls back to the vladmandic CDN, so face detection still works without local files.
 
+---
 
-🌐 Application Screens
-ScreenDescriptionSprintLoginSecure login with email & password1RegisterCreate new account with field validation1HomeLanding page with feature overview and season palette preview1Style Analysis — Skin ToneUpload photo or take quiz → undertone detection + colour palette1–2Style Analysis — Face ShapeUpload selfie or take manual quiz → face shape + style suggestions2Style Analysis — Body Type5-question quiz → body type classification with styling tips1WardrobeAdd clothing items with colour, category & style tag; generate event-based outfits1–3ProductsMakeup & clothing recommendations by undertone; wishlist2ParlourParlour Finder & Booking (Sprint 3 — In Progress)3
+## 🌐 Application Screens
 
-🔌 API Endpoints
-Auth
-MethodEndpointAuthDescriptionPOST/api/register❌Register new userPOST/api/login❌Login, returns JWT tokenGET/api/profile✅Get user profilePOST/api/forgot-password❌Request password resetPOST/api/reset-password❌Reset password with token
-Undertone Quiz & Palette
-MethodEndpointAuthDescriptionGET/api/quiz/undertone/questions✅Get undertone quiz questionsPOST/api/quiz/undertone/submit✅Submit answers, returns undertone resultGET/api/palette✅Get personalized colour paletteGET/api/tips✅Get styling tips for undertonePOST/api/bookmarks✅Toggle tip bookmark
-Body Type Quiz
-MethodEndpointAuthDescriptionGET/api/quiz/bodytype/questions✅Get body type quiz questionsPOST/api/quiz/bodytype/submit✅Submit answers, returns body type result
-Photo Analysis & Face Shape
-MethodEndpointAuthDescriptionPOST/api/photo/save-result✅Save skin tone + face shape from frontend analysisGET/api/face-shape✅Get saved face shape for userGET/api/face-shape/quiz/questions✅Get manual face shape quiz questionsPOST/api/face-shape/quiz/submit✅Submit manual quiz, returns face shape
-Style Suggestions
-MethodEndpointAuthDescriptionGET/api/style-suggestions✅Get hairstyle/hijab/earring suggestions for face shapePOST/api/bookmarks/style✅Toggle style suggestion bookmark
-Wardrobe & Outfits
-MethodEndpointAuthDescriptionGET/api/wardrobe✅Get all wardrobe items for userPOST/api/wardrobe✅Add wardrobe item (category, style_tag, color)DELETE/api/wardrobe/<id>✅Delete wardrobe itemPOST/api/wardrobe/outfit✅Generate event-based outfit combinationsPOST/api/wardrobe/favourite✅Save a favourite outfit
-Products & Wishlist
-MethodEndpointAuthDescriptionGET/api/products✅Get makeup/clothing recommendations by undertoneGET/api/wishlist✅Get user's saved wishlist productsPOST/api/wishlist✅Toggle product in wishlist
+| Screen | Description | Sprint |
+|--------|-------------|--------|
+| **Login** | Secure login with email & password | 1 |
+| **Register** | Create new account with field validation | 1 |
+| **Home** | Landing page with feature overview and season palette preview | 1 |
+| **Style Analysis — Skin Tone** | Upload photo or take quiz → undertone detection + colour palette | 1–2 |
+| **Style Analysis — Face Shape** | Upload selfie or take manual quiz → face shape + style suggestions | 2 |
+| **Style Analysis — Body Type** | 5-question quiz → body type classification with styling tips | 1 |
+| **Wardrobe** | Add clothing items with colour, category & style tag; generate event-based outfits | 1–3 |
+| **Products** | Makeup & clothing recommendations by undertone; wishlist | 2 |
+| **Parlour** | Parlour Finder & Booking *(Sprint 3 — In Progress)* | 3 |
 
-🗄️ Database Tables
-TableDescriptionSprintusersUser accounts — name, email, password hash, undertone, body type, face shape1quiz_logRecords of all quiz submissions with answers and results1wardrobeClothing items per user — category, style tag, colour1–3bookmarksSaved styling tip IDs per user1photo_analysisSkin tone and face shape results from photo uploads2product_recommendationsMakeup and clothing products seeded by undertone2wishlistUser-saved products from product recommendations2style_suggestionsHairstyle, hijab, and earring suggestions per face shape2style_bookmarksUser-saved style suggestions2
+---
 
-🔒 Security Notes
+## 🔌 API Endpoints
 
-Passwords are hashed using SHA-256 before storing
-Authentication uses JWT tokens with a 24-hour expiry
-Never commit the .env file — use .env.example as a template
-Privacy option available when uploading photos (keep or delete after analysis)
-Existing databases automatically migrate to add new columns (e.g., color on wardrobe) without data loss
+### Auth
 
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/register` | ❌ | Register new user |
+| POST | `/api/login` | ❌ | Login, returns JWT token |
+| GET | `/api/profile` | ✅ | Get user profile |
+| POST | `/api/forgot-password` | ❌ | Request password reset |
+| POST | `/api/reset-password` | ❌ | Reset password with token |
 
-📋 Submission Checklist
+### Undertone Quiz & Palette
 
- Repository set to Public
- All team members have commits
- README.md complete and up to date
- Backend with requirements.txt
- Frontend source code (index.html)
- Database schema.sql and seed.sql
- .gitignore configured
- .env.example (no real secrets committed)
- docs/ folder with all iteration documents (Iteration 0–3)
- models/ folder with face-api.js model files
- ERD diagram (erd.png)
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/quiz/undertone/questions` | ✅ | Get undertone quiz questions |
+| POST | `/api/quiz/undertone/submit` | ✅ | Submit answers, returns undertone result |
+| GET | `/api/palette` | ✅ | Get personalized colour palette |
+| GET | `/api/tips` | ✅ | Get styling tips for undertone |
+| POST | `/api/bookmarks` | ✅ | Toggle tip bookmark |
+
+### Body Type Quiz
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/quiz/bodytype/questions` | ✅ | Get body type quiz questions |
+| POST | `/api/quiz/bodytype/submit` | ✅ | Submit answers, returns body type result |
+
+### Photo Analysis & Face Shape
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/photo/save-result` | ✅ | Save skin tone + face shape from frontend analysis |
+| GET | `/api/face-shape` | ✅ | Get saved face shape for user |
+| GET | `/api/face-shape/quiz/questions` | ✅ | Get manual face shape quiz questions |
+| POST | `/api/face-shape/quiz/submit` | ✅ | Submit manual quiz, returns face shape |
+
+### Style Suggestions
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/style-suggestions` | ✅ | Get hairstyle/hijab/earring suggestions for face shape |
+| POST | `/api/bookmarks/style` | ✅ | Toggle style suggestion bookmark |
+
+### Wardrobe & Outfits
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/wardrobe` | ✅ | Get all wardrobe items for user |
+| POST | `/api/wardrobe` | ✅ | Add wardrobe item (category, style_tag, color) |
+| DELETE | `/api/wardrobe/<id>` | ✅ | Delete wardrobe item |
+| POST | `/api/wardrobe/outfit` | ✅ | Generate event-based outfit combinations |
+| POST | `/api/wardrobe/favourite` | ✅ | Save a favourite outfit |
+
+### Products & Wishlist
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/products` | ✅ | Get makeup/clothing recommendations by undertone |
+| GET | `/api/wishlist` | ✅ | Get user's saved wishlist products |
+| POST | `/api/wishlist` | ✅ | Toggle product in wishlist |
+
+---
+
+## 🗄️ Database Tables
+
+| Table | Description | Sprint |
+|-------|-------------|--------|
+| `users` | User accounts — name, email, password hash, undertone, body type, face shape | 1 |
+| `quiz_log` | Records of all quiz submissions with answers and results | 1 |
+| `wardrobe` | Clothing items per user — category, style tag, colour | 1–3 |
+| `bookmarks` | Saved styling tip IDs per user | 1 |
+| `photo_analysis` | Skin tone and face shape results from photo uploads | 2 |
+| `product_recommendations` | Makeup and clothing products seeded by undertone | 2 |
+| `wishlist` | User-saved products from product recommendations | 2 |
+| `style_suggestions` | Hairstyle, hijab, and earring suggestions per face shape | 2 |
+| `style_bookmarks` | User-saved style suggestions | 2 |
+
+---
+
+## 🔒 Security Notes
+
+- Passwords are hashed using SHA-256 before storing
+- Authentication uses JWT tokens with a 24-hour expiry
+- Never commit the `.env` file — use `.env.example` as a template
+- Privacy option available when uploading photos (keep or delete after analysis)
+- Existing databases automatically migrate to add new columns (e.g., `color` on wardrobe) without data loss
+
+---
+
+## 📋 Submission Checklist
+
+- [x] Repository set to Public
+- [x] All team members have commits
+- [x] README.md complete and up to date
+- [x] Backend with `requirements.txt`
+- [x] Frontend source code (`index.html`)
+- [x] Database `schema.sql` and `seed.sql`
+- [x] `.gitignore` configured
+- [x] `.env.example` (no real secrets committed)
+- [x] `docs/` folder with all iteration documents (Iteration 0–3)
+- [x] `models/` folder with face-api.js model files
+- [x] ERD diagram (`erd.png`)
