@@ -1331,6 +1331,25 @@ async function loadProducts(category,btn){
   const{data,ok}=await api("/products?category="+category);
   if(!ok){toast("Could not load products","err");return;}
   const grid=document.getElementById("products-grid");if(!grid)return;
+
+  // ← Quiz nahi liya toh message dikhao
+  if(data.quiz_required || !data.undertone){
+    grid.innerHTML=`
+      <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-light);">
+        <div style="font-size:2.5rem;margin-bottom:.6rem;">🎨</div>
+        <div style="font-family:var(--font-s);font-size:1.1rem;color:var(--text-med);margin-bottom:.4rem;">
+          Complete Your Style Analysis First
+        </div>
+        <div style="font-size:.82rem;margin-bottom:1rem;">
+          Take the undertone quiz to get personalised product recommendations tailored to your skin tone.
+        </div>
+        <button class="btn-action" onclick="go('screen-analysis')">
+          🎨 Take Undertone Quiz
+        </button>
+      </div>`;
+    return;
+  }
+
   if(!data.products||!data.products.length){
     grid.innerHTML='<div style="color:var(--text-light);font-size:.82rem;">No products found for your undertone yet.</div>';
     return;

@@ -823,7 +823,12 @@ def face_quiz_submit():
 def get_products():
     c         = db()
     u         = c.execute("SELECT undertone FROM users WHERE id=?", (request.uid,)).fetchone()
-    undertone = u["undertone"] if u and u["undertone"] else "neutral"
+    undertone = u["undertone"] if u and u["undertone"] else None
+
+    if not undertone:
+        c.close()
+        return jsonify({"products": [], "undertone": None, "quiz_required": True})
+
     category  = request.args.get("category")
     q, p      = "SELECT * FROM product_recommendations WHERE undertone=?", [undertone]
     if category: q += " AND category=?"; p.append(category)
