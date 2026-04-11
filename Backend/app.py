@@ -121,7 +121,115 @@ def init_db():
             FOREIGN KEY(suggestion_id) REFERENCES style_suggestions(id)
         );
     """)
-    c.commit(); c.close()
+    c.commit()
+
+    # ── Seed style_suggestions if empty ──────────────────────────
+    if not c.execute("SELECT 1 FROM style_suggestions LIMIT 1").fetchone():
+        suggestions = [
+            # oval
+            ("oval","hairstyle","Any Length Works","Oval faces suit virtually all hairstyles — long, short, curly, or straight."),
+            ("oval","hairstyle","Side-Swept Bangs","Asymmetric side bangs add drama and complement your balanced proportions beautifully."),
+            ("oval","hairstyle","Voluminous Waves","Loose waves add romance and highlight your naturally symmetrical features."),
+            ("oval","hijab","Wrap Style Hijab","A simple wrap or Turkish style flatters your oval shape perfectly — minimal fuss, maximum elegance."),
+            ("oval","hijab","Draped Shawl","A draped shawl with soft folds adds sophistication and works beautifully with your balanced features."),
+            ("oval","hijab","Turban Style","A neat turban or pin-free wrap draws attention to your symmetrical face with chic simplicity."),
+            ("oval","earring","Statement Drops","Long drop earrings or chandeliers look stunning — your balanced shape carries bold styles effortlessly."),
+            ("oval","earring","Hoops — Any Size","Small, medium, or oversized hoops all work. Oval faces are the most versatile shape for earrings."),
+            ("oval","earring","Geometric Shapes","Angular geometric earrings add modern edge and contrast beautifully with soft oval lines."),
+            # round
+            ("round","hairstyle","Long Layers","Long layered hair creates length and slims a round face — great for adding visual height."),
+            ("round","hairstyle","High Top Knot","A high bun or top knot draws the eye upward, elongating your face shape beautifully."),
+            ("round","hairstyle","Avoid Full Blunt Bobs","Blunt jaw-length cuts add width. Opt for longer styles or asymmetric cuts instead."),
+            ("round","hijab","Tall Volume on Top","Styles with height at the crown — like a high-pinned turban — balance and elongate a round face."),
+            ("round","hijab","V-Shape Front","Hijab styles that form a V or point at the forehead add length and slim the face visually."),
+            ("round","hijab","Avoid Wide Side Volume","Avoid styles that flare wide at the sides — this adds width to an already full face shape."),
+            ("round","earring","Long Drop Earrings","Elongated dangles draw the eye down and add visual length to round faces."),
+            ("round","earring","Angular Studs","Square or rectangular studs add sharp contrast that slims and defines a rounder face."),
+            ("round","earring","Avoid Large Round Hoops","Round earrings echo the face's circular shape — opt for ovals or geometric drops instead."),
+            # square
+            ("square","hairstyle","Soft Waves & Curls","Wavy or curly texture softens angular jawlines and adds feminine contrast to square faces."),
+            ("square","hairstyle","Side Part with Length","A deep side part with hair past the chin balances a strong jaw with asymmetric softness."),
+            ("square","hairstyle","Avoid Blunt Straight Cuts","Straight one-length cuts accentuate squareness — add layers or waves for a softening effect."),
+            ("square","hijab","Rounded Draping","Softly draped hijab styles with rounded edges contrast with angular jaw and soften the overall look."),
+            ("square","hijab","Side Volume","Styles with more volume on one side create pleasing asymmetry that flatters square shapes."),
+            ("square","hijab","Avoid Tight Angular Wraps","Sharp geometric wraps repeat the angular lines of a square face — choose softer draping."),
+            ("square","earring","Oval & Teardrop Earrings","Curved oval or teardrop shapes contrast the angles of a square jaw for a softening effect."),
+            ("square","earring","Hoop Earrings","Medium circular hoops add curves that balance strong angular jawlines beautifully."),
+            ("square","earring","Avoid Sharp Rectangle Earrings","Rectangular bar earrings repeat the angular jaw — choose rounds or soft drops instead."),
+            # heart
+            ("heart","hairstyle","Chin-Length Bob","A bob at jaw level adds width at the chin, balancing a wider forehead beautifully."),
+            ("heart","hairstyle","Side-Swept Fringe","Side bangs minimize a wider forehead and draw attention to your cheekbones instead."),
+            ("heart","hairstyle","Avoid High Volume on Top","Extra volume at the crown emphasizes the widest part — keep fullness lower on heart faces."),
+            ("heart","hijab","Fuller at the Chin","Hijab styles with volume near the jaw balance a pointed chin with a wide forehead."),
+            ("heart","hijab","Avoid Height at Crown","Styles that add height to the top of the head accentuate an already wider forehead."),
+            ("heart","hijab","Layered Draping at Jaw","Layering fabric near the jaw adds width where heart-shaped faces are naturally narrower."),
+            ("heart","earring","Teardrop & Wide-Bottom Earrings","Earrings wider at the bottom draw attention to the jaw, balancing a narrower chin."),
+            ("heart","earring","Chandelier Earrings","Wide chandelier styles flare at the bottom to complement the natural taper of a heart face."),
+            ("heart","earring","Avoid Pointed-Top Studs","Sharp pointed studs emphasize the pointed chin — opt for designs that widen at the bottom."),
+            # oblong
+            ("oblong","hairstyle","Soft Waves with Volume","Waves and curls add width to an oblong face, making it appear shorter and fuller."),
+            ("oblong","hairstyle","Blunt Fringe","A straight-across fringe reduces the vertical length of an oblong face — very flattering."),
+            ("oblong","hairstyle","Avoid Sleek Length","Long sleek straight hair emphasizes the length — add waves or volume for an oblong face."),
+            ("oblong","hijab","Wide Side Volume","Styles with volume on the sides add width, balancing the length of an oblong face shape."),
+            ("oblong","hijab","Horizontal Draping","Hijab wrapped with horizontal layers across the forehead shortens and balances an oblong face."),
+            ("oblong","hijab","Avoid Tall Crown Styles","Height at the top adds more length — choose styles that widen rather than heighten."),
+            ("oblong","earring","Stud or Button Earrings","Short studs and button earrings don't add length, keeping the face's vertical line balanced."),
+            ("oblong","earring","Wide Hoops","Wide circular hoops add horizontal emphasis, making an oblong face appear shorter and rounder."),
+            ("oblong","earring","Avoid Long Dangles","Long earrings elongate an already-long face — keep earrings short and wide instead."),
+        ]
+        c.executemany(
+            "INSERT INTO style_suggestions(face_shape,category,suggestion_name,description) VALUES(?,?,?,?)",
+            suggestions
+        )
+        c.commit()
+
+    # ── Seed product_recommendations if empty ─────────────────────
+    if not c.execute("SELECT 1 FROM product_recommendations LIMIT 1").fetchone():
+        products = [
+            # WARM makeup
+            ("makeup","foundation","warm","L'Oreal","True Match Foundation","W3 Golden Beige","#C8906A","https://www.loreal-paris.com"),
+            ("makeup","blush","warm","NARS","Blush","Orgasm — Warm Peach","#E8956A","https://www.narscosmetics.com"),
+            ("makeup","lipstick","warm","MAC","Matte Lipstick","Mull It Over — Terracotta","#B7604A","https://www.maccosmetics.com"),
+            ("makeup","lipstick","warm","Charlotte Tilbury","Matte Revolution","So It Glows — Coral","#CC6040","https://www.charlottetilbury.com"),
+            ("makeup","highlight","warm","Fenty Beauty","Killawatt Highlighter","Trophy Wife — Gold","#D4A030","https://www.fentybeauty.com"),
+            ("makeup","eyeshadow","warm","Urban Decay","Naked Heat Palette","Warm Amber Tones","#C08040","https://www.urbandecay.com"),
+            # WARM clothing
+            ("clothing","top","warm","Zara","Linen Blend Top","Terracotta","#C45C3A","https://www.zara.com"),
+            ("clothing","dress","warm","H&M","Wrap Midi Dress","Camel","#C19A6B","https://www.hm.com"),
+            ("clothing","outerwear","warm","Mango","Tailored Blazer","Warm Brown","#8B5030","https://www.mango.com"),
+            ("clothing","bottom","warm","Uniqlo","Wide Leg Trousers","Mustard","#E1AD01","https://www.uniqlo.com"),
+            # COOL makeup
+            ("makeup","foundation","cool","Maybelline","Fit Me Foundation","C30 Cool Porcelain","#F0D0C0","https://www.maybelline.com"),
+            ("makeup","blush","cool","NARS","Blush","Dolce Vita — Mauve Pink","#C8788A","https://www.narscosmetics.com"),
+            ("makeup","lipstick","cool","MAC","Lipstick","Rebel — Berry","#8E2D56","https://www.maccosmetics.com"),
+            ("makeup","lipstick","cool","Charlotte Tilbury","Hot Lips","Walk of No Shame — Cool Red","#C01840","https://www.charlottetilbury.com"),
+            ("makeup","highlight","cool","Fenty Beauty","Diamond Bomb","How Many Carats — Silver","#E0E0E8","https://www.fentybeauty.com"),
+            ("makeup","eyeshadow","cool","Urban Decay","Naked Palette","Cool Blues & Purples","#6060B0","https://www.urbandecay.com"),
+            # COOL clothing
+            ("clothing","top","cool","Zara","Satin Blouse","Sapphire Blue","#0F52BA","https://www.zara.com"),
+            ("clothing","dress","cool","H&M","Midi Dress","Lavender","#967BB6","https://www.hm.com"),
+            ("clothing","outerwear","cool","Mango","Blazer","Emerald Green","#50C878","https://www.mango.com"),
+            ("clothing","bottom","cool","Uniqlo","Slim Trousers","Slate Grey","#708090","https://www.uniqlo.com"),
+            # NEUTRAL makeup
+            ("makeup","foundation","neutral","Fenty Beauty","Pro Filt'r Foundation","240N Neutral","#C8906A","https://www.fentybeauty.com"),
+            ("makeup","blush","neutral","NARS","Blush","Desire — Dusty Rose","#DCAE96","https://www.narscosmetics.com"),
+            ("makeup","lipstick","neutral","Charlotte Tilbury","Pillow Talk","Original — Nude Pink","#C8847A","https://www.charlottetilbury.com"),
+            ("makeup","lipstick","neutral","MAC","Lipstick","Twig — Mauve","#C0909A","https://www.maccosmetics.com"),
+            ("makeup","highlight","neutral","Fenty Beauty","Killawatt Highlighter","Rose Gold","#B76E79","https://www.fentybeauty.com"),
+            ("makeup","eyeshadow","neutral","Urban Decay","Naked3 Palette","Rosy Neutral Tones","#C09090","https://www.urbandecay.com"),
+            # NEUTRAL clothing
+            ("clothing","top","neutral","Zara","Relaxed Blouse","Dusty Rose","#DCAE96","https://www.zara.com"),
+            ("clothing","dress","neutral","H&M","Wrap Dress","Sage Green","#8CA67B","https://www.hm.com"),
+            ("clothing","outerwear","neutral","Mango","Trench Coat","Taupe","#BDB09F","https://www.mango.com"),
+            ("clothing","bottom","neutral","Uniqlo","Wide Leg Pants","Mauve","#C0909A","https://www.uniqlo.com"),
+        ]
+        c.executemany(
+            "INSERT INTO product_recommendations(category,sub_category,undertone,brand,product_name,shade_name,swatch_color,product_link) VALUES(?,?,?,?,?,?,?,?)",
+            products
+        )
+        c.commit()
+
+    c.close()
 
 # ── Auth helpers ─────────────────────────────────────────────────
 def hp(pw): return hashlib.sha256(pw.encode()).hexdigest()
@@ -392,13 +500,14 @@ def login():
     c.close()
     if not u: return jsonify({"error":"Incorrect email or password"}), 401
     return jsonify({"token":make_token(u["id"]),"name":u["name"],
-                    "undertone":u["undertone"],"body_type":u["body_type"]})
+                    "undertone":u["undertone"],"body_type":u["body_type"],
+                    "face_shape":u["face_shape"]})
 
 @app.route("/api/profile", methods=["GET"])
 @auth
 def profile():
     c = db()
-    u = c.execute("SELECT id,name,email,undertone,body_type,created FROM users WHERE id=?",
+    u = c.execute("SELECT id,name,email,undertone,body_type,face_shape,created FROM users WHERE id=?",
                   (request.uid,)).fetchone()
     bm = [r["tip_id"] for r in c.execute("SELECT tip_id FROM bookmarks WHERE user_id=?",
                                           (request.uid,)).fetchall()]
@@ -406,6 +515,7 @@ def profile():
     if not u: return jsonify({"error":"Not found"}), 404
     return jsonify({"id":u["id"],"name":u["name"],"email":u["email"],
                     "undertone":u["undertone"],"body_type":u["body_type"],
+                    "face_shape":u["face_shape"],
                     "created":u["created"],"bookmarks":bm})
 
 # ════════════════════════════════════════════════════════════════
@@ -760,7 +870,10 @@ def save_fav():
 def style_suggestions():
     c  = db()
     u  = c.execute("SELECT face_shape FROM users WHERE id=?", (request.uid,)).fetchone()
-    fs = u["face_shape"] if u and u["face_shape"] else "oval"
+    fs = u["face_shape"] if u and u["face_shape"] else None
+    if not fs:
+        c.close()
+        return jsonify({"face_shape": None, "suggestions": []})
     cat= request.args.get("category")
     q, p = "SELECT * FROM style_suggestions WHERE face_shape=?", [fs]
     if cat: q += " AND category=?"; p.append(cat)

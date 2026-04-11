@@ -590,12 +590,13 @@ window.onload=async()=>{
     const{data,ok}=await api("/profile");
     if(ok){
       userName=data.name;userUndertone=data.undertone;userBodyType=data.body_type;
+      if(data.face_shape){faceShape=data.face_shape;}
       bookmarks=new Set(data.bookmarks||[]);setNavNames();go("screen-home");
     } else{clearSession();go("screen-login");}
   } else{go("screen-login");}
 };
 function setNavNames(){["nav-name-a","nav-name-w"].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=userName;});}
-function clearSession(){token=null;localStorage.removeItem("gm_tok");userUndertone=null;userBodyType=null;}
+function clearSession(){token=null;localStorage.removeItem("gm_tok");userUndertone=null;userBodyType=null;faceShape=null;}
 
 // ── Auth ──────────────────────────────────────────────────────
 async function doLogin(){
@@ -608,6 +609,7 @@ async function doLogin(){
   setLoading("li-btn",false,"LOG IN");
   if(!ok){errEl.textContent=data.error;errEl.style.display="block";return;}
   token=data.token;userName=data.name;userUndertone=data.undertone;userBodyType=data.body_type;
+  if(data.face_shape){faceShape=data.face_shape;}
   localStorage.setItem("gm_tok",token);
   toast("Welcome back, "+userName+" ✨");setNavNames();go("screen-home");
 }
@@ -1057,10 +1059,23 @@ async function renderStyleSuggestionsPanel(p){
   if(!ok){toast("Failed to load suggestions","err");return;}
   const icons={hairstyle:"💇",hijab:"🧕",earring:"💎"};
   const labels={hairstyle:"Hairstyles",hijab:"Hijab Styles",earring:"Earrings"};
-  p.innerHTML=`<span class="panel-title-pill">Style Suggestions — ${(data.face_shape||"").charAt(0).toUpperCase()+(data.face_shape||"").slice(1)} Face</span>
+  const faceName=(data.face_shape||"").charAt(0).toUpperCase()+(data.face_shape||"").slice(1);
+  if(!data.suggestions||!data.suggestions.length){
+    p.innerHTML=`<span class="panel-title-pill">Style Suggestions</span>
+      <div class="panel-body">
+        <div style="text-align:center;padding:1rem;color:var(--text-light);font-size:.85rem;">
+          <div style="font-size:2rem;margin-bottom:.5rem;">🪞</div>
+          <p>Complete the face shape quiz or upload a selfie first,<br>then come back here for personalised suggestions.</p>
+          <button class="btn-action" style="margin-top:.8rem;" onclick="faceState='menu';renderAnalysisPanel()">← Take Face Shape Quiz</button>
+        </div>
+      </div>`;
+    return;
+  }
+  p.innerHTML=`<span class="panel-title-pill">Style Suggestions — ${faceName} Face</span>
     <div class="panel-body">
       ${["hairstyle","hijab","earring"].map(cat=>{
         const list=data.suggestions.filter(s=>s.category===cat);
+        if(!list.length)return"";
         return`<div class="sec-label">${icons[cat]} ${labels[cat]}</div>
           ${list.map(s=>`<div class="tip-item">
             <span class="tip-emo">${icons[cat]}</span>
