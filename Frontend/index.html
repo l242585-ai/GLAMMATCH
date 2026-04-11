@@ -769,16 +769,35 @@ function getRGBUndertone(canvas){
 
 // ── US-07: Get face shape from landmarks ──────────────────────
 function getFaceShapeFromLandmarks(landmarks){
-  const pts=landmarks.positions;
-  const jawW=Math.abs(pts[16].x-pts[0].x);
-  const foreW=Math.abs(pts[26].x-pts[17].x);
-  const cheekW=Math.abs(pts[15].x-pts[1].x);
-  const faceLen=Math.abs(pts[8].y-pts[27].y);
-  const ratio=faceLen/cheekW;
-  if(foreW>jawW*1.2)return "heart";
-  if(ratio>1.5)return "oblong";
-  if(jawW>cheekW*0.9&&ratio<1.15)return "square";
-  if(ratio<1.05)return "round";
+  const pts = landmarks.positions;
+
+  // Forehead width: outer ends of eyebrows (pts 17 & 26)
+  const foreheadW = Math.abs(pts[26].x - pts[17].x);
+
+  // Cheekbone width: jaw-line points 3 steps from edge (pts 2 & 14)
+  const cheekW = Math.abs(pts[14].x - pts[2].x);
+
+  // Jaw width: inner jaw points (pts 4 & 12) — avoids angled outer edge
+  const jawW = Math.abs(pts[12].x - pts[4].x);
+
+  // Full jaw span for heart detection (pts 0 & 16)
+  const fullJawW = Math.abs(pts[16].x - pts[0].x);
+
+  // Face length: eyebrow midpoint y down to chin tip (pt 8)
+  const browY = (pts[19].y + pts[24].y) / 2;
+  const faceLen = Math.abs(pts[8].y - browY);
+
+  // Ratios
+  const lengthToWidth = faceLen / cheekW;      // tall vs wide
+  const jawToCheek    = jawW   / cheekW;       // jaw narrowness
+  const foreToJaw     = foreheadW / fullJawW;  // forehead vs jaw
+  const foreToCheck   = foreheadW / cheekW;    // forehead vs cheeks
+
+  // Classification
+  if (lengthToWidth > 1.55)                             return "oblong";
+  if (foreToJaw > 1.25 && foreToCheck > 1.1)           return "heart";
+  if (lengthToWidth < 1.10 && jawToCheek < 0.75)       return "round";
+  if (jawToCheek > 0.85  && lengthToWidth < 1.35)      return "square";
   return "oval";
 }
 
