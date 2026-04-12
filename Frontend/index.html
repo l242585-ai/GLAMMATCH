@@ -1541,73 +1541,92 @@ function getProductImage(p){
 }
 
 // Style suggestion images — curated by category + suggestion name
-function getStyleImage(category, suggestionName, faceShape){
-  const name=(suggestionName||"").toLowerCase();
-  const cat=(category||"").toLowerCase();
 
-  const hairstyleImgs={
-    "beachy waves":     "photo-1522337360788-8b13dee7a37e",
-    "sleek straight":   "photo-1504703395950-b89145a5425b",
-    "high ponytail":    "photo-1522338242992-e1a54906a8da",
-    "long layers":      "photo-1520872024865-3ff2d9103a03",
-    "side part":        "photo-1595476108010-b4d1f102b1b1",
-    "high bun":         "photo-1502823403499-6ccfcf4fb453",
-    "soft curls":       "photo-1560066984-138daaa8432f",
-    "side-swept fringe":"photo-1519699047748-de8e457a634e",
-    "layered bob":      "photo-1523264653568-d3d4032d1476",
-    "chin-length bob":  "photo-1523264653568-d3d4032d1476",
-    "side part waves":  "photo-1522337360788-8b13dee7a37e",
-    "low bun":          "photo-1502823403499-6ccfcf4fb453",
-    "blunt bob":        "photo-1523264653568-d3d4032d1476",
-    "curtain bangs":    "photo-1519699047748-de8e457a634e",
-    "voluminous waves": "photo-1560066984-138daaa8432f",
-    "default":          "photo-1522337360788-8b13dee7a37e"
+ function getStyleImage(category, suggestionName, faceShape){
+  const name = (suggestionName || "").toLowerCase();
+  const cat  = (category || "").toLowerCase();
+
+  const hairstyleImgs = {
+    // oval
+    "any length works":       "images/hairstyles/beachywaves.jpg",
+    "side-swept bangs":       "images/hairstyles/sidesweptfringe.jpg",
+    "voluminous waves":       "images/hairstyles/volumouswaves.jpg",
+    // round
+    "long layers":            "images/hairstyles/longlayer.jpg",
+    "high top knot":          "images/hairstyles/highbun.jpg",
+    "avoid full blunt bobs":  "images/hairstyles/bluntbob.jpg",
+    // square
+    "soft waves & curls":     "images/hairstyles/softcurl.jpg",
+    "side part with length":  "images/hairstyles/sidepart.jpg",
+    "avoid blunt straight cuts": "images/hairstyles/bluntbob.jpg",
+    // heart
+    "chin-length bob":        "images/hairstyles/chinlengthbob.jpg",
+    "side-swept fringe":      "images/hairstyles/sidesweptfringe.jpg",
+    "avoid high volume on top": "images/hairstyles/highbun.jpg",
+    // oblong
+    "soft waves with volume": "images/hairstyles/volumouswaves.jpg",
+    "blunt fringe":           "images/hairstyles/curtainbangs.jpg",
+    "avoid sleek length":     "images/hairstyles/sleekstraight.jpg",
+    "default":                "images/hairstyles/beachywaves.jpg",
   };
 
-  const hijabImgs={
-    "classic wrap":       "photo-1594744803329-e58b31de8bf5",
-    "pinned side style":  "photo-1606760227091-3dd870d97f1d",
-    "layered front style":"photo-1594744803329-e58b31de8bf5",
-    "layered volume top": "photo-1578632767115-351597cf2477",
-    "v-shape front":      "photo-1606760227091-3dd870d97f1d",
-    "draped side style":  "photo-1594744803329-e58b31de8bf5",
-    "soft gathered style":"photo-1578632767115-351597cf2477",
-    "round-front drape":  "photo-1606760227091-3dd870d97f1d",
-    "loose wrap":         "photo-1594744803329-e58b31de8bf5",
-    "volume-at-chin style":"photo-1578632767115-351597cf2477",
-    "wide wrap":          "photo-1606760227091-3dd870d97f1d",
-    "side-pinned style":  "photo-1594744803329-e58b31de8bf5",
-    "side volume style":  "photo-1578632767115-351597cf2477",
-    "turban style":       "photo-1606760227091-3dd870d97f1d",
-    "flat top style":     "photo-1594744803329-e58b31de8bf5",
-    "default":            "photo-1594744803329-e58b31de8bf5"
+  const hijabImgs = {
+    // oval
+    "wrap style hijab":       "images/hijab/classicwrap.jpg",
+    "draped shawl":           "images/hijab/sidedrapped.jpg",
+    "turban style":           "images/hijab/turbanhijab.jpg",
+    // round
+    "tall volume on top":     "images/hijab/layeredvolumetop.jpg",
+    "v-shape front":          "images/hijab/vshape.jpg",
+    "avoid wide side volume": "images/hijab/widewrap.jpg",
+    // square
+    "rounded draping":        "images/hijab/roundfront.jpg",
+    "side volume":            "images/hijab/sidevol.jpg",
+    "avoid tight angular wraps": "images/hijab/flattop.jpg",
+    // heart
+    "fuller at the chin":     "images/hijab/volumechin.jpg",
+    "avoid height at crown":  "images/hijab/flattop.jpg",
+    "layered draping at jaw": "images/hijab/layeredfront.jpg",
+    // oblong
+    "wide side volume":       "images/hijab/widewrap.jpg",
+    "horizontal draping":     "images/hijab/gatheredsoft.jpg",
+    "avoid tall crown styles":"images/hijab/flattop.jpg",
+    "default":                "images/hijab/classicwrap.jpg",
   };
 
-  const earringImgs={
-    "hoop earrings":        "photo-1535632066927-ab7c9ab60908",
-    "drop earrings":        "photo-1611591437281-460bfbe1220a",
-    "stud earrings":        "photo-1589128777073-263566ae5e4d",
-    "long drop earrings":   "photo-1611591437281-460bfbe1220a",
-    "angular earrings":     "photo-1535632066927-ab7c9ab60908",
-    "chandelier earrings":  "photo-1515562141207-7a88fb7ce338",
-    "round hoops":          "photo-1535632066927-ab7c9ab60908",
-    "oval drop earrings":   "photo-1611591437281-460bfbe1220a",
-    "pearl drops":          "photo-1589128777073-263566ae5e4d",
-    "teardrop earrings":    "photo-1611591437281-460bfbe1220a",
-    "wide hoop earrings":   "photo-1535632066927-ab7c9ab60908",
-    "cluster earrings":     "photo-1515562141207-7a88fb7ce338",
-    "default":              "photo-1535632066927-ab7c9ab60908"
+  const earringImgs = {
+    // oval
+    "statement drops":              "images/earrings/longdrop.jpg",
+    "hoops — any size":             "images/earrings/hoops.jpg",
+    "geometric shapes":             "images/earrings/angulatearings.jpg",
+    // round
+    "long drop earrings":           "images/earrings/longdrop.jpg",
+    "angular studs":                "images/earrings/angulatearings.jpg",
+    "avoid large round hoops":      "images/earrings/roundhoops.jpg",
+    // square
+    "oval & teardrop earrings":     "images/earrings/ovaldrop.jpg",
+    "hoop earrings":                "images/earrings/hoops.jpg",
+    "avoid sharp rectangle earrings": "images/earrings/angulatearings.jpg",
+    // heart
+    "teardrop & wide-bottom earrings": "images/earrings/teardrop.jpg",
+    "chandelier earrings":          "images/earrings/chandelier.jpg",
+    "avoid pointed-top studs":      "images/earrings/stud.jpg",
+    // oblong
+    "stud or button earrings":      "images/earrings/stud.jpg",
+    "wide hoops":                   "images/earrings/widehoop.jpg",
+    "avoid long dangles":           "images/earrings/longdrop.jpg",
+    "default":                      "images/earrings/hoops.jpg",
   };
 
   let photoId;
-  if(cat==="hairstyle"){
-    photoId=hairstyleImgs[name]||hairstyleImgs["default"];
-  } else if(cat==="hijab"){
-    photoId=hijabImgs[name]||hijabImgs["default"];
+  if(cat === "hairstyle"){
+    photoId = hairstyleImgs[name] || hairstyleImgs["default"];
+  } else if(cat === "hijab"){
+    photoId = hijabImgs[name] || hijabImgs["default"];
   } else {
-    photoId=earringImgs[name]||earringImgs["default"];
+    photoId = earringImgs[name] || earringImgs["default"];
   }
-  return `https://images.unsplash.com/${photoId}?w=280&h=220&fit=crop&auto=format`;
+  return photoId;
 }
 
 // ── Forgot Password Modal ──────────────────────────────────────
