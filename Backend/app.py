@@ -15,7 +15,11 @@ except ImportError:
 app = Flask(__name__, static_folder="../frontend", template_folder="../frontend")
 DB  = os.path.join(os.path.dirname(__file__), "glammatch.db")
 SECRET = "glammatch_sprint1_secret"
-
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = 587
+SMTP_USER = "glammatch0@gmail.com"
+SMTP_PASS = "sszdwpcrntfbmhhf"
+FROM_EMAIL = "glammatch0@gmail.com"
 try:
     from flask_cors import CORS
     CORS(app)
@@ -120,6 +124,12 @@ def init_db():
             FOREIGN KEY(user_id)       REFERENCES users(id),
             FOREIGN KEY(suggestion_id) REFERENCES style_suggestions(id)
         );
+        CREATE TABLE IF NOT EXISTS password_reset_tokens(
+            token      TEXT PRIMARY KEY,
+            user_id    INTEGER NOT NULL,
+            expires    TEXT NOT NULL,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        );            
     """)
     c.commit()
 
@@ -908,53 +918,60 @@ import secrets, datetime as dt
 PASSWORD_RESET_TOKENS = {}   # token -> {user_id, expires}
 
 @app.route("/api/forgot-password", methods=["POST"])
+
+
 def forgot_password():
     email = ((request.get_json() or {}).get("email") or "").strip().lower()
     if not email or "@" not in email:
         return jsonify({"error": "Enter a valid email address"}), 400
     c = db()
     u = c.execute("SELECT id, name FROM users WHERE email=?", (email,)).fetchone()
-    c.close()
-    # Always return success to prevent email enumeration
     if u:
         token = secrets.token_urlsafe(32)
-        PASSWORD_RESET_TOKENS[token] = {
-            "user_id": u["id"],
-            "expires": dt.datetime.utcnow() + dt.timedelta(hours=1)
-        }
+        expires = (dt.datetime.utcnow() + dt.timedelta(hours=1)).isoformat()
+        c.execute("DELETE FROM password_reset_tokens WHERE user_id=?", (u["id"],))
+        c.execute("INSERT INTO password_reset_tokens(token,user_id,expires) VALUES(?,?,?)",
+                  (token, u["id"], expires))
+        c.commit()
         reset_link = f"http://localhost:5000/?reset_token={token}"
-        # In production send an email; for dev we print to console
-        print(f"\n🔑 PASSWORD RESET LINK for {email}:\n   {reset_link}\n")
-        # Optionally try to send email if smtplib is configured
+        print(f"\n PASSWORD RESET LINK for {email}:\n   {reset_link}\n")
         try:
             import smtplib
+            from email.mime.multipart import MIMEMultipart
             from email.mime.text import MIMEText
-            SMTP_HOST = os.getenv("SMTP_HOST", "")
-            SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
-            SMTP_USER = os.getenv("SMTP_USER", "")
-            SMTP_PASS = os.getenv("SMTP_PASS", "")
-            FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@glammatch.com")
-            if SMTP_HOST and SMTP_USER:
-                msg = MIMEText(
-                    f"Hi {u['name']},\n\n"
-                    f"Click the link below to reset your GlamMatch password:\n\n"
-                    f"{reset_link}\n\n"
-                    f"This link expires in 1 hour.\n\n"
-                    f"If you didn't request this, ignore this email.\n\n"
-                    f"— The GlamMatch Team"
-                )
-                msg["Subject"] = "GlamMatch — Reset Your Password"
-                msg["From"]    = FROM_EMAIL
-                msg["To"]      = email
-                with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as s:
-                    s.starttls()
-                    s.login(SMTP_USER, SMTP_PASS)
-                    s.sendmail(FROM_EMAIL, [email], msg.as_string())
-                print(f"✉️  Reset email sent to {email}")
+            html_body = f"""
+            <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:20px;">
+              <h2 style="color:#C0546A;font-family:Georgia,serif;">Glam<em>Match</em></h2>
+              <p>Hi {u['name']},</p>
+              <p>We received a request to reset your GlamMatch password.</p>
+              <p>Click the button below to set a new password:</p>
+              <div style="text-align:center;margin:30px 0;">
+                <a href="{reset_link}"
+                   style="background:#C0546A;color:#fff;padding:12px 30px;border-radius:50px;
+                          text-decoration:none;font-weight:bold;font-size:15px;">
+                  Reset My Password
+                </a>
+              </div>
+              <p style="color:#999;font-size:13px;">This link expires in 1 hour.</p>
+              <p style="color:#999;font-size:13px;">If you didn't request this, ignore this email.</p>
+              <hr style="border:none;border-top:1px solid #eee;margin:20px 0;"/>
+              <p style="color:#ccc;font-size:12px;">— The GlamMatch Team 💄</p>
+            </div>
+            """
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = "GlamMatch — Reset Your Password 🔑"
+            msg["From"]    = f"GlamMatch <{FROM_EMAIL}>"
+            msg["To"]      = email
+            msg.attach(MIMEText(html_body, "html"))
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as s:
+                s.starttls()
+                s.login(SMTP_USER, SMTP_PASS)
+                s.sendmail(FROM_EMAIL, [email], msg.as_string())
+            print(f"✉️  Reset email sent to {email}")
         except Exception as e:
-            print(f"Email send skipped: {e}")
+            print(f" Email failed: {e}")
+    c.close()
     return jsonify({"message": "If that email is registered, a reset link has been sent."})
-
 @app.route("/api/reset-password", methods=["POST"])
 def reset_password():
     d        = request.get_json() or {}
@@ -964,18 +981,20 @@ def reset_password():
         return jsonify({"error": "Token and password are required"}), 400
     if len(password) < 8 or not any(c.isdigit() for c in password):
         return jsonify({"error": "Password must be 8+ characters with at least one number"}), 400
-    entry = PASSWORD_RESET_TOKENS.get(token)
+    conn = db()
+    entry = conn.execute("SELECT * FROM password_reset_tokens WHERE token=?", (token,)).fetchone()
     if not entry:
+        conn.close()
         return jsonify({"error": "Invalid or expired reset link"}), 400
-    if dt.datetime.utcnow() > entry["expires"]:
-        del PASSWORD_RESET_TOKENS[token]
+    if dt.datetime.utcnow() > dt.datetime.fromisoformat(entry["expires"]):
+        conn.execute("DELETE FROM password_reset_tokens WHERE token=?", (token,))
+        conn.commit(); conn.close()
         return jsonify({"error": "Reset link has expired. Please request a new one."}), 400
-    c = db()
-    c.execute("UPDATE users SET password=? WHERE id=?", (hp(password), entry["user_id"]))
-    c.commit(); c.close()
-    del PASSWORD_RESET_TOKENS[token]
+    conn.execute("UPDATE users SET password=? WHERE id=?", (hp(password), entry["user_id"]))
+    conn.execute("DELETE FROM password_reset_tokens WHERE token=?", (token,))
+    conn.commit(); conn.close()
     return jsonify({"message": "Password reset successfully"})
-
+   
 if __name__ == "__main__":
     init_db()
     print("✅ GlamMatch Sprint 1 — http://localhost:5000")

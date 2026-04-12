@@ -623,6 +623,10 @@ function setLoading(id,on,label){
 
 // ── App init ──────────────────────────────────────────────────
 window.onload=async()=>{
+  if(new URLSearchParams(window.location.search).get("reset_token")){
+    go("screen-reset");
+    return;
+  }
   if(token){
     const{data,ok}=await api("/profile");
     if(ok){
@@ -1709,7 +1713,11 @@ window.go=function(id){
   if(id==="screen-wardrobe")loadWardrobe();
   if(id==="screen-products")loadProducts("makeup");
 };
-window.addEventListener("load",()=>{checkResetToken();renderAnalysisPanel();});
+window.addEventListener("load",()=>{
+  if(!new URLSearchParams(window.location.search).get("reset_token")){
+    renderAnalysisPanel();
+  }
+});
 </script>
 </body>
 </html>
