@@ -69,7 +69,7 @@ GlamMatch/
 | US-03 | Personalized Colour Palette (clothing + makeup) | ✅ Complete |
 | US-04 | Styling Tips + Bookmarks | ✅ Complete |
 | US-05 | Body Type Quiz & Recommendations | ✅ Complete |
-| US-06 | Basic Wardrobe Management | ✅ Complete |
+
 
 ---
 
@@ -77,14 +77,14 @@ GlamMatch/
 
 | User Story | Feature | Status |
 |-----------|---------|--------|
-| US-07 | Photo Upload → Skin Tone Detection (pixel RGB analysis) | ✅ Complete |
-| US-08 | Face Shape Detection via Photo (face-api.js landmarks) | ✅ Complete |
-| US-09 | Manual Face Shape Quiz | ✅ Complete |
-| US-10 | Face Shape Style Suggestions (hairstyle, hijab, earrings) | ✅ Complete |
-| US-11 | Makeup & Clothing Product Recommendations by Undertone | ✅ Complete |
-| US-12 | Product Wishlist | ✅ Complete |
-| US-13 | Event-Based Outfit Generation from Wardrobe | ✅ Complete |
-| US-14 | Style Suggestion Bookmarks | ✅ Complete |
+| US-06 | Upload selfie and get skin tone / undertone estimate| ✅ Complete |
+| US-07 | Detect face shape from uploaded photo	| ✅ Complete |
+| US-08 | Receive makeup and clothing product recommendations | ✅ Complete |
+| US-09 | Upload wardrobe items and get outfit suggestions	| ✅ Complete |
+| US-10 | Get face shape–based style suggestions (hairstyle, hijab & earrings) | ✅ Complete |
+
+
+
 
 ---
 
@@ -92,11 +92,11 @@ GlamMatch/
 
 The following bugs from Sprint 2 were identified and resolved in Sprint 3:
 
-| Bug | Fix |
-|-----|-----|
-| Wardrobe had no colour field | Added colour picker + name input to all wardrobe sections; backend stores `color` column |
-| Outfit generation returned the same combination for every event type | Added event-type filtering and randomised selection with deduplication |
-| Face shape photo detection always failed | Fixed model serving route (`/models/`) in Flask + added CDN fallback for face-api.js models |
+| US-11 | | ✅ Complete |
+| US-12 |  | ✅ Complete |
+| US-13 |  | ✅ Complete |
+| US-14 | | ✅ Complete |
+| US-15 | | ✅ Complete |
 
 ---
 
