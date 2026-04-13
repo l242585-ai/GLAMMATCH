@@ -86,17 +86,6 @@ GlamMatch/
 
 
 
----
-
-## 🔧 Sprint 3 — Bug Fixes
-
-The following bugs from Sprint 2 were identified and resolved in Sprint 3:
-
-| US-11 | | ✅ Complete |
-| US-12 |  | ✅ Complete |
-| US-13 |  | ✅ Complete |
-| US-14 | | ✅ Complete |
-| US-15 | | ✅ Complete |
 
 ---
 
