@@ -2,7 +2,7 @@
 
 > *Your personal glam stylist, always on.*
 
-GlamMatch is an AI-powered web application that provides personalized colour palette recommendations, styling tips, wardrobe outfit suggestions, makeup product recommendations, and face shape analysis — all based on a user's skin undertone, body type, and facial structure. It also connects users with nearby beauty parlours for appointment booking.
+GlamMatch is a web application that provides personalized colour palette recommendations, styling tips, wardrobe outfit suggestions, makeup product recommendations, and face shape analysis — all based on a user's skin undertone, body type, and facial structure. It also connects users with nearby beauty parlours for appointment booking.
 
 ---
 
