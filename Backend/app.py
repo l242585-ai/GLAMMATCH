@@ -994,8 +994,337 @@ def reset_password():
     conn.execute("DELETE FROM password_reset_tokens WHERE token=?", (token,))
     conn.commit(); conn.close()
     return jsonify({"message": "Password reset successfully"})
-   
+
+# ══════════════════════════════════════════════════════════════════
+#  SPRINT 3 — SALON CONNECTOR PLATFORM
+#  US-11: Salon Discovery | US-12: Salon Profile | US-13: Booking
+#  US-14: Chat           | US-15: Reviews
+# ══════════════════════════════════════════════════════════════════
+
+def init_salon_db():
+    c = db()
+    c.executescript("""
+        CREATE TABLE IF NOT EXISTS salons(
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            name          TEXT NOT NULL,
+            address       TEXT,
+            category      TEXT DEFAULT 'women',
+            price_range   TEXT DEFAULT 'mid',
+            rating        REAL DEFAULT 0.0,
+            review_count  INTEGER DEFAULT 0,
+            working_hours TEXT DEFAULT '9:00 AM – 8:00 PM',
+            phone         TEXT,
+            description   TEXT,
+            created_at    TEXT DEFAULT(datetime('now'))
+        );
+        CREATE TABLE IF NOT EXISTS salon_services(
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            salon_id     INTEGER NOT NULL,
+            service_name TEXT NOT NULL,
+            service_type TEXT,
+            price_min    INTEGER DEFAULT 0,
+            price_max    INTEGER DEFAULT 0,
+            duration_min INTEGER DEFAULT 60,
+            FOREIGN KEY(salon_id) REFERENCES salons(id)
+        );
+        CREATE TABLE IF NOT EXISTS bookings(
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id    INTEGER NOT NULL,
+            salon_id   INTEGER NOT NULL,
+            service_id INTEGER,
+            datetime   TEXT NOT NULL,
+            status     TEXT DEFAULT 'pending',
+            note       TEXT,
+            alt_time   TEXT,
+            created_at TEXT DEFAULT(datetime('now')),
+            FOREIGN KEY(user_id)    REFERENCES users(id),
+            FOREIGN KEY(salon_id)   REFERENCES salons(id),
+            FOREIGN KEY(service_id) REFERENCES salon_services(id)
+        );
+        CREATE TABLE IF NOT EXISTS chat_messages(
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            booking_id  INTEGER NOT NULL,
+            sender_type TEXT NOT NULL,
+            message     TEXT NOT NULL,
+            sent_at     TEXT DEFAULT(datetime('now')),
+            FOREIGN KEY(booking_id) REFERENCES bookings(id)
+        );
+        CREATE TABLE IF NOT EXISTS reviews(
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id     INTEGER NOT NULL,
+            salon_id    INTEGER NOT NULL,
+            booking_id  INTEGER,
+            rating      INTEGER NOT NULL,
+            review_text TEXT,
+            created_at  TEXT DEFAULT(datetime('now')),
+            UNIQUE(user_id, booking_id),
+            FOREIGN KEY(user_id)   REFERENCES users(id),
+            FOREIGN KEY(salon_id)  REFERENCES salons(id),
+            FOREIGN KEY(booking_id) REFERENCES bookings(id)
+        );
+    """)
+    c.commit()
+
+    # Seed salons if empty
+    if not c.execute("SELECT 1 FROM salons LIMIT 1").fetchone():
+        salons = [
+            ("Glamour Studio",    "12 Mall Road, Lahore",       "women",  "mid",      4.7, 38, "10:00 AM – 9:00 PM",  "+92-300-1234567", "Premium beauty studio specializing in bridal and editorial makeup."),
+            ("The Beauty Lounge", "45 DHA Phase 5, Lahore",     "women",  "premium",  4.5, 22, "9:00 AM – 8:00 PM",   "+92-321-9876543", "Relaxing lounge offering hair, skin, and nail treatments."),
+            ("Zara Salon",        "88 Johar Town, Lahore",      "unisex", "budget",   4.2, 55, "8:30 AM – 9:30 PM",   "+92-333-5551234", "Affordable salon for everyday cuts, color, and grooming."),
+            ("Bridal Affairs",    "3 Gulberg III, Lahore",      "women",  "premium",  4.9, 14, "10:00 AM – 7:00 PM",  "+92-311-7778888", "Exclusive bridal studio with full event packages."),
+            ("SnipMaster",        "22 Model Town, Lahore",      "men",    "budget",   4.3, 41, "9:00 AM – 10:00 PM",  "+92-345-4440000", "Classic barbershop with modern grooming services."),
+            ("Nails & Beyond",    "67 Bahria Town, Lahore",     "women",  "mid",      4.6, 29, "10:00 AM – 8:00 PM",  "+92-300-9990001", "Nail art, gel extensions, and pedicure specialist."),
+            ("Style Hub",         "11 Faisal Town, Lahore",     "unisex", "mid",      4.1, 63, "9:00 AM – 9:00 PM",   "+92-322-1231231", "Full-service salon covering all hair and beauty needs."),
+            ("Elite Spa & Salon", "5 Cantt, Lahore",            "women",  "premium",  4.8, 18, "10:00 AM – 7:30 PM",  "+92-301-5556789", "Luxury spa and salon experience with trained therapists."),
+        ]
+        c.executemany(
+            "INSERT INTO salons(name,address,category,price_range,rating,review_count,working_hours,phone,description) VALUES(?,?,?,?,?,?,?,?,?)",
+            salons
+        )
+        c.commit()
+
+        # Seed services
+        services = [
+            # Glamour Studio (id=1)
+            (1,"Bridal Makeup",       "makeup",  8000,15000, 180),
+            (1,"Party Makeup",         "makeup",  3000, 6000,  90),
+            (1,"Hair Styling",         "hair",    1500, 3000,  60),
+            (1,"Facial",              "skincare",1500, 3500,  60),
+            # The Beauty Lounge (id=2)
+            (2,"Hair Cut & Blow Dry",  "hair",    1200, 2500,  60),
+            (2,"Hair Color",           "hair",    3000, 8000, 120),
+            (2,"Manicure",             "nails",    800, 1500,  45),
+            (2,"Pedicure",             "nails",    900, 1800,  45),
+            # Zara Salon (id=3)
+            (3,"Basic Haircut",        "hair",     500,  800,  30),
+            (3,"Threading",            "skincare", 150,  250,  15),
+            (3,"Waxing (Full)",        "skincare", 800, 1200,  60),
+            (3,"Simple Makeup",        "makeup",  1500, 2500,  60),
+            # Bridal Affairs (id=4)
+            (4,"Full Bridal Package",  "makeup", 20000,50000, 360),
+            (4,"Mehndi Makeup",        "makeup",  5000,10000, 120),
+            (4,"Trial Makeup",         "makeup",  3000, 5000,  90),
+            (4,"Hair Treatment",       "hair",    2000, 5000,  90),
+            # SnipMaster (id=5)
+            (5,"Haircut",              "hair",     400,  700,  30),
+            (5,"Shave",                "hair",     300,  500,  20),
+            (5,"Beard Trim",           "hair",     250,  400,  15),
+            (5,"Hair Color",           "hair",    1500, 3000,  60),
+            # Nails & Beyond (id=6)
+            (6,"Gel Nails",            "nails",   1500, 2500,  60),
+            (6,"Nail Art",             "nails",    500, 1500,  45),
+            (6,"Pedicure Deluxe",      "nails",   1200, 2000,  60),
+            (6,"Acrylic Extensions",   "nails",   2000, 3500,  90),
+            # Style Hub (id=7)
+            (7,"Haircut (Women)",      "hair",     800, 1500,  45),
+            (7,"Haircut (Men)",        "hair",     400,  700,  30),
+            (7,"Highlights",           "hair",    3000, 7000, 120),
+            (7,"Facial Basic",         "skincare",1000, 2000,  60),
+            # Elite Spa & Salon (id=8)
+            (8,"Luxury Facial",        "skincare",3500, 6000,  90),
+            (8,"Body Massage",         "skincare",4000, 7000,  90),
+            (8,"Hair Spa",             "hair",    2000, 4000,  60),
+            (8,"Full Glam Makeup",     "makeup",  5000, 9000, 120),
+        ]
+        c.executemany(
+            "INSERT INTO salon_services(salon_id,service_name,service_type,price_min,price_max,duration_min) VALUES(?,?,?,?,?,?)",
+            services
+        )
+        c.commit()
+    c.close()
+
+# ── US-11: Salon Discovery ────────────────────────────────────────
+@app.route("/api/salons", methods=["GET"])
+@auth
+def get_salons():
+    c = db()
+    q = "SELECT * FROM salons WHERE 1=1"
+    p = []
+    st = request.args.get("service_type")
+    pr = request.args.get("price_range")
+    ct = request.args.get("category")
+    if pr:  q += " AND price_range=?";  p.append(pr)
+    if ct and ct != "all": q += " AND (category=? OR category='unisex')"; p.append(ct)
+    q += " ORDER BY rating DESC"
+    salons = c.execute(q, p).fetchall()
+
+    result = []
+    for s in salons:
+        sd = dict(s)
+        if st:
+            svc_match = c.execute(
+                "SELECT id FROM salon_services WHERE salon_id=? AND service_type=? LIMIT 1",
+                (s["id"], st)
+            ).fetchone()
+            if not svc_match:
+                continue
+        result.append(sd)
+    c.close()
+    return jsonify({"salons": result, "count": len(result)})
+
+# ── US-12: Salon Profile ──────────────────────────────────────────
+@app.route("/api/salons/<int:salon_id>", methods=["GET"])
+@auth
+def get_salon(salon_id):
+    c = db()
+    s = c.execute("SELECT * FROM salons WHERE id=?", (salon_id,)).fetchone()
+    if not s:
+        c.close()
+        return jsonify({"error": "Salon not found"}), 404
+    services = c.execute(
+        "SELECT * FROM salon_services WHERE salon_id=? ORDER BY service_type, service_name",
+        (salon_id,)
+    ).fetchall()
+    reviews = c.execute(
+        """SELECT r.*, u.name as user_name FROM reviews r
+           JOIN users u ON r.user_id = u.id
+           WHERE r.salon_id=? ORDER BY r.created_at DESC LIMIT 10""",
+        (salon_id,)
+    ).fetchall()
+    c.close()
+    return jsonify({
+        "salon":    dict(s),
+        "services": [dict(sv) for sv in services],
+        "reviews":  [dict(rv) for rv in reviews],
+    })
+
+# ── US-13: Booking ────────────────────────────────────────────────
+@app.route("/api/bookings", methods=["GET"])
+@auth
+def get_bookings():
+    c = db()
+    rows = c.execute(
+        """SELECT b.*, s.name as salon_name, sv.service_name
+           FROM bookings b
+           JOIN salons s ON b.salon_id = s.id
+           LEFT JOIN salon_services sv ON b.service_id = sv.id
+           WHERE b.user_id=? ORDER BY b.created_at DESC""",
+        (request.uid,)
+    ).fetchall()
+    c.close()
+    return jsonify({"bookings": [dict(r) for r in rows]})
+
+@app.route("/api/bookings", methods=["POST"])
+@auth
+def create_booking():
+    d = request.get_json() or {}
+    salon_id   = d.get("salon_id")
+    service_id = d.get("service_id")
+    datetime_  = d.get("datetime", "").strip()
+    note       = d.get("note", "")
+    if not salon_id or not datetime_:
+        return jsonify({"error": "salon_id and datetime are required"}), 400
+    c = db()
+    s = c.execute("SELECT id FROM salons WHERE id=?", (salon_id,)).fetchone()
+    if not s:
+        c.close()
+        return jsonify({"error": "Salon not found"}), 404
+    c.execute(
+        "INSERT INTO bookings(user_id,salon_id,service_id,datetime,note) VALUES(?,?,?,?,?)",
+        (request.uid, salon_id, service_id, datetime_, note)
+    )
+    c.commit()
+    bid = c.execute("SELECT last_insert_rowid()").fetchone()[0]
+    c.close()
+    return jsonify({"booking_id": bid, "status": "pending"}), 201
+
+@app.route("/api/bookings/<int:bid>", methods=["PUT"])
+@auth
+def update_booking(bid):
+    d      = request.get_json() or {}
+    status = d.get("status")
+    alt    = d.get("alt_time", "")
+    allowed = ("confirmed", "rejected", "alternate", "completed")
+    if status not in allowed:
+        return jsonify({"error": f"status must be one of {allowed}"}), 400
+    c = db()
+    c.execute("UPDATE bookings SET status=?, alt_time=? WHERE id=?", (status, alt, bid))
+    c.commit(); c.close()
+    return jsonify({"booking_id": bid, "status": status})
+
+# ── US-14: Chat ───────────────────────────────────────────────────
+@app.route("/api/chat/<int:bid>", methods=["GET"])
+@auth
+def get_chat(bid):
+    c    = db()
+    msgs = c.execute(
+        "SELECT * FROM chat_messages WHERE booking_id=? ORDER BY sent_at ASC",
+        (bid,)
+    ).fetchall()
+    c.close()
+    return jsonify({"messages": [dict(m) for m in msgs]})
+
+@app.route("/api/chat/<int:bid>", methods=["POST"])
+@auth
+def send_chat(bid):
+    d    = request.get_json() or {}
+    msg  = (d.get("message") or "").strip()
+    sender = d.get("sender_type", "user")
+    if not msg:
+        return jsonify({"error": "message is required"}), 400
+    if sender not in ("user", "salon"):
+        sender = "user"
+    c = db()
+    c.execute(
+        "INSERT INTO chat_messages(booking_id,sender_type,message) VALUES(?,?,?)",
+        (bid, sender, msg)
+    )
+    c.commit()
+    mid = c.execute("SELECT last_insert_rowid()").fetchone()[0]
+    c.close()
+    return jsonify({"message_id": mid, "sent": True}), 201
+
+# ── US-15: Reviews ────────────────────────────────────────────────
+@app.route("/api/reviews", methods=["POST"])
+@auth
+def post_review():
+    d          = request.get_json() or {}
+    salon_id   = d.get("salon_id")
+    booking_id = d.get("booking_id")
+    rating     = d.get("rating")
+    text       = (d.get("review_text") or "").strip()
+    if not salon_id or not rating or not (1 <= int(rating) <= 5):
+        return jsonify({"error": "salon_id and rating (1–5) are required"}), 400
+    c = db()
+    try:
+        c.execute(
+            "INSERT INTO reviews(user_id,salon_id,booking_id,rating,review_text) VALUES(?,?,?,?,?)",
+            (request.uid, salon_id, booking_id, int(rating), text)
+        )
+        c.commit()
+        # Update salon average rating
+        avg = c.execute(
+            "SELECT AVG(rating) as avg, COUNT(*) as cnt FROM reviews WHERE salon_id=?",
+            (salon_id,)
+        ).fetchone()
+        c.execute(
+            "UPDATE salons SET rating=?, review_count=? WHERE id=?",
+            (round(avg["avg"], 1), avg["cnt"], salon_id)
+        )
+        c.commit()
+        c.close()
+        return jsonify({"saved": True, "rating": int(rating)}), 201
+    except Exception as e:
+        c.close()
+        if "UNIQUE" in str(e):
+            return jsonify({"error": "You have already reviewed this appointment"}), 409
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/salons/<int:salon_id>/reviews", methods=["GET"])
+@auth
+def salon_reviews(salon_id):
+    c    = db()
+    rows = c.execute(
+        """SELECT r.*, u.name as user_name FROM reviews r
+           JOIN users u ON r.user_id = u.id
+           WHERE r.salon_id=? ORDER BY r.created_at DESC""",
+        (salon_id,)
+    ).fetchall()
+    c.close()
+    return jsonify({"reviews": [dict(r) for r in rows]})
+
 if __name__ == "__main__":
     init_db()
-    print("✅ GlamMatch Sprint 1 — http://localhost:5000")
+    init_salon_db()
+    print("GlamMatch Sprint 3 — http://localhost:5000")
     app.run(debug=True, port=5000)

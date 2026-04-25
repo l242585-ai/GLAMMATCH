@@ -302,7 +302,7 @@ input,select,button{font-family:var(--font-b);}
     <div class="nav-link" onclick="go('screen-analysis')">Style Analysis</div>
     <div class="nav-link" onclick="go('screen-wardrobe')">Wardrobe</div>
     <div class="nav-link" onclick="go('screen-products')">Products</div>
-    <div class="nav-link" onclick="go('screen-parlour')">Parlour</div>
+    <div class="nav-link" onclick="go('screen-salon')">Salon Finder</div>
     <div class="nav-right">
       <button class="btn-nav-outline" onclick="doLogout()">Sign In</button>
       <button class="btn-nav-fill" onclick="go('screen-analysis')">Get Started ✦</button>
@@ -315,11 +315,11 @@ input,select,button{font-family:var(--font-b);}
       <div class="hero-desc">Discover your perfect colours, style, and look — powered by AI analysis of your skin tone, body type &amp; face shape. Book top parlours nearby.</div>
       <div class="hero-btns">
         <button class="btn-hero-fill" onclick="go('screen-analysis')">🎨 Analyze My Style</button>
-        <button class="btn-hero-outline" onclick="go('screen-parlour')">📍 Find Parlour</button>
+        <button class="btn-hero-outline" onclick="go('screen-salon')">📍 Find Parlour</button>
       </div>
       <div class="hero-stats">
         <div class="stat-item"><div class="stat-num">50<span>K+</span></div><div class="stat-label">Style profiles</div></div>
-        <div class="stat-item"><div class="stat-num">1.2<span>K+</span></div><div class="stat-label">Parlour</div></div>
+        <div class="stat-item"><div class="stat-num">1.2<span>K+</span></div><div class="stat-label">Salon Finder</div></div>
         <div class="stat-item"><div class="stat-num">9<span>8%</span></div><div class="stat-label">Accuracy</div></div>
       </div>
     </div>
@@ -360,7 +360,7 @@ input,select,button{font-family:var(--font-b);}
     <div class="nav-link active">Style Analysis</div>
     <div class="nav-link" onclick="go('screen-wardrobe')">Wardrobe</div>
     <div class="nav-link" onclick="go('screen-products')">Products</div>
-    <div class="nav-link" onclick="go('screen-parlour')">Parlour</div>
+    <div class="nav-link" onclick="go('screen-salon')">Salon Finder</div>
     <div class="nav-right">
       <span style="font-size:.82rem;color:var(--text-light);margin-right:.4rem;" id="nav-name-a"></span>
       <button class="btn-nav-outline" onclick="doLogout()">Sign Out</button>
@@ -394,7 +394,7 @@ input,select,button{font-family:var(--font-b);}
     <div class="nav-link" onclick="go('screen-analysis')">Style Analysis</div>
     <div class="nav-link active">Wardrobe</div>
     <div class="nav-link" onclick="go('screen-products')">Products</div>
-    <div class="nav-link" onclick="go('screen-parlour')">Parlour</div>
+    <div class="nav-link" onclick="go('screen-salon')">Salon Finder</div>
     <div class="nav-right">
       <span style="font-size:.82rem;color:var(--text-light);margin-right:.4rem;" id="nav-name-w"></span>
       <button class="btn-nav-outline" onclick="doLogout()">Sign Out</button>
@@ -514,7 +514,7 @@ input,select,button{font-family:var(--font-b);}
     <div class="nav-link" onclick="go('screen-analysis')">Style Analysis</div>
     <div class="nav-link" onclick="go('screen-wardrobe')">Wardrobe</div>
     <div class="nav-link active">Products</div>
-    <div class="nav-link" onclick="go('screen-parlour')">Parlour</div>
+    <div class="nav-link" onclick="go('screen-salon')">Salon Finder</div>
     <div class="nav-right">
       <button class="btn-nav-outline" onclick="doLogout()">Sign Out</button>
     </div>
@@ -543,7 +543,7 @@ input,select,button{font-family:var(--font-b);}
     <div class="nav-link" onclick="go('screen-analysis')">Style Analysis</div>
     <div class="nav-link" onclick="go('screen-wardrobe')">Wardrobe</div>
     <div class="nav-link" onclick="go('screen-products')">Products</div>
-    <div class="nav-link active">Parlour</div>
+    <div class="nav-link active">Salon Finder</div>
     <div class="nav-right"><button class="btn-nav-outline" onclick="doLogout()">Sign Out</button></div>
   </nav>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;color:var(--text-light);">
@@ -1718,6 +1718,434 @@ window.addEventListener("load",()=>{
     renderAnalysisPanel();
   }
 });
+
+// ══════════════════════════════════════════════════════════════════
+//  SPRINT 3 — SALON CONNECTOR JS
+// ══════════════════════════════════════════════════════════════════
+
+let currentSalonId = null;
+let currentSalonServices = [];
+let currentBookingId = null;
+let currentReviewSalonId = null;
+let currentReviewBookingId = null;
+let selectedRating = 0;
+let chatPollInterval = null;
+
+// ── Salon card price badge color ─────────────────────────────────
+function priceBadgeColor(pr){ return pr==="premium"?"#C0546A":pr==="budget"?"#4CAF50":"#7A5A8A"; }
+
+// ── Stars display ─────────────────────────────────────────────────
+function starsHTML(rating){
+  const full=Math.round(rating);
+  return "★".repeat(full)+"☆".repeat(5-full);
+}
+
+// ── Load salons (US-11) ───────────────────────────────────────────
+async function loadSalons(){
+  const st=document.getElementById("filter-service")?.value||"";
+  const pr=document.getElementById("filter-price")?.value||"";
+  const ct=document.getElementById("filter-cat")?.value||"all";
+  let qs=`?category=${ct}`;
+  if(st)qs+=`&service_type=${st}`;
+  if(pr)qs+=`&price_range=${pr}`;
+  const{data,ok}=await api(`/salons${qs}`,"GET");
+  if(!ok){toast("Could not load salons","err");return;}
+  const grid=document.getElementById("salon-grid");
+  document.getElementById("salon-count").textContent=`${data.count} salon${data.count!==1?"s":""} found`;
+  if(!data.salons.length){grid.innerHTML=`<p style="color:var(--text-light);">No salons match your filters.</p>`;return;}
+  grid.innerHTML=data.salons.map(s=>`
+    <div onclick="openSalonProfile(${s.id})" style="background:#fff;border-radius:var(--r);border:1.5px solid var(--border);padding:1.2rem;cursor:pointer;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 4px 18px rgba(192,84,106,.15)'" onmouseout="this.style.boxShadow='none'">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.6rem;">
+        <h3 style="font-family:var(--font-s);font-size:1.1rem;color:var(--text);">${s.name}</h3>
+        <span style="background:${priceBadgeColor(s.price_range)};color:#fff;font-size:.7rem;padding:.2rem .6rem;border-radius:var(--r-pill);font-weight:700;text-transform:capitalize;flex-shrink:0;margin-left:.5rem;">${s.price_range}</span>
+      </div>
+      <div style="font-size:.82rem;color:var(--text-light);margin-bottom:.5rem;">📍 ${s.address}</div>
+      <div style="font-size:.88rem;color:#D4A030;margin-bottom:.4rem;">${starsHTML(s.rating)} <span style="color:var(--text-light);font-size:.78rem;">${s.rating} (${s.review_count} reviews)</span></div>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem;">
+        <span style="background:var(--rose-pale);color:var(--rose);font-size:.72rem;padding:.15rem .55rem;border-radius:var(--r-pill);">${s.category}</span>
+        <span style="background:var(--cream2);color:var(--text-med);font-size:.72rem;padding:.15rem .55rem;border-radius:var(--r-pill);">🕐 ${s.working_hours}</span>
+      </div>
+    </div>
+  `).join("");
+}
+
+// ── Open salon profile (US-12) ────────────────────────────────────
+async function openSalonProfile(salonId){
+  currentSalonId=salonId;
+  const{data,ok}=await api(`/salons/${salonId}`,"GET");
+  if(!ok){toast("Could not load salon profile","err");return;}
+  const s=data.salon;
+  currentSalonServices=data.services;
+  const body=document.getElementById("salon-profile-body");
+  const serviceRows=data.services.map(sv=>`
+    <tr>
+      <td style="padding:.5rem .8rem;border-bottom:1px solid var(--border);">${sv.service_name}</td>
+      <td style="padding:.5rem .8rem;border-bottom:1px solid var(--border);text-transform:capitalize;">${sv.service_type}</td>
+      <td style="padding:.5rem .8rem;border-bottom:1px solid var(--border);">Rs. ${sv.price_min.toLocaleString()} – ${sv.price_max.toLocaleString()}</td>
+      <td style="padding:.5rem .8rem;border-bottom:1px solid var(--border);">${sv.duration_min} min</td>
+    </tr>`).join("");
+  const reviewCards=data.reviews.length
+    ? data.reviews.map(r=>`
+      <div style="background:var(--cream2);border-radius:var(--r);padding:.9rem 1rem;margin-bottom:.6rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem;">
+          <strong style="font-size:.88rem;">${r.user_name}</strong>
+          <span style="color:#D4A030;font-size:.95rem;">${starsHTML(r.rating)}</span>
+        </div>
+        <p style="font-size:.82rem;color:var(--text-med);">${r.review_text||"No written review."}</p>
+        <p style="font-size:.72rem;color:var(--text-light);margin-top:.3rem;">${r.created_at?.slice(0,10)||""}</p>
+      </div>`).join("")
+    : `<p style="color:var(--text-light);font-size:.85rem;">No reviews yet. Be the first!</p>`;
+  body.innerHTML=`
+    <div style="background:linear-gradient(135deg,var(--rose-pale),var(--cream2));border-radius:var(--r);padding:1.5rem 2rem;margin-bottom:1.5rem;">
+      <h2 style="font-family:var(--font-s);font-size:2rem;color:var(--text);margin-bottom:.3rem;">${s.name}</h2>
+      <p style="color:var(--text-light);font-size:.85rem;margin-bottom:.5rem;">📍 ${s.address}</p>
+      <div style="color:#D4A030;font-size:1.1rem;margin-bottom:.4rem;">${starsHTML(s.rating)} <span style="color:var(--text-light);font-size:.82rem;">${s.rating} (${s.review_count} reviews)</span></div>
+      <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.82rem;color:var(--text-med);">
+        <span>🕐 ${s.working_hours}</span>
+        <span>📞 ${s.phone||"N/A"}</span>
+        <span>👤 ${s.category}</span>
+        <span>💳 ${s.price_range}</span>
+      </div>
+      ${s.description?`<p style="margin-top:.8rem;font-size:.85rem;color:var(--text-med);font-style:italic;">"${s.description}"</p>`:""}
+    </div>
+
+    <h3 style="font-family:var(--font-s);font-size:1.2rem;color:var(--text);margin-bottom:.8rem;">Services Catalog</h3>
+    <div style="overflow-x:auto;margin-bottom:1.5rem;">
+      <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--border);">
+        <thead>
+          <tr style="background:var(--rose-pale);">
+            <th style="padding:.6rem .8rem;text-align:left;font-size:.83rem;color:var(--rose);">Service</th>
+            <th style="padding:.6rem .8rem;text-align:left;font-size:.83rem;color:var(--rose);">Type</th>
+            <th style="padding:.6rem .8rem;text-align:left;font-size:.83rem;color:var(--rose);">Price (PKR)</th>
+            <th style="padding:.6rem .8rem;text-align:left;font-size:.83rem;color:var(--rose);">Duration</th>
+          </tr>
+        </thead>
+        <tbody>${serviceRows||"<tr><td colspan=4 style=padding:.8rem;color:var(--text-light);>No services listed.</td></tr>"}</tbody>
+      </table>
+    </div>
+
+    <h3 style="font-family:var(--font-s);font-size:1.2rem;color:var(--text);margin-bottom:.8rem;">Reviews</h3>
+    ${reviewCards}
+  `;
+  go("screen-salon-profile");
+}
+
+function openBookingFromProfile(){
+  if(!currentSalonId){toast("No salon selected","err");return;}
+  document.getElementById("booking-salon-name").textContent=`Booking at: ${document.querySelector("#salon-profile-body h2")?.textContent||"Salon"}`;
+  const sel=document.getElementById("booking-service");
+  sel.innerHTML=`<option value="">— Choose a service —</option>`+currentSalonServices.map(s=>`<option value="${s.id}">${s.service_name} — Rs. ${s.price_min.toLocaleString()}–${s.price_max.toLocaleString()}</option>`).join("");
+  // Set min datetime to now
+  const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+  document.getElementById("booking-datetime").min=now.toISOString().slice(0,16);
+  document.getElementById("booking-err").style.display="none";
+  go("screen-booking");
+}
+
+// ── Submit booking (US-13) ────────────────────────────────────────
+async function submitBooking(){
+  const svcId=document.getElementById("booking-service").value;
+  const dt=document.getElementById("booking-datetime").value;
+  const note=document.getElementById("booking-note").value.trim();
+  const errEl=document.getElementById("booking-err");
+  errEl.style.display="none";
+  if(!svcId){errEl.textContent="Please select a service.";errEl.style.display="block";return;}
+  if(!dt){errEl.textContent="Please choose a date and time.";errEl.style.display="block";return;}
+  const btn=document.getElementById("booking-submit-btn");
+  btn.disabled=true; btn.textContent="Sending…";
+  const{data,ok}=await api("/bookings","POST",{salon_id:currentSalonId,service_id:parseInt(svcId),datetime:dt,note});
+  btn.disabled=false; btn.textContent="Send Booking Request";
+  if(ok){
+    toast("Booking request sent! ✓","ok");
+    setTimeout(()=>{ loadBookings(); go("screen-bookings"); },1000);
+  } else {
+    errEl.textContent=data.error||"Booking failed. Please try again.";
+    errEl.style.display="block";
+  }
+}
+
+// ── Load bookings (US-13) ────────────────────────────────────────
+async function loadBookings(){
+  const{data,ok}=await api("/bookings","GET");
+  const list=document.getElementById("bookings-list");
+  if(!ok||!data.bookings?.length){
+    list.innerHTML=`<div style="text-align:center;padding:3rem;color:var(--text-light);">
+      <div style="font-size:2.5rem;margin-bottom:.8rem;">📅</div>
+      <p>No bookings yet. <a onclick="go('screen-salon')" style="color:var(--rose);cursor:pointer;font-weight:700;">Find a salon</a> to get started.</p>
+    </div>`;
+    return;
+  }
+  const statusColor={"pending":"#E1AD01","confirmed":"#4CAF50","rejected":"#F44336","alternate":"#9C27B0","completed":"#607D8B"};
+  list.innerHTML=data.bookings.map(b=>`
+    <div style="background:#fff;border-radius:var(--r);border:1.5px solid var(--border);padding:1.2rem;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.6rem;">
+        <div>
+          <strong style="font-size:1rem;">${b.salon_name}</strong>
+          <p style="color:var(--text-light);font-size:.82rem;">${b.service_name||"Service not specified"}</p>
+        </div>
+        <span style="background:${statusColor[b.status]||"#999"};color:#fff;font-size:.72rem;padding:.25rem .7rem;border-radius:var(--r-pill);font-weight:700;text-transform:capitalize;">${b.status}</span>
+      </div>
+      <p style="font-size:.82rem;color:var(--text-med);margin-bottom:.4rem;">🕐 ${b.datetime||"N/A"}${b.alt_time?`<br>📌 Alternate proposed: ${b.alt_time}`:""}</p>
+      ${b.note?`<p style="font-size:.78rem;color:var(--text-light);font-style:italic;">Note: ${b.note}</p>`:""}
+      <div style="display:flex;gap:.5rem;margin-top:.8rem;flex-wrap:wrap;">
+        <button onclick="openChat(${b.id},'${b.salon_name}')" class="btn-hero-outline" style="padding:.35rem .9rem;font-size:.8rem;">💬 Chat</button>
+        ${b.status==="completed"?`<button onclick="openReview(${b.salon_id},'${b.salon_name}',${b.id})" class="btn-hero-fill" style="padding:.35rem .9rem;font-size:.8rem;">⭐ Review</button>`:""}
+        ${b.status==="pending"?`<button onclick="updateBookingStatus(${b.id},'confirmed')" class="btn-hero-fill" style="padding:.35rem .9rem;font-size:.8rem;background:var(--rose);">✓ Mark Confirmed</button>
+        <button onclick="updateBookingStatus(${b.id},'completed')" class="btn-hero-outline" style="padding:.35rem .9rem;font-size:.8rem;">✓ Mark Complete</button>`:""}
+      </div>
+    </div>
+  `).join("");
+}
+
+async function updateBookingStatus(bid, status){
+  const{ok}=await api(`/bookings/${bid}`,"PUT",{status});
+  if(ok){ toast(`Status updated to ${status} ✓`,"ok"); loadBookings(); }
+  else toast("Update failed","err");
+}
+
+// ── Chat (US-14) ──────────────────────────────────────────────────
+function openChat(bookingId, salonName){
+  currentBookingId=bookingId;
+  document.getElementById("chat-salon-name").textContent=salonName;
+  go("screen-chat");
+  loadChatMessages();
+  if(chatPollInterval)clearInterval(chatPollInterval);
+  chatPollInterval=setInterval(loadChatMessages,5000);
+}
+
+async function loadChatMessages(){
+  if(!currentBookingId)return;
+  const{data,ok}=await api(`/chat/${currentBookingId}`,"GET");
+  if(!ok)return;
+  const box=document.getElementById("chat-messages");
+  box.innerHTML=data.messages.map(m=>{
+    const isUser=m.sender_type==="user";
+    return `<div style="display:flex;justify-content:${isUser?"flex-end":"flex-start"};">
+      <div style="max-width:70%;background:${isUser?"var(--rose)":"#fff"};color:${isUser?"#fff":"var(--text)"};
+        padding:.6rem .9rem;border-radius:${isUser?"14px 14px 4px 14px":"14px 14px 14px 4px"};
+        font-size:.85rem;border:${isUser?"none":"1.5px solid var(--border)"};box-shadow:0 2px 8px rgba(0,0,0,.06);">
+        <p style="margin:0;">${m.message}</p>
+        <p style="margin:.2rem 0 0;font-size:.68rem;opacity:.7;text-align:right;">${(m.sent_at||"").slice(11,16)}</p>
+      </div>
+    </div>`;
+  }).join("");
+  box.scrollTop=box.scrollHeight;
+}
+
+async function sendChatMsg(){
+  const inp=document.getElementById("chat-input");
+  const msg=inp.value.trim();
+  if(!msg||!currentBookingId)return;
+  inp.value="";
+  const{ok}=await api(`/chat/${currentBookingId}`,"POST",{message:msg,sender_type:"user"});
+  if(ok)loadChatMessages();
+  else toast("Could not send message","err");
+}
+
+// ── Review (US-15) ────────────────────────────────────────────────
+function openReview(salonId, salonName, bookingId){
+  currentReviewSalonId=salonId;
+  currentReviewBookingId=bookingId;
+  selectedRating=0;
+  document.getElementById("review-salon-label").textContent=`Reviewing: ${salonName}`;
+  document.getElementById("review-text").value="";
+  document.getElementById("review-err").style.display="none";
+  setRating(0);
+  go("screen-review");
+}
+
+function setRating(val){
+  selectedRating=val;
+  document.querySelectorAll(".star").forEach(s=>{
+    s.style.color=parseInt(s.dataset.v)<=val?"#D4A030":"#DDD";
+  });
+}
+
+async function submitReview(){
+  const text=document.getElementById("review-text").value.trim();
+  const errEl=document.getElementById("review-err");
+  errEl.style.display="none";
+  if(!selectedRating){errEl.textContent="Please select a star rating.";errEl.style.display="block";return;}
+  const btn=document.getElementById("review-submit-btn");
+  btn.disabled=true; btn.textContent="Submitting…";
+  const{data,ok}=await api("/reviews","POST",{salon_id:currentReviewSalonId,booking_id:currentReviewBookingId,rating:selectedRating,review_text:text});
+  btn.disabled=false; btn.textContent="Submit Review";
+  if(ok){
+    toast("Review submitted! Thank you ⭐","ok");
+    setTimeout(()=>go("screen-bookings"),1200);
+  } else {
+    errEl.textContent=data.error||"Could not submit review.";
+    errEl.style.display="block";
+  }
+}
+
+// ── Extend window.go for Sprint 3 ────────────────────────────────
+(function(){
+  const _go=window.go;
+  window.go=function(id){
+    _go(id);
+    if(id==="screen-salon")loadSalons();
+    if(id==="screen-bookings")loadBookings();
+    if(id!=="screen-chat"&&chatPollInterval){clearInterval(chatPollInterval);chatPollInterval=null;}
+  };
+})();
+
 </script>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SPRINT 3 SCREENS — SALON CONNECTOR PLATFORM
+     US-11: Salon Finder | US-12: Salon Profile
+     US-13: Booking      | US-14: Chat | US-15: Reviews
+     ══════════════════════════════════════════════════════════════ -->
+
+<!-- ── SALON FINDER (US-11) ─────────────────────────────────── -->
+<div id="screen-salon" class="screen">
+  <nav class="topnav">
+    <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
+    <span class="nav-link active">Salon Finder</span>
+    <div class="nav-right">
+      <button class="btn-nav-outline" onclick="go('screen-home')">← Home</button>
+      <button class="btn-nav-outline" onclick="go('screen-bookings')">My Bookings</button>
+    </div>
+  </nav>
+  <div style="flex:1;padding:1.5rem 2rem;overflow-y:auto;">
+    <h2 style="font-family:var(--font-s);font-size:1.8rem;color:var(--text);margin-bottom:.3rem;">Find Nearby Salons</h2>
+    <p style="color:var(--text-light);font-size:.85rem;margin-bottom:1.2rem;">Discover beauty salons and book appointments with ease.</p>
+
+    <!-- Filters -->
+    <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;">
+      <select id="filter-service" onchange="loadSalons()" style="padding:.45rem .9rem;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:.83rem;background:#fff;color:var(--text);cursor:pointer;">
+        <option value="">All Services</option>
+        <option value="makeup">Makeup</option>
+        <option value="hair">Hair</option>
+        <option value="nails">Nails</option>
+        <option value="skincare">Skincare</option>
+      </select>
+      <select id="filter-price" onchange="loadSalons()" style="padding:.45rem .9rem;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:.83rem;background:#fff;color:var(--text);cursor:pointer;">
+        <option value="">Any Price</option>
+        <option value="budget">Budget</option>
+        <option value="mid">Mid-Range</option>
+        <option value="premium">Premium</option>
+      </select>
+      <select id="filter-cat" onchange="loadSalons()" style="padding:.45rem .9rem;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:.83rem;background:#fff;color:var(--text);cursor:pointer;">
+        <option value="all">All Categories</option>
+        <option value="women">Women</option>
+        <option value="men">Men</option>
+        <option value="unisex">Unisex</option>
+      </select>
+      <span id="salon-count" style="font-size:.82rem;color:var(--text-light);margin-left:auto;"></span>
+    </div>
+
+    <div id="salon-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;"></div>
+  </div>
+</div>
+
+<!-- ── SALON PROFILE (US-12) ─────────────────────────────────── -->
+<div id="screen-salon-profile" class="screen">
+  <nav class="topnav">
+    <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
+    <span class="nav-link" onclick="go('screen-salon')">← Salons</span>
+    <div class="nav-right">
+      <button class="btn-nav-fill" onclick="openBookingFromProfile()">Book Appointment</button>
+    </div>
+  </nav>
+  <div id="salon-profile-body" style="flex:1;overflow-y:auto;padding:1.5rem 2rem;"></div>
+</div>
+
+<!-- ── BOOKING (US-13) ────────────────────────────────────────── -->
+<div id="screen-booking" class="screen">
+  <nav class="topnav">
+    <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
+    <span class="nav-link" onclick="go('screen-salon-profile')">← Salon Profile</span>
+    <div class="nav-right">
+      <button class="btn-nav-outline" onclick="go('screen-bookings')">My Bookings</button>
+    </div>
+  </nav>
+  <div style="flex:1;overflow-y:auto;padding:1.5rem 2rem;max-width:600px;margin:0 auto;width:100%;">
+    <h2 style="font-family:var(--font-s);font-size:1.7rem;color:var(--text);margin-bottom:.3rem;">Book Appointment</h2>
+    <p id="booking-salon-name" style="color:var(--rose);font-weight:700;margin-bottom:1.5rem;font-size:.95rem;"></p>
+
+    <div style="background:#fff;border-radius:var(--r);border:1.5px solid var(--border);padding:1.5rem;">
+      <label style="font-size:.85rem;font-weight:700;color:var(--text-med);display:block;margin-bottom:.4rem;">Select Service</label>
+      <select id="booking-service" style="width:100%;padding:.6rem .9rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.88rem;margin-bottom:1rem;">
+        <option value="">— Choose a service —</option>
+      </select>
+
+      <label style="font-size:.85rem;font-weight:700;color:var(--text-med);display:block;margin-bottom:.4rem;">Preferred Date & Time</label>
+      <input type="datetime-local" id="booking-datetime" style="width:100%;padding:.6rem .9rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.88rem;margin-bottom:1rem;" />
+
+      <label style="font-size:.85rem;font-weight:700;color:var(--text-med);display:block;margin-bottom:.4rem;">Note for Salon (optional)</label>
+      <textarea id="booking-note" rows="3" placeholder="e.g. I prefer a female stylist, I have an allergy to…" style="width:100%;padding:.6rem .9rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.88rem;resize:none;"></textarea>
+
+      <button id="booking-submit-btn" class="btn-hero-fill" style="width:100%;margin-top:1.2rem;justify-content:center;" onclick="submitBooking()">
+        Send Booking Request
+      </button>
+      <div id="booking-err" class="err-msg" style="display:none;margin-top:.6rem;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MY BOOKINGS (US-13 list + US-14 chat) ─────────────────── -->
+<div id="screen-bookings" class="screen">
+  <nav class="topnav">
+    <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
+    <span class="nav-link active">My Bookings</span>
+    <div class="nav-right">
+      <button class="btn-nav-outline" onclick="go('screen-salon')">Find Salons</button>
+    </div>
+  </nav>
+  <div style="flex:1;overflow-y:auto;padding:1.5rem 2rem;">
+    <h2 style="font-family:var(--font-s);font-size:1.7rem;color:var(--text);margin-bottom:1rem;">My Bookings</h2>
+    <div id="bookings-list" style="display:flex;flex-direction:column;gap:1rem;max-width:700px;"></div>
+  </div>
+</div>
+
+<!-- ── CHAT (US-14) ───────────────────────────────────────────── -->
+<div id="screen-chat" class="screen">
+  <nav class="topnav">
+    <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
+    <span class="nav-link" onclick="go('screen-bookings')">← Bookings</span>
+    <div class="nav-right">
+      <span id="chat-salon-name" style="font-size:.88rem;color:var(--text-med);font-weight:700;"></span>
+    </div>
+  </nav>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+    <div id="chat-messages" style="flex:1;overflow-y:auto;padding:1rem 1.5rem;display:flex;flex-direction:column;gap:.6rem;background:var(--cream);"></div>
+    <div style="padding:.8rem 1.2rem;background:#fff;border-top:1.5px solid var(--border);display:flex;gap:.6rem;">
+      <input id="chat-input" type="text" placeholder="Type a message…" style="flex:1;padding:.6rem 1rem;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:.88rem;"
+        onkeydown="if(event.key==='Enter')sendChatMsg()" />
+      <button class="btn-hero-fill" onclick="sendChatMsg()" style="padding:.55rem 1.2rem;">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── REVIEW (US-15) ─────────────────────────────────────────── -->
+<div id="screen-review" class="screen">
+  <nav class="topnav">
+    <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
+    <span class="nav-link" onclick="go('screen-bookings')">← Bookings</span>
+  </nav>
+  <div style="flex:1;overflow-y:auto;padding:1.5rem 2rem;max-width:520px;margin:0 auto;width:100%;">
+    <h2 style="font-family:var(--font-s);font-size:1.7rem;color:var(--text);margin-bottom:.3rem;">Leave a Review</h2>
+    <p id="review-salon-label" style="color:var(--rose);font-weight:700;margin-bottom:1.5rem;font-size:.95rem;"></p>
+    <div style="background:#fff;border-radius:var(--r);border:1.5px solid var(--border);padding:1.5rem;">
+      <label style="font-size:.85rem;font-weight:700;color:var(--text-med);display:block;margin-bottom:.7rem;">Your Rating</label>
+      <div id="star-rating" style="display:flex;gap:.4rem;margin-bottom:1.2rem;cursor:pointer;">
+        <span data-v="1" class="star" onclick="setRating(1)" style="font-size:2rem;color:#DDD;">★</span>
+        <span data-v="2" class="star" onclick="setRating(2)" style="font-size:2rem;color:#DDD;">★</span>
+        <span data-v="3" class="star" onclick="setRating(3)" style="font-size:2rem;color:#DDD;">★</span>
+        <span data-v="4" class="star" onclick="setRating(4)" style="font-size:2rem;color:#DDD;">★</span>
+        <span data-v="5" class="star" onclick="setRating(5)" style="font-size:2rem;color:#DDD;">★</span>
+      </div>
+      <label style="font-size:.85rem;font-weight:700;color:var(--text-med);display:block;margin-bottom:.4rem;">Your Review</label>
+      <textarea id="review-text" rows="4" placeholder="Share your experience with this salon…" style="width:100%;padding:.6rem .9rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.88rem;resize:none;"></textarea>
+      <button id="review-submit-btn" class="btn-hero-fill" style="width:100%;margin-top:1rem;justify-content:center;" onclick="submitReview()">
+        Submit Review
+      </button>
+      <div id="review-err" class="err-msg" style="display:none;margin-top:.6rem;"></div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
