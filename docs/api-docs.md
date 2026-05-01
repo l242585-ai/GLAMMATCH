@@ -1,5 +1,5 @@
 # GlamMatch API Documentation
-## Sprint 1 & 2 — REST API Endpoints
+## Sprint 1, 2 & 3 — REST API Endpoints
 
 **Base URL:** `http://localhost:5000/api`  
 **Auth:** Bearer token in `Authorization` header (except register, login, forgot-password, reset-password)
@@ -245,7 +245,7 @@ Called automatically by the frontend after face-api.js analysis.
 ```
 **Notes:**
 - `face_shape` is optional — skin tone can be saved without it
-- `save_photo` controls whether the image is stored or discarded
+- `save_photo`: `true` = save photo record, `false` = analyze then discard (privacy mode)
 - Skin tone values: `light` | `medium` | `deep` | `rich`
 
 ---
@@ -484,17 +484,351 @@ Save a favourite outfit combination. **Requires auth.**
 
 ---
 
+---
+
+# Sprint 3 — Salon Connector Platform
+
+## Salon Discovery (US-11)
+
+### GET /salons
+Get list of all salons with optional filters. **Requires auth.**
+
+**Query Parameters (all optional):**
+
+| Param | Values | Description |
+|---|---|---|
+| `category` | `women` \| `men` \| `unisex` \| `all` | Filter by salon category |
+| `price_range` | `budget` \| `mid` \| `premium` | Filter by price range |
+| `service_type` | `makeup` \| `hair` \| `nails` \| `skincare` \| `bridal` | Filter by service type offered |
+
+**Example:** `GET /api/salons?category=women&price_range=mid&service_type=hair`
+
+**Response:**
+```json
+{
+  "salons": [
+    {
+      "id": 1,
+      "name": "Glamour Studio",
+      "address": "12 Mall Road, Lahore",
+      "category": "women",
+      "price_range": "mid",
+      "rating": 4.7,
+      "review_count": 38,
+      "working_hours": "10:00 AM – 9:00 PM",
+      "phone": "+92-300-1234567",
+      "description": "Premium beauty studio specializing in bridal and editorial makeup."
+    }
+  ],
+  "count": 1
+}
+```
+**Notes:**
+- Results are ordered by rating descending
+- `category=all` or omitting `category` returns all salons
+- When `service_type` is provided, only salons that have at least one service of that type are returned
+
+---
+
+## Salon Profile (US-12)
+
+### GET /salons/\<salon_id\>
+Get full salon profile including services and recent reviews. **Requires auth.**
+
+**Response:**
+```json
+{
+  "salon": {
+    "id": 1,
+    "name": "Glamour Studio",
+    "address": "12 Mall Road, Lahore",
+    "category": "women",
+    "price_range": "mid",
+    "rating": 4.7,
+    "review_count": 38,
+    "working_hours": "10:00 AM – 9:00 PM",
+    "phone": "+92-300-1234567",
+    "description": "Premium beauty studio specializing in bridal and editorial makeup."
+  },
+  "services": [
+    {
+      "id": 1,
+      "salon_id": 1,
+      "service_name": "Bridal Makeup",
+      "service_type": "bridal",
+      "price_min": 8000,
+      "price_max": 15000,
+      "duration_min": 180
+    }
+  ],
+  "reviews": [
+    {
+      "id": 1,
+      "user_id": 2,
+      "user_name": "Eman",
+      "salon_id": 1,
+      "booking_id": 3,
+      "rating": 5,
+      "review_text": "Amazing experience!",
+      "created_at": "2024-05-01 14:30:00"
+    }
+  ]
+}
+```
+**Error:** `404 { "error": "Salon not found" }`
+
+---
+
+## Appointment Booking (US-13)
+
+### GET /bookings
+Get all bookings for the current user. **Requires auth.**
+
+**Response:**
+```json
+{
+  "bookings": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "salon_id": 2,
+      "salon_name": "The Beauty Lounge",
+      "service_id": 5,
+      "service_name": "Hair Cut & Blow Dry",
+      "datetime": "2024-05-10T14:00",
+      "status": "pending",
+      "note": "I prefer a female stylist",
+      "alt_time": null,
+      "created_at": "2024-05-01 10:00:00"
+    }
+  ]
+}
+```
+
+---
+
+### POST /bookings
+Create a new booking request. **Requires auth.**
+**Body:**
+```json
+{
+  "salon_id": 2,
+  "service_id": 5,
+  "datetime": "2024-05-10T14:00",
+  "note": "I prefer a female stylist"
+}
+```
+**Validation:**
+- `salon_id` and `datetime` are required
+- `service_id` and `note` are optional
+- `salon_id` must exist in the database
+
+**Response:**
+```json
+{ "booking_id": 1, "status": "pending" }
+```
+**Error:** `404 { "error": "Salon not found" }`
+
+---
+
+### GET /bookings/\<booking_id\>
+Get a single booking by ID. **Requires auth.**
+
+**Response:**
+```json
+{
+  "booking": {
+    "id": 1,
+    "salon_name": "The Beauty Lounge",
+    "service_name": "Hair Cut & Blow Dry",
+    "datetime": "2024-05-10T14:00",
+    "status": "confirmed",
+    "note": "I prefer a female stylist",
+    "alt_time": null
+  }
+}
+```
+**Error:** `404 { "error": "Booking not found" }`
+
+---
+
+### PUT /bookings/\<booking_id\>
+Update booking status (used by salon to confirm/reject or user to cancel/complete). **Requires auth.**
+**Body:**
+```json
+{ "status": "confirmed", "alt_time": "" }
+```
+**Status values:**
+
+| Value | Description |
+|---|---|
+| `confirmed` | Salon accepts the booking (or user accepts an alternate slot) |
+| `rejected` | Salon rejects the booking |
+| `alternate` | Salon proposes a new time — include `alt_time` in body |
+| `completed` | Appointment has taken place — user can now leave a review |
+| `cancelled` | User cancels the booking |
+
+**Body for alternate slot:**
+```json
+{ "status": "alternate", "alt_time": "2024-05-11T10:00" }
+```
+
+**Response:**
+```json
+{ "booking_id": 1, "status": "alternate" }
+```
+
+---
+
+## Chat (US-14)
+
+### GET /chat/\<booking_id\>
+Get all chat messages for a booking. **Requires auth.**
+
+**Response:**
+```json
+{
+  "messages": [
+    {
+      "id": 1,
+      "booking_id": 1,
+      "sender_type": "user",
+      "message": "Hi, can I confirm my appointment for Friday?",
+      "sent_at": "2024-05-01 10:15:00"
+    },
+    {
+      "id": 2,
+      "booking_id": 1,
+      "sender_type": "salon",
+      "message": "Yes, your appointment is confirmed for Friday at 2 PM!",
+      "sent_at": "2024-05-01 10:20:00"
+    }
+  ]
+}
+```
+**Notes:**
+- Messages are returned in ascending order (oldest first)
+- `sender_type` is either `user` or `salon`
+- Chat is linked to a specific booking — a booking must exist before chatting
+
+---
+
+### POST /chat/\<booking_id\>
+Send a message in a booking chat thread. **Requires auth.**
+**Body:**
+```json
+{ "message": "Can I reschedule to Saturday?", "sender_type": "user" }
+```
+**sender_type values:** `user` | `salon`
+
+**Response:**
+```json
+{ "message_id": 3, "sent": true }
+```
+**Error:** `400 { "error": "message is required" }`
+
+---
+
+## Reviews (US-15)
+
+### POST /reviews
+Submit a rating and review for a salon after an appointment. **Requires auth.**
+**Body:**
+```json
+{
+  "salon_id": 2,
+  "booking_id": 1,
+  "rating": 5,
+  "review_text": "Absolutely loved the experience!"
+}
+```
+**Validation:**
+- `salon_id` and `rating` are required
+- `rating` must be an integer between 1 and 5
+- `booking_id` is optional but recommended to prevent duplicate reviews
+- A user cannot review the same booking twice
+
+**Response:**
+```json
+{ "saved": true, "rating": 5 }
+```
+**Errors:**
+- `400` — missing salon_id or invalid rating
+- `409` — `{ "error": "You have already reviewed this appointment" }`
+
+**Notes:**
+- After a review is saved, the salon's average `rating` and `review_count` are automatically recalculated
+- Salon cannot edit or delete user reviews
+
+---
+
+### GET /salons/\<salon_id\>/reviews
+Get all reviews for a specific salon. **Requires auth.**
+
+**Response:**
+```json
+{
+  "reviews": [
+    {
+      "id": 1,
+      "user_id": 2,
+      "user_name": "Eman",
+      "salon_id": 1,
+      "booking_id": 3,
+      "rating": 5,
+      "review_text": "Amazing experience!",
+      "created_at": "2024-05-01 14:30:00"
+    }
+  ]
+}
+```
+**Notes:**
+- Results are ordered by `created_at` descending (newest first)
+
+---
+
+---
+
 ## Database Tables
 
+### Sprint 1 & 2 Tables
+
 | Table | Purpose |
-|-------|---------|
+|---|---|
 | `users` | User accounts with undertone, body_type, face_shape |
 | `wardrobe` | Wardrobe items per user |
-| `quiz_log` | History of all quiz submissions |
-| `bookmarks` | Bookmarked styling tips |
-| `photo_analysis` | Results from uploaded photo analysis |
-| `product_recommendations` | Seeded product data by undertone |
+| `quiz_log` | History of all quiz submissions (undertone, bodytype, outfit_fav) |
+| `bookmarks` | Bookmarked styling tips per user |
+| `photo_analysis` | Results from uploaded photo analysis (skin_tone, undertone, face_shape, photo_saved) |
+| `product_recommendations` | Seeded product data (makeup & clothing) by undertone |
 | `wishlist` | User wishlisted products |
-| `style_suggestions` | Seeded hairstyle/hijab/earring suggestions by face shape |
-| `style_bookmarks` | Bookmarked style suggestions |
-| `password_reset_tokens` | Active password reset tokens with expiry |
+| `style_suggestions` | Seeded hairstyle / hijab / earring suggestions by face shape |
+| `style_bookmarks` | Bookmarked style suggestions per user |
+| `password_reset_tokens` | Active password reset tokens with expiry timestamp |
+
+### Sprint 3 Tables
+
+| Table | Purpose |
+|---|---|
+| `salons` | Salon profiles — name, address, category, price_range, rating, working_hours, phone, description |
+| `salon_services` | Services offered by each salon — name, type, price range, duration |
+| `bookings` | Appointment requests — links user to salon + service, stores status and alt_time |
+| `chat_messages` | Chat messages per booking — sender_type (user/salon), message, timestamp |
+| `reviews` | Post-appointment reviews — rating (1–5), review_text, linked to user + salon + booking |
+
+### Booking Status Flow
+
+```
+[User submits] → pending
+                    ↓
+        ┌───────────┼───────────┐
+     confirmed   rejected   alternate (salon proposes new time)
+        ↓                       ↓
+     completed            confirmed (user accepts)
+        ↓                       ↓
+    [Review enabled]         completed
+                                ↓
+                           [Review enabled]
+
+At any point while pending or confirmed → cancelled (user cancels)
+```

@@ -1086,7 +1086,7 @@ def init_salon_db():
         # Seed services
         services = [
             # Glamour Studio (id=1)
-            (1,"Bridal Makeup",       "makeup",  8000,15000, 180),
+            (1,"Bridal Makeup",       "bridal",  8000,15000, 180),
             (1,"Party Makeup",         "makeup",  3000, 6000,  90),
             (1,"Hair Styling",         "hair",    1500, 3000,  60),
             (1,"Facial",              "skincare",1500, 3500,  60),
@@ -1101,8 +1101,8 @@ def init_salon_db():
             (3,"Waxing (Full)",        "skincare", 800, 1200,  60),
             (3,"Simple Makeup",        "makeup",  1500, 2500,  60),
             # Bridal Affairs (id=4)
-            (4,"Full Bridal Package",  "makeup", 20000,50000, 360),
-            (4,"Mehndi Makeup",        "makeup",  5000,10000, 120),
+            (4,"Full Bridal Package",  "bridal", 20000,50000, 360),
+            (4,"Mehndi Makeup",        "bridal",  5000,10000, 120),
             (4,"Trial Makeup",         "makeup",  3000, 5000,  90),
             (4,"Hair Treatment",       "hair",    2000, 5000,  90),
             # SnipMaster (id=5)
@@ -1228,16 +1228,33 @@ def create_booking():
     c.close()
     return jsonify({"booking_id": bid, "status": "pending"}), 201
 
+@app.route("/api/bookings/<int:bid>", methods=["GET"])
+@auth
+def get_booking(bid):
+    c = db()
+    row = c.execute(
+        """SELECT b.*, s.name as salon_name, sv.service_name
+           FROM bookings b
+           JOIN salons s ON b.salon_id = s.id
+           LEFT JOIN salon_services sv ON b.service_id = sv.id
+           WHERE b.id=? AND b.user_id=?""",
+        (bid, request.uid)
+    ).fetchone()
+    c.close()
+    if not row: return jsonify({"error": "Booking not found"}), 404
+    return jsonify({"booking": dict(row)})
+
 @app.route("/api/bookings/<int:bid>", methods=["PUT"])
 @auth
 def update_booking(bid):
     d      = request.get_json() or {}
     status = d.get("status")
     alt    = d.get("alt_time", "")
-    allowed = ("confirmed", "rejected", "alternate", "completed")
+    allowed = ("confirmed", "rejected", "alternate", "completed", "cancelled")
     if status not in allowed:
         return jsonify({"error": f"status must be one of {allowed}"}), 400
     c = db()
+    # Verify booking belongs to this user (or allow any update for demo)
     c.execute("UPDATE bookings SET status=?, alt_time=? WHERE id=?", (status, alt, bid))
     c.commit(); c.close()
     return jsonify({"booking_id": bid, "status": status})

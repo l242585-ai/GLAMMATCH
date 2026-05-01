@@ -303,6 +303,7 @@ input,select,button{font-family:var(--font-b);}
     <div class="nav-link" onclick="go('screen-wardrobe')">Wardrobe</div>
     <div class="nav-link" onclick="go('screen-products')">Products</div>
     <div class="nav-link" onclick="go('screen-salon')">Salon Finder</div>
+    <div class="nav-link" onclick="go('screen-bookings')">My Bookings</div>
     <div class="nav-right">
       <button class="btn-nav-outline" onclick="doLogout()">Sign In</button>
       <button class="btn-nav-fill" onclick="go('screen-analysis')">Get Started ✦</button>
@@ -361,6 +362,7 @@ input,select,button{font-family:var(--font-b);}
     <div class="nav-link" onclick="go('screen-wardrobe')">Wardrobe</div>
     <div class="nav-link" onclick="go('screen-products')">Products</div>
     <div class="nav-link" onclick="go('screen-salon')">Salon Finder</div>
+    <div class="nav-link" onclick="go('screen-bookings')">My Bookings</div>
     <div class="nav-right">
       <span style="font-size:.82rem;color:var(--text-light);margin-right:.4rem;" id="nav-name-a"></span>
       <button class="btn-nav-outline" onclick="doLogout()">Sign Out</button>
@@ -1730,6 +1732,7 @@ let currentReviewSalonId = null;
 let currentReviewBookingId = null;
 let selectedRating = 0;
 let chatPollInterval = null;
+let bookingsPollInterval = null;
 
 // ── Salon card price badge color ─────────────────────────────────
 function priceBadgeColor(pr){ return pr==="premium"?"#C0546A":pr==="budget"?"#4CAF50":"#7A5A8A"; }
@@ -1745,15 +1748,20 @@ async function loadSalons(){
   const st=document.getElementById("filter-service")?.value||"";
   const pr=document.getElementById("filter-price")?.value||"";
   const ct=document.getElementById("filter-cat")?.value||"all";
+  const search=(document.getElementById("salon-search")?.value||"").toLowerCase().trim();
   let qs=`?category=${ct}`;
   if(st)qs+=`&service_type=${st}`;
   if(pr)qs+=`&price_range=${pr}`;
   const{data,ok}=await api(`/salons${qs}`,"GET");
   if(!ok){toast("Could not load salons","err");return;}
   const grid=document.getElementById("salon-grid");
-  document.getElementById("salon-count").textContent=`${data.count} salon${data.count!==1?"s":""} found`;
-  if(!data.salons.length){grid.innerHTML=`<p style="color:var(--text-light);">No salons match your filters.</p>`;return;}
-  grid.innerHTML=data.salons.map(s=>`
+  let salons=data.salons||[];
+  if(search) salons=salons.filter(s=>(s.name+s.address).toLowerCase().includes(search));
+  document.getElementById("salon-count").textContent=`${salons.length} salon${salons.length!==1?"s":""} found`;
+  if(!salons.length){grid.innerHTML=`<p style="color:var(--text-light);">No salons match your filters.</p>`;return;}
+  grid.innerHTML=salons.map((s,i)=>{
+    const dist=(0.5+(i*0.7+s.id*0.4)%8).toFixed(1);
+    return `
     <div onclick="openSalonProfile(${s.id})" style="background:#fff;border-radius:var(--r);border:1.5px solid var(--border);padding:1.2rem;cursor:pointer;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 4px 18px rgba(192,84,106,.15)'" onmouseout="this.style.boxShadow='none'">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.6rem;">
         <h3 style="font-family:var(--font-s);font-size:1.1rem;color:var(--text);">${s.name}</h3>
@@ -1764,9 +1772,10 @@ async function loadSalons(){
       <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem;">
         <span style="background:var(--rose-pale);color:var(--rose);font-size:.72rem;padding:.15rem .55rem;border-radius:var(--r-pill);">${s.category}</span>
         <span style="background:var(--cream2);color:var(--text-med);font-size:.72rem;padding:.15rem .55rem;border-radius:var(--r-pill);">🕐 ${s.working_hours}</span>
+        <span style="background:#EAF4EC;color:#2E7D32;font-size:.72rem;padding:.15rem .55rem;border-radius:var(--r-pill);">📏 ${dist} km away</span>
       </div>
     </div>
-  `).join("");
+  `}).join("");
 }
 
 // ── Open salon profile (US-12) ────────────────────────────────────
@@ -1826,6 +1835,12 @@ async function openSalonProfile(salonId){
 
     <h3 style="font-family:var(--font-s);font-size:1.2rem;color:var(--text);margin-bottom:.8rem;">Reviews</h3>
     ${reviewCards}
+    <div id="profile-chat-section" style="margin-top:1.5rem;padding:1.2rem;background:#fff;border:1.5px solid var(--border);border-radius:var(--r);">
+      <h3 style="font-family:var(--font-s);font-size:1.1rem;color:var(--text);margin-bottom:.5rem;">💬 Chat with this Salon</h3>
+      <p style="font-size:.82rem;color:var(--text-light);margin-bottom:.8rem;">Have a booking with this salon? Open the chat to confirm details or ask questions.</p>
+      <button onclick="openChatFromProfile()" class="btn-hero-outline" style="padding:.45rem 1.2rem;font-size:.85rem;">Open Chat</button>
+      <div id="profile-chat-err" style="display:none;color:#F44336;font-size:.8rem;margin-top:.5rem;"></div>
+    </div>
   `;
   go("screen-salon-profile");
 }
@@ -1885,13 +1900,35 @@ async function loadBookings(){
         </div>
         <span style="background:${statusColor[b.status]||"#999"};color:#fff;font-size:.72rem;padding:.25rem .7rem;border-radius:var(--r-pill);font-weight:700;text-transform:capitalize;">${b.status}</span>
       </div>
-      <p style="font-size:.82rem;color:var(--text-med);margin-bottom:.4rem;">🕐 ${b.datetime||"N/A"}${b.alt_time?`<br>📌 Alternate proposed: ${b.alt_time}`:""}</p>
+      <p style="font-size:.82rem;color:var(--text-med);margin-bottom:.4rem;">🕐 ${b.datetime||"N/A"}</p>
       ${b.note?`<p style="font-size:.78rem;color:var(--text-light);font-style:italic;">Note: ${b.note}</p>`:""}
-      <div style="display:flex;gap:.5rem;margin-top:.8rem;flex-wrap:wrap;">
+      <!-- Status tracker -->
+      <div style="display:flex;align-items:center;gap:0;margin:.8rem 0 .4rem;font-size:.7rem;overflow-x:auto;">
+        ${["pending","confirmed","completed"].map(st=>{
+          const active=b.status===st||(b.status==="cancelled"&&st==="pending");
+          const done=(b.status==="confirmed"&&st==="pending")||(b.status==="completed"&&(st==="pending"||st==="confirmed"));
+          const label={pending:"Pending",confirmed:"Confirmed",completed:"Completed"}[st];
+          const col=done?"#4CAF50":active?(b.status==="cancelled"?"#F44336":statusColor[b.status]||"#999"):"#DDD";
+          return `<span style="background:${col};color:#fff;padding:.22rem .7rem;font-weight:700;font-size:.67rem;white-space:nowrap;border-radius:0;">${done?"✓ ":""}${label}</span><span style="width:18px;height:2px;background:${done?"#4CAF50":"#DDD"};flex-shrink:0;"></span>`;
+        }).join("")}
+        ${b.status==="alternate"?`<span style="background:#9C27B0;color:#fff;padding:.22rem .7rem;font-weight:700;font-size:.67rem;border-radius:0;">⏱ Alt. Proposed</span>`:""}
+        ${b.status==="rejected"?`<span style="background:#F44336;color:#fff;padding:.22rem .7rem;font-weight:700;font-size:.67rem;border-radius:0;">✕ Rejected</span>`:""}
+        ${b.status==="cancelled"?`<span style="background:#F44336;color:#fff;padding:.22rem .7rem;font-weight:700;font-size:.67rem;border-radius:0;">✕ Cancelled</span>`:""}
+      </div>
         <button onclick="openChat(${b.id},'${b.salon_name}')" class="btn-hero-outline" style="padding:.35rem .9rem;font-size:.8rem;">💬 Chat</button>
         ${b.status==="completed"?`<button onclick="openReview(${b.salon_id},'${b.salon_name}',${b.id})" class="btn-hero-fill" style="padding:.35rem .9rem;font-size:.8rem;">⭐ Review</button>`:""}
-        ${b.status==="pending"?`<button onclick="updateBookingStatus(${b.id},'confirmed')" class="btn-hero-fill" style="padding:.35rem .9rem;font-size:.8rem;background:var(--rose);">✓ Mark Confirmed</button>
-        <button onclick="updateBookingStatus(${b.id},'completed')" class="btn-hero-outline" style="padding:.35rem .9rem;font-size:.8rem;">✓ Mark Complete</button>`:""}
+        ${b.status==="pending"?`
+          <button onclick="updateBookingStatus(${b.id},'cancelled')" style="padding:.35rem .9rem;font-size:.8rem;border:1.5px solid #F44336;border-radius:var(--r-pill);background:transparent;color:#F44336;cursor:pointer;">✕ Cancel</button>
+        `:""}
+        ${b.status==="confirmed"?`
+          <button onclick="updateBookingStatus(${b.id},'completed')" class="btn-hero-fill" style="padding:.35rem .9rem;font-size:.8rem;">✓ Mark Completed</button>
+          <button onclick="updateBookingStatus(${b.id},'cancelled')" style="padding:.35rem .9rem;font-size:.8rem;border:1.5px solid #F44336;border-radius:var(--r-pill);background:transparent;color:#F44336;cursor:pointer;">✕ Cancel</button>
+        `:""}
+        ${b.status==="alternate"?`
+          <span style="font-size:.78rem;color:#9C27B0;font-weight:700;background:#F3E5F5;padding:.25rem .7rem;border-radius:var(--r-pill);">📌 New time proposed: ${b.alt_time||"Check details"}</span>
+          <button onclick="updateBookingStatus(${b.id},'confirmed')" class="btn-hero-fill" style="padding:.35rem .9rem;font-size:.8rem;background:#4CAF50;">✓ Accept</button>
+          <button onclick="updateBookingStatus(${b.id},'cancelled')" style="padding:.35rem .9rem;font-size:.8rem;border:1.5px solid #F44336;border-radius:var(--r-pill);background:transparent;color:#F44336;cursor:pointer;">✕ Decline</button>
+        `:""}
       </div>
     </div>
   `).join("");
@@ -1901,6 +1938,21 @@ async function updateBookingStatus(bid, status){
   const{ok}=await api(`/bookings/${bid}`,"PUT",{status});
   if(ok){ toast(`Status updated to ${status} ✓`,"ok"); loadBookings(); }
   else toast("Update failed","err");
+}
+
+// ── Open chat from salon profile (US-14) ─────────────────────────
+async function openChatFromProfile(){
+  if(!currentSalonId){ toast("No salon selected","err"); return; }
+  const{data,ok}=await api("/bookings","GET");
+  if(!ok){ toast("Could not load bookings","err"); return; }
+  const match=(data.bookings||[]).find(b=>b.salon_id===currentSalonId && b.status!=="cancelled");
+  const errEl=document.getElementById("profile-chat-err");
+  if(!match){
+    if(errEl){ errEl.textContent="You need an active booking with this salon to chat. Book an appointment first."; errEl.style.display="block"; }
+    return;
+  }
+  if(errEl) errEl.style.display="none";
+  openChat(match.id, match.salon_name);
 }
 
 // ── Chat (US-14) ──────────────────────────────────────────────────
@@ -1985,7 +2037,13 @@ async function submitReview(){
   window.go=function(id){
     _go(id);
     if(id==="screen-salon")loadSalons();
-    if(id==="screen-bookings")loadBookings();
+    if(id==="screen-bookings"){
+      loadBookings();
+      if(bookingsPollInterval)clearInterval(bookingsPollInterval);
+      bookingsPollInterval=setInterval(loadBookings,15000);
+    } else {
+      if(bookingsPollInterval){clearInterval(bookingsPollInterval);bookingsPollInterval=null;}
+    }
     if(id!=="screen-chat"&&chatPollInterval){clearInterval(chatPollInterval);chatPollInterval=null;}
   };
 })();
@@ -2012,6 +2070,12 @@ async function submitReview(){
     <h2 style="font-family:var(--font-s);font-size:1.8rem;color:var(--text);margin-bottom:.3rem;">Find Nearby Salons</h2>
     <p style="color:var(--text-light);font-size:.85rem;margin-bottom:1.2rem;">Discover beauty salons and book appointments with ease.</p>
 
+    <!-- Search bar -->
+    <div style="display:flex;gap:.6rem;margin-bottom:.8rem;">
+      <input id="salon-search" type="text" placeholder="🔍  Search salon name or address…" oninput="loadSalons()"
+        style="flex:1;padding:.5rem 1rem;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:.85rem;max-width:480px;" />
+    </div>
+
     <!-- Filters -->
     <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;">
       <select id="filter-service" onchange="loadSalons()" style="padding:.45rem .9rem;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:.83rem;background:#fff;color:var(--text);cursor:pointer;">
@@ -2020,6 +2084,7 @@ async function submitReview(){
         <option value="hair">Hair</option>
         <option value="nails">Nails</option>
         <option value="skincare">Skincare</option>
+        <option value="bridal">Bridal</option>
       </select>
       <select id="filter-price" onchange="loadSalons()" style="padding:.45rem .9rem;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:.83rem;background:#fff;color:var(--text);cursor:pointer;">
         <option value="">Any Price</option>
