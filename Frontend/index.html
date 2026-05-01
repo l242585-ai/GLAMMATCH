@@ -313,6 +313,61 @@ button{transition:all var(--trans) !important;}
 
 /* Screen content padding fix */
 .screen > div:not(.topnav){flex:1;}
+
+/* ── PARLOUR PORTAL ──────────────────────────────────────────── */
+.pp-landing-badge{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.2);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.35);border-radius:var(--r-pill);padding:.38rem 1.1rem;font-size:.78rem;color:#fff;font-weight:600;letter-spacing:.06em;}
+.pp-choice-row{display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;width:100%;}
+.pp-choice-card{flex:1;min-width:280px;max-width:360px;background:rgba(255,248,250,.96);border-radius:18px;padding:2.5rem 2rem;display:flex;flex-direction:column;align-items:center;gap:1.1rem;box-shadow:var(--shadow-lg);border:1.5px solid rgba(255,255,255,.7);cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);}
+.pp-choice-card:hover{transform:translateY(-6px);box-shadow:0 16px 48px rgba(192,84,106,.25);}
+.pp-choice-icon{width:72px;height:72px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:2rem;}
+.pp-choice-icon.reg{background:linear-gradient(135deg,#FDE8EC,#FBCDD5);}
+.pp-choice-icon.find{background:linear-gradient(135deg,#E8F0FE,#C8D8F8);}
+.pp-choice-btn{width:100%;padding:.7rem 1.4rem;border:none;border-radius:var(--r-pill);font-size:.88rem;font-weight:700;cursor:pointer;letter-spacing:.04em;transition:all var(--trans);}
+.pp-choice-btn.reg{background:linear-gradient(135deg,#C0546A,#A03050);color:#fff;box-shadow:var(--shadow-sm);}
+.pp-choice-btn.find{background:linear-gradient(135deg,#5B7FD4,#3A5BB8);color:#fff;box-shadow:0 2px 8px rgba(58,91,184,.2);}
+.pp-choice-tag{font-size:.7rem;font-weight:700;letter-spacing:.08em;padding:.22rem .7rem;border-radius:var(--r-pill);}
+.pp-choice-tag.reg{background:var(--rose-pale);color:var(--rose);}
+.pp-choice-tag.find{background:#E8F0FE;color:#3A5BB8;}
+/* Parlour Register form */
+.pp-reg-left{width:300px;flex-shrink:0;background:linear-gradient(160deg,#9A2840,#C0546A,#D9849A);display:flex;flex-direction:column;justify-content:center;padding:3rem 2.5rem;gap:2rem;}
+.pp-reg-feature{display:flex;align-items:flex-start;gap:.85rem;}
+.pp-reg-feature-icon{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;border:1px solid rgba(255,255,255,.2);}
+.pp-reg-feature-text strong{display:block;font-size:.82rem;color:#fff;margin-bottom:.18rem;}
+.pp-reg-feature-text span{font-size:.76rem;color:rgba(255,255,255,.75);}
+.pp-form-section{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);padding:1.5rem;margin-bottom:.9rem;}
+.pp-form-section h4{font-size:.82rem;font-weight:700;color:var(--rose);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;}
+.pp-form-section h4::after{content:'';flex:1;height:1px;background:var(--border);}
+.pp-field-row{display:flex;gap:.9rem;}
+.pp-field-group{display:flex;flex-direction:column;gap:.3rem;flex:1;}
+.pp-field-group label{font-size:.78rem;font-weight:700;color:var(--text-med);}
+.pp-svc-chip{padding:.32rem .9rem;border-radius:var(--r-pill);border:1.5px solid var(--border);background:#fff;font-size:.76rem;cursor:pointer;transition:all var(--trans);font-weight:600;color:var(--text-med);}
+.pp-svc-chip:hover{border-color:var(--rose);color:var(--rose);}
+.pp-svc-chip.active{background:var(--rose-pale);border-color:var(--rose);color:var(--rose);}
+.pp-doc-upload{display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed var(--border);border-radius:var(--r);padding:1.5rem;background:var(--rose-bg);cursor:pointer;transition:all var(--trans);gap:.5rem;}
+.pp-doc-upload:hover{border-color:var(--rose);background:var(--rose-pale);}
+/* Find parlours */
+.pp-parlour-card{display:flex;gap:.9rem;padding:1rem 1.2rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--trans);}
+.pp-parlour-card:hover,.pp-parlour-card.selected{background:var(--rose-bg);}
+.pp-parlour-card.selected{border-left:3px solid var(--rose);}
+.pp-parlour-avatar{width:54px;height:54px;border-radius:var(--r-sm);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem;background:linear-gradient(135deg,#F9E4E8,#EEC0C8);}
+.pp-status-dot{width:7px;height:7px;border-radius:50%;background:#4CAF50;flex-shrink:0;}
+.pp-status-dot.closed{background:#E57373;}
+.pp-book-modal{background:#fff;border-radius:18px;padding:2rem;max-width:440px;width:90%;box-shadow:var(--shadow-lg);animation:fadeUp .3s cubic-bezier(.4,0,.2,1);}
+/* Chatbox */
+.pp-chat-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:800;display:flex;flex-direction:column;align-items:flex-end;gap:.5rem;}
+.pp-chat-bubble{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#C0546A,#A03050);display:flex;align-items:center;justify-content:center;font-size:1.4rem;cursor:pointer;box-shadow:var(--shadow-lg);transition:all var(--trans);}
+.pp-chat-bubble:hover{transform:scale(1.1);box-shadow:0 8px 30px rgba(192,84,106,.35);}
+.pp-chatbox{width:320px;height:420px;background:#fff;border-radius:16px;box-shadow:var(--shadow-lg);border:1.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden;animation:fadeUp .25s ease;}
+.pp-chatbox-header{background:linear-gradient(135deg,#C0546A,#A03050);padding:.8rem 1rem;display:flex;align-items:center;gap:.6rem;}
+.pp-chatbox-header span{font-weight:700;font-size:.9rem;color:#fff;flex:1;}
+.pp-chatbox-msgs{flex:1;overflow-y:auto;padding:.8rem;display:flex;flex-direction:column;gap:.5rem;background:var(--cream);}
+.pp-chat-msg{max-width:75%;padding:.5rem .8rem;border-radius:12px;font-size:.82rem;line-height:1.4;}
+.pp-chat-msg.bot{background:#fff;color:var(--text);border:1.5px solid var(--border);align-self:flex-start;border-radius:12px 12px 12px 4px;}
+.pp-chat-msg.user{background:linear-gradient(135deg,#C0546A,#A03050);color:#fff;align-self:flex-end;border-radius:12px 12px 4px 12px;}
+.pp-chatbox-input{display:flex;gap:.4rem;padding:.6rem .8rem;border-top:1px solid var(--border);background:#fff;}
+.pp-chatbox-input input{flex:1;border:1.5px solid var(--border);border-radius:var(--r-pill);padding:.4rem .8rem;font-size:.82rem;outline:none;}
+.pp-chatbox-input input:focus{border-color:var(--rose);}
+.pp-chatbox-input button{padding:.4rem .8rem;background:var(--rose);color:#fff;border:none;border-radius:var(--r-pill);cursor:pointer;font-size:.8rem;font-weight:700;}
 </style>
 </head>
 <body>
@@ -408,8 +463,8 @@ button{transition:all var(--trans) !important;}
     <div class="nav-link" onclick="go('screen-analysis')">Style Analysis</div>
     <div class="nav-link" onclick="go('screen-wardrobe')">Wardrobe</div>
     <div class="nav-link" onclick="go('screen-products')">Products</div>
-    <div class="nav-link" onclick="go('screen-salon')">Salon Finder</div>
-    <div class="nav-link" onclick="go('screen-bookings')">My Bookings</div>
+    <div class="nav-link" onclick="go('screen-parlour-portal')">Parlour Portal</div>
+    <div class="nav-link" onclick="go('screen-parlour-mybookings')">My Bookings</div>
     <div class="nav-right">
       <button class="btn-nav-outline" onclick="doLogout()">Sign In</button>
       <button class="btn-nav-fill" onclick="go('screen-analysis')">Get Started ✦</button>
@@ -422,11 +477,11 @@ button{transition:all var(--trans) !important;}
       <div class="hero-desc">Discover your perfect colours, style, and look — powered by AI analysis of your skin tone, body type &amp; face shape. Book top parlours nearby.</div>
       <div class="hero-btns">
         <button class="btn-hero-fill" onclick="go('screen-analysis')">🎨 Analyze My Style</button>
-        <button class="btn-hero-outline" onclick="go('screen-salon')">📍 Find Parlour</button>
+        <button class="btn-hero-outline" onclick="go('screen-parlour-find')">📍 Find Parlour</button>
       </div>
       <div class="hero-stats">
         <div class="stat-item"><div class="stat-num">50<span>K+</span></div><div class="stat-label">Style profiles</div></div>
-        <div class="stat-item"><div class="stat-num">1.2<span>K+</span></div><div class="stat-label">Salon Finder</div></div>
+        <div class="stat-item"><div class="stat-num">1.2<span>K+</span></div><div class="stat-label">Parlour Portal</div></div>
         <div class="stat-item"><div class="stat-num">9<span>8%</span></div><div class="stat-label">Accuracy</div></div>
       </div>
     </div>
@@ -467,8 +522,8 @@ button{transition:all var(--trans) !important;}
     <div class="nav-link active">Style Analysis</div>
     <div class="nav-link" onclick="go('screen-wardrobe')">Wardrobe</div>
     <div class="nav-link" onclick="go('screen-products')">Products</div>
-    <div class="nav-link" onclick="go('screen-salon')">Salon Finder</div>
-    <div class="nav-link" onclick="go('screen-bookings')">My Bookings</div>
+    <div class="nav-link" onclick="go('screen-parlour-portal')">Parlour Portal</div>
+    <div class="nav-link" onclick="go('screen-parlour-mybookings')">My Bookings</div>
     <div class="nav-right">
       <span style="font-size:.82rem;color:var(--text-light);margin-right:.4rem;" id="nav-name-a"></span>
       <button class="btn-nav-outline" onclick="doLogout()">Sign Out</button>
@@ -502,7 +557,7 @@ button{transition:all var(--trans) !important;}
     <div class="nav-link" onclick="go('screen-analysis')">Style Analysis</div>
     <div class="nav-link active">Wardrobe</div>
     <div class="nav-link" onclick="go('screen-products')">Products</div>
-    <div class="nav-link" onclick="go('screen-salon')">Salon Finder</div>
+    <div class="nav-link" onclick="go('screen-parlour-portal')">Parlour Portal</div>
     <div class="nav-right">
       <span style="font-size:.82rem;color:var(--text-light);margin-right:.4rem;" id="nav-name-w"></span>
       <button class="btn-nav-outline" onclick="doLogout()">Sign Out</button>
@@ -622,8 +677,8 @@ button{transition:all var(--trans) !important;}
     <div class="nav-link" onclick="go('screen-analysis')">Style Analysis</div>
     <div class="nav-link" onclick="go('screen-wardrobe')">Wardrobe</div>
     <div class="nav-link active">Products</div>
-    <div class="nav-link" onclick="go('screen-salon')">Salon Finder</div>
-    <div class="nav-link" onclick="go('screen-bookings')">My Bookings</div>
+    <div class="nav-link" onclick="go('screen-parlour-portal')">Parlour Portal</div>
+    <div class="nav-link" onclick="go('screen-parlour-mybookings')">My Bookings</div>
     <div class="nav-right">
       <button class="btn-nav-outline" onclick="doLogout()">Sign Out</button>
     </div>
@@ -645,23 +700,374 @@ button{transition:all var(--trans) !important;}
 </div>
 
 <!-- SCREEN 7 — PARLOUR -->
-<div class="screen" id="screen-parlour">
+
+<!-- ══════════════════════════════════════════════════════════════
+     PARLOUR PORTAL SCREENS
+     PP-01: Landing  PP-02: Register Parlour  PP-03: Find Parlours
+     ══════════════════════════════════════════════════════════════ -->
+
+<!-- ── PARLOUR PORTAL LANDING ──────────────────────────────────── -->
+<div id="screen-parlour-portal" class="screen">
   <nav class="topnav">
     <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
-    <div class="nav-link" onclick="go('screen-home')">features</div>
-    <div class="nav-link" onclick="go('screen-analysis')">Style Analysis</div>
-    <div class="nav-link" onclick="go('screen-wardrobe')">Wardrobe</div>
-    <div class="nav-link" onclick="go('screen-products')">Products</div>
-    <div class="nav-link active">Salon Finder</div>
-    <div class="nav-right"><button class="btn-nav-outline" onclick="doLogout()">Sign Out</button></div>
+    <span class="nav-tag" style="font-size:.75rem;background:var(--rose-pale);color:var(--rose);border:1px solid var(--rose-light);padding:.25rem .8rem;border-radius:var(--r-pill);font-weight:700;letter-spacing:.04em;">Parlour Portal</span>
+    <div class="nav-right">
+      <button class="btn-nav-outline" onclick="go('screen-home')">← Home</button>
+    </div>
   </nav>
-  <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;color:var(--text-light);">
-    <div style="font-size:2.5rem;">💅</div>
-    <div style="font-family:var(--font-s);font-size:1.3rem;color:var(--text-med);">Parlour Finder — Sprint 3</div>
-    <div style="font-size:.85rem;">This feature will be available in Iteration 3.</div>
-    <button class="btn-action" onclick="go('screen-home')">← Back to Home</button>
+  <div style="flex:1;background:linear-gradient(145deg,#9A2840 0%,#C0546A 30%,#D9849A 60%,#F0C8D0 85%,#F8E4E8 100%);display:flex;align-items:center;justify-content:center;">
+    <div style="width:100%;max-width:880px;padding:3rem 1.5rem;display:flex;flex-direction:column;align-items:center;gap:2.5rem;animation:fadeUp .5s ease both;">
+      <div class="pp-landing-badge">✨ &nbsp;Parlour Partnership Hub</div>
+      <h1 style="font-family:var(--font-s);font-size:3rem;color:#fff;text-align:center;line-height:1.15;letter-spacing:-.01em;">
+        Your <em style="color:rgba(255,220,228,.9);font-style:italic;">beauty business</em>,<br>beautifully connected.
+      </h1>
+      <p style="font-size:.9rem;color:rgba(255,255,255,.82);text-align:center;max-width:480px;line-height:1.7;">
+        Join Pakistan's fastest-growing beauty network — register your parlour to reach thousands of clients, or discover top-rated salons near you instantly.
+      </p>
+      <div class="pp-choice-row">
+        <!-- Register card -->
+        <div class="pp-choice-card" onclick="go('screen-parlour-register')">
+          <span class="pp-choice-tag reg">FOR PARLOUR OWNERS</span>
+          <div class="pp-choice-icon reg">🏪</div>
+          <h3 style="font-family:var(--font-s);font-size:1.35rem;color:var(--text);text-align:center;">Register Your Parlour</h3>
+          <p style="font-size:.82rem;color:var(--text-light);text-align:center;line-height:1.6;">List your salon on GlamMatch. Get verified, attract new clients, and manage bookings — all in one place.</p>
+          <div style="width:100%;display:flex;flex-direction:column;gap:.5rem;font-size:.76rem;color:var(--text-light);text-align:left;">
+            <div style="display:flex;gap:.5rem;align-items:center;"><span style="color:var(--rose);">✔</span> Free listing & verification</div>
+            <div style="display:flex;gap:.5rem;align-items:center;"><span style="color:var(--rose);">✔</span> Appear in location-based search</div>
+            <div style="display:flex;gap:.5rem;align-items:center;"><span style="color:var(--rose);">✔</span> Receive & manage bookings</div>
+          </div>
+          <button class="pp-choice-btn reg">Register My Parlour →</button>
+        </div>
+        <!-- Find card -->
+        <div class="pp-choice-card" onclick="go('screen-parlour-mybookings')" style="cursor:pointer;" >
+          <div class="pp-choice-icon find" style="background:linear-gradient(135deg,#E8F4EC,#C8E8D0);">📅</div>
+          <span class="pp-choice-tag find" style="background:#E8F4EC;color:#3A8B50;">CLIENTS</span>
+          <h3 style="font-family:var(--font-s);font-size:1.2rem;color:var(--text);text-align:center;">My Bookings</h3>
+          <p style="font-size:.82rem;color:var(--text-light);text-align:center;line-height:1.5;">View your appointments and chat directly with the parlour after booking.</p>
+          <button class="pp-choice-btn find" style="background:linear-gradient(135deg,#3A8B50,#2A6B40);">📋 View My Bookings</button>
+        </div>
+        <div class="pp-choice-card" onclick="go('screen-parlour-find')">
+          <span class="pp-choice-tag find">FOR CLIENTS</span>
+          <div class="pp-choice-icon find">📍</div>
+          <h3 style="font-family:var(--font-s);font-size:1.35rem;color:var(--text);text-align:center;">Find Nearby Parlours</h3>
+          <p style="font-size:.82rem;color:var(--text-light);text-align:center;line-height:1.6;">Discover verified beauty salons close to you. Compare services, ratings, and book your appointment instantly.</p>
+          <div style="width:100%;display:flex;flex-direction:column;gap:.5rem;font-size:.76rem;color:var(--text-light);text-align:left;">
+            <div style="display:flex;gap:.5rem;align-items:center;"><span style="color:#3A5BB8;">✔</span> Real-time location detection</div>
+            <div style="display:flex;gap:.5rem;align-items:center;"><span style="color:#3A5BB8;">✔</span> Filter by service & rating</div>
+            <div style="display:flex;gap:.5rem;align-items:center;"><span style="color:#3A5BB8;">✔</span> Book with one tap</div>
+          </div>
+          <button class="pp-choice-btn find">Find Parlours Near Me →</button>
+        </div>
+      </div>
+      <!-- Stats strip -->
+      <div style="display:flex;gap:3rem;flex-wrap:wrap;justify-content:center;margin-top:.5rem;">
+        <div style="text-align:center;"><div style="font-family:var(--font-s);font-size:1.8rem;color:#fff;font-weight:700;" id="pp-stat-count">240+</div><div style="font-size:.72rem;color:rgba(255,255,255,.7);letter-spacing:.05em;">REGISTERED PARLOURS</div></div>
+        <div style="text-align:center;"><div style="font-family:var(--font-s);font-size:1.8rem;color:#fff;font-weight:700;">12K+</div><div style="font-size:.72rem;color:rgba(255,255,255,.7);letter-spacing:.05em;">HAPPY CLIENTS</div></div>
+        <div style="text-align:center;"><div style="font-family:var(--font-s);font-size:1.8rem;color:#fff;font-weight:700;">8</div><div style="font-size:.72rem;color:rgba(255,255,255,.7);letter-spacing:.05em;">CITIES COVERED</div></div>
+        <div style="text-align:center;"><div style="font-family:var(--font-s);font-size:1.8rem;color:#fff;font-weight:700;">4.8★</div><div style="font-size:.72rem;color:rgba(255,255,255,.7);letter-spacing:.05em;">AVERAGE RATING</div></div>
+      </div>
+    </div>
   </div>
 </div>
+
+<!-- ── PARLOUR REGISTER (2-step) ─────────────────────────────── -->
+<div id="screen-parlour-register" class="screen">
+  <nav class="topnav">
+    <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
+    <span style="font-size:.75rem;background:var(--rose-pale);color:var(--rose);border:1px solid var(--rose-light);padding:.25rem .8rem;border-radius:var(--r-pill);font-weight:700;">Parlour Portal</span>
+    <div class="nav-right"><button class="btn-nav-outline" onclick="go('screen-parlour-portal')">← Back</button></div>
+  </nav>
+  <div style="flex:1;display:flex;overflow:hidden;">
+    <!-- Left panel -->
+    <div class="pp-reg-left">
+      <div>
+        <h2 style="font-family:var(--font-s);font-size:2rem;color:#fff;line-height:1.2;">Join <em style="color:rgba(255,210,220,.88);font-style:italic;">GlamMatch</em><br>as a Partner</h2>
+        <p style="font-size:.82rem;color:rgba(255,255,255,.82);line-height:1.7;margin-top:.6rem;">Complete the form to register your parlour. Our team will verify your documents and activate your listing within 24–48 hours.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        <div class="pp-reg-feature"><div class="pp-reg-feature-icon">📋</div><div class="pp-reg-feature-text"><strong>Business Verification</strong><span>We verify CNIC and trade licence for client trust</span></div></div>
+        <div class="pp-reg-feature"><div class="pp-reg-feature-icon">📍</div><div class="pp-reg-feature-text"><strong>Location Listing</strong><span>Appear in nearby searches across GlamMatch</span></div></div>
+        <div class="pp-reg-feature"><div class="pp-reg-feature-icon">📅</div><div class="pp-reg-feature-text"><strong>Booking Management</strong><span>Clients book directly, you confirm in the app</span></div></div>
+        <div class="pp-reg-feature"><div class="pp-reg-feature-icon">⭐</div><div class="pp-reg-feature-text"><strong>Ratings & Reviews</strong><span>Build trust with verified client reviews</span></div></div>
+      </div>
+    </div>
+    <!-- Right form -->
+    <div style="flex:1;overflow-y:auto;padding:2.5rem 3rem;display:flex;flex-direction:column;gap:1.2rem;" id="pp-reg-form-wrap">
+      <div>
+        <h2 style="font-family:var(--font-s);font-size:1.8rem;color:var(--text);">Register Your Parlour</h2>
+        <p style="font-size:.82rem;color:var(--text-light);">Already registered? <a onclick="go('screen-parlour-find')" style="color:var(--rose);font-weight:700;cursor:pointer;">Find your listing →</a></p>
+      </div>
+      <div style="display:flex;gap:.4rem;" id="pp-step-dots">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--rose);" id="pp-dot-1"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--border);" id="pp-dot-2"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--border);" id="pp-dot-3"></div>
+      </div>
+
+      <!-- Step 1 -->
+      <div id="pp-step-1">
+        <div class="pp-form-section">
+          <h4>Parlour Information</h4>
+          <div class="pp-field-row">
+            <div class="pp-field-group"><label>Parlour / Salon Name *</label><input type="text" class="field" id="pp-r-name" placeholder="e.g. Rosé Beauty Lounge"/></div>
+            <div class="pp-field-group"><label>Owner Name *</label><input type="text" class="field" id="pp-r-owner" placeholder="Full legal name"/></div>
+          </div>
+          <div class="pp-field-row">
+            <div class="pp-field-group"><label>Phone Number *</label><input type="tel" class="field" id="pp-r-phone" placeholder="03XX-XXXXXXX"/></div>
+            <div class="pp-field-group"><label>Email Address</label><input type="email" class="field" id="pp-r-email" placeholder="parlour@email.com"/></div>
+          </div>
+          <div class="pp-field-group" style="margin-top:.1rem;"><label>Full Address *</label><input type="text" class="field" id="pp-r-address" placeholder="Street, Area, City"/></div>
+          <div class="pp-field-row" style="margin-top:.1rem;">
+            <div class="pp-field-group"><label>City *</label>
+              <select class="field" id="pp-r-city">
+                <option value="">— Select city —</option>
+                <option>Lahore</option><option>Karachi</option><option>Islamabad</option>
+                <option>Rawalpindi</option><option>Faisalabad</option><option>Multan</option>
+                <option>Peshawar</option><option>Quetta</option>
+              </select>
+            </div>
+            <div class="pp-field-group"><label>Area / Locality</label><input type="text" class="field" id="pp-r-area" placeholder="e.g. DHA Phase 5"/></div>
+          </div>
+        </div>
+        <div class="pp-form-section">
+          <h4>Services Offered</h4>
+          <p style="font-size:.78rem;color:var(--text-light);margin-bottom:.6rem;">Select all that apply</p>
+          <div style="display:flex;flex-wrap:wrap;gap:.5rem;" id="pp-svc-chips">
+            <span class="pp-svc-chip" data-svc="Haircut & Styling" onclick="ppToggleSvc(this)">✂️ Haircut & Styling</span>
+            <span class="pp-svc-chip" data-svc="Hair Colour" onclick="ppToggleSvc(this)">🎨 Hair Colour</span>
+            <span class="pp-svc-chip" data-svc="Bridal Makeup" onclick="ppToggleSvc(this)">💄 Bridal Makeup</span>
+            <span class="pp-svc-chip" data-svc="Facial & Cleanup" onclick="ppToggleSvc(this)">✨ Facial & Cleanup</span>
+            <span class="pp-svc-chip" data-svc="Threading & Waxing" onclick="ppToggleSvc(this)">🌿 Threading & Waxing</span>
+            <span class="pp-svc-chip" data-svc="Manicure & Pedicure" onclick="ppToggleSvc(this)">💅 Manicure & Pedicure</span>
+            <span class="pp-svc-chip" data-svc="Hair Treatment" onclick="ppToggleSvc(this)">💆 Hair Treatment</span>
+            <span class="pp-svc-chip" data-svc="Mehndi" onclick="ppToggleSvc(this)">🌺 Mehndi</span>
+            <span class="pp-svc-chip" data-svc="Massage & Spa" onclick="ppToggleSvc(this)">🧖 Massage & Spa</span>
+            <span class="pp-svc-chip" data-svc="Nail Art" onclick="ppToggleSvc(this)">🌸 Nail Art</span>
+          </div>
+        </div>
+        <div class="pp-form-section">
+          <h4>Business Hours</h4>
+          <div class="pp-field-row">
+            <div class="pp-field-group"><label>Opening Time</label><input type="time" class="field" id="pp-r-open" value="09:00"/></div>
+            <div class="pp-field-group"><label>Closing Time</label><input type="time" class="field" id="pp-r-close" value="21:00"/></div>
+            <div class="pp-field-group"><label>Days Open</label>
+              <select class="field" id="pp-r-days">
+                <option>Mon – Sat</option><option>Mon – Sun</option><option>Tue – Sun</option>
+                <option>Mon – Fri only</option><option>Weekends only</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;">
+          <button class="btn-hero-fill" onclick="ppGoStep2()">Continue to Verification →</button>
+          <div id="pp-step1-err" style="font-size:.78rem;color:var(--rose);display:none;"></div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div id="pp-step-2" style="display:none;animation:fadeUp .4s ease;">
+        <div class="pp-form-section">
+          <h4>Identity Verification</h4>
+          <div class="pp-field-row">
+            <div class="pp-field-group"><label>CNIC Number *</label><input type="text" class="field" id="pp-r-cnic" placeholder="XXXXX-XXXXXXX-X" maxlength="15" oninput="ppFormatCNIC(this)"/></div>
+            <div class="pp-field-group"><label>Business Type</label>
+              <select class="field" id="pp-r-btype">
+                <option value="">— Select —</option>
+                <option>Home-based Parlour</option><option>Salon / Shop</option>
+                <option>Franchise</option><option>Mobile Beauty Service</option>
+              </select>
+            </div>
+          </div>
+          <div class="pp-field-group" style="margin-top:.5rem;"><label>CNIC Front Image *</label>
+            <div class="pp-doc-upload" onclick="document.getElementById('pp-cnic-inp').click()">
+              <div style="font-size:2rem;">🪪</div>
+              <strong id="pp-cnic-lbl">Click to upload CNIC front</strong>
+              <span style="font-size:.78rem;color:var(--text-light);">JPG, PNG or PDF · max 5 MB</span>
+              <input type="file" id="pp-cnic-inp" accept="image/*,.pdf" style="display:none;" onchange="ppFileChosen(this,'pp-cnic-lbl')"/>
+            </div>
+          </div>
+        </div>
+        <div class="pp-form-section">
+          <h4>Price Range & Description</h4>
+          <div class="pp-field-row">
+            <div class="pp-field-group"><label>Starting from (PKR)</label><input type="number" class="field" id="pp-r-pmin" placeholder="e.g. 500" min="0"/></div>
+            <div class="pp-field-group"><label>Up to (PKR)</label><input type="number" class="field" id="pp-r-pmax" placeholder="e.g. 5000" min="0"/></div>
+          </div>
+          <div class="pp-field-group" style="margin-top:.5rem;"><label>Short Description</label>
+            <textarea class="field" id="pp-r-desc" rows="2" placeholder="e.g. We specialize in bridal makeup with over 10 years of experience…" style="resize:none;"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+          <button class="btn-hero-outline" onclick="ppGoStep1Back()">← Back</button>
+          <button class="btn-hero-fill" id="pp-submit-btn" onclick="ppSubmitRegistration()">Submit for Verification ✓</button>
+          <div id="pp-step2-err" style="font-size:.78rem;color:var(--rose);display:none;"></div>
+        </div>
+      </div>
+
+      <!-- Step 3 Success -->
+      <div id="pp-step-3" style="display:none;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:1.2rem;text-align:center;padding:3rem 1rem;animation:fadeUp .5s ease;">
+          <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#4CAF50,#2E7D32);display:flex;align-items:center;justify-content:center;font-size:2.5rem;box-shadow:0 8px 24px rgba(46,125,50,.25);">✓</div>
+          <h3 style="font-family:var(--font-s);font-size:1.8rem;color:var(--text);">Registration Submitted!</h3>
+          <p style="font-size:.88rem;color:var(--text-light);max-width:380px;line-height:1.7;">Thank you for joining GlamMatch. Our team will review your documents and activate your listing within <strong>24–48 hours</strong>. You'll receive a confirmation call on the number you provided.</p>
+          <div style="background:#F5FBF5;border:1.5px solid #4CAF50;border-radius:var(--r);padding:1rem 1.5rem;max-width:400px;width:100%;font-size:.82rem;color:#2e7d32;line-height:1.8;">
+            📋 <strong>What happens next?</strong><br>
+            1. Our verification team reviews your documents<br>
+            2. You receive a confirmation call/SMS<br>
+            3. Your parlour goes live on GlamMatch<br>
+            4. Clients can find & book you instantly
+          </div>
+          <button class="btn-hero-fill" onclick="go('screen-parlour-portal')">Back to Parlour Portal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FIND PARLOURS ──────────────────────────────────────────── -->
+<div id="screen-parlour-find" class="screen">
+  <nav class="topnav">
+    <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
+    <span style="font-size:.75rem;background:var(--rose-pale);color:var(--rose);border:1px solid var(--rose-light);padding:.25rem .8rem;border-radius:var(--r-pill);font-weight:700;">Parlour Portal</span>
+    <div class="nav-right"><button class="btn-nav-outline" onclick="go('screen-parlour-portal')">← Back</button></div>
+  </nav>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+    <!-- Search header -->
+    <div style="background:#fff;border-bottom:1px solid var(--border);padding:1.2rem 2rem;display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;">
+      <h2 style="font-family:var(--font-s);font-size:1.4rem;color:var(--text);margin-right:.5rem;white-space:nowrap;">Find Parlours</h2>
+      <div style="flex:1;min-width:180px;display:flex;align-items:center;background:var(--rose-bg);border:1.5px solid var(--border);border-radius:var(--r-pill);padding:.45rem 1rem;gap:.5rem;transition:border-color var(--trans);" onfocusin="this.style.borderColor='var(--rose)'" onfocusout="this.style.borderColor='var(--border)'">
+        <span style="color:var(--text-light);font-size:.9rem;">🔍</span>
+        <input type="text" id="pp-search-input" placeholder="Search by name or area…" oninput="ppFilterParlours()" style="border:none;background:transparent;font-size:.85rem;color:var(--text);outline:none;flex:1;"/>
+      </div>
+      <button id="pp-loc-btn" onclick="ppDetectLocation()" style="padding:.5rem 1.1rem;border:1.5px solid var(--rose);border-radius:var(--r-pill);background:transparent;color:var(--rose);font-size:.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:.4rem;white-space:nowrap;transition:all var(--trans);" onmouseover="this.style.background='var(--rose)';this.style.color='#fff'" onmouseout="if(!ppLocActive)this.style.background='transparent';this.style.color=ppLocActive?'#fff':'var(--rose)'">📍 Use My Location</button>
+      <button onclick="ppFilterParlours()" style="padding:.52rem 1.3rem;border:none;border-radius:var(--r-pill);background:linear-gradient(135deg,#C0546A,#A03050);color:#fff;font-size:.82rem;font-weight:700;cursor:pointer;">Search</button>
+    </div>
+    <!-- Filter chips -->
+    <div style="padding:.7rem 2rem;display:flex;gap:.5rem;flex-wrap:wrap;border-bottom:1px solid var(--border);background:#fff;">
+      <span style="font-size:.75rem;font-weight:700;color:var(--text-med);margin-right:.3rem;">Filter:</span>
+      <span class="pp-svc-chip active" data-filter="all" onclick="ppSetFilter(this,'all')">All</span>
+      <span class="pp-svc-chip" data-filter="Bridal Makeup" onclick="ppSetFilter(this,'Bridal Makeup')">💄 Bridal</span>
+      <span class="pp-svc-chip" data-filter="Haircut & Styling" onclick="ppSetFilter(this,'Haircut & Styling')">✂️ Hair</span>
+      <span class="pp-svc-chip" data-filter="Facial & Cleanup" onclick="ppSetFilter(this,'Facial & Cleanup')">✨ Facial</span>
+      <span class="pp-svc-chip" data-filter="Mehndi" onclick="ppSetFilter(this,'Mehndi')">🌺 Mehndi</span>
+      <span class="pp-svc-chip" data-filter="Manicure & Pedicure" onclick="ppSetFilter(this,'Manicure & Pedicure')">💅 Nails</span>
+      <span class="pp-svc-chip" data-filter="open" onclick="ppSetFilter(this,'open')">🟢 Open Now</span>
+      <span class="pp-svc-chip" data-filter="top" onclick="ppSetFilter(this,'top')">⭐ Top Rated</span>
+    </div>
+    <!-- Body -->
+    <div style="flex:1;display:flex;overflow:hidden;">
+      <!-- List -->
+      <div style="width:380px;flex-shrink:0;overflow-y:auto;border-right:1px solid var(--border);" id="pp-parlour-list">
+        <div style="padding:.9rem 1.2rem;font-size:.76rem;color:var(--text-light);border-bottom:1px solid var(--border);background:var(--rose-bg);" id="pp-list-status">📍 Showing parlours in Lahore</div>
+      </div>
+      <!-- Map -->
+      <div style="flex:1;background:var(--rose-bg);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;" id="pp-find-map">
+        <div style="width:100%;height:100%;position:relative;">
+          <div style="width:100%;height:100%;background:linear-gradient(180deg,#E8F4F8 0%,#D4EDF5 30%,#C8E8F2 50%,#E0EED8 60%,#D4E8C8 100%);position:absolute;inset:0;"></div>
+          <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:.6;" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <path d="M0,250 Q150,200 300,250 Q450,300 600,250" stroke="#D8D0C8" stroke-width="8" fill="none"/>
+            <path d="M300,0 Q280,130 300,250 Q320,370 300,500" stroke="#D8D0C8" stroke-width="6" fill="none"/>
+            <path d="M0,150 Q200,160 400,130 Q500,120 600,160" stroke="#E0D8D0" stroke-width="4" fill="none"/>
+            <path d="M0,380 Q200,360 350,380 Q450,390 600,370" stroke="#E0D8D0" stroke-width="4" fill="none"/>
+            <ellipse cx="480" cy="120" rx="60" ry="35" fill="#BDE0EE" opacity=".5"/>
+            <ellipse cx="80" cy="380" rx="50" ry="35" fill="#C8E0B8" opacity=".6"/>
+          </svg>
+          <div id="pp-map-pins"></div>
+          <div id="pp-map-you" style="position:absolute;left:50%;top:52%;display:none;transform:translate(-50%,-50%);">
+            <div style="width:22px;height:22px;border-radius:50%;background:rgba(58,91,184,.15);display:flex;align-items:center;justify-content:center;animation:pulse 2s infinite;">
+              <div style="width:12px;height:12px;border-radius:50%;background:#3A5BB8;border:2px solid #fff;box-shadow:var(--shadow-sm);"></div>
+            </div>
+          </div>
+          <div id="pp-no-loc" style="display:flex;flex-direction:column;align-items:center;gap:1rem;padding:3rem 2rem;text-align:center;position:absolute;inset:0;background:rgba(253,240,242,.85);justify-content:center;">
+            <div style="font-size:3rem;">🗺️</div>
+            <h3 style="font-family:var(--font-s);font-size:1.3rem;color:var(--text);">Share Your Location</h3>
+            <p style="font-size:.82rem;color:var(--text-light);max-width:280px;line-height:1.6;">Click "Use My Location" to discover verified parlours near you on the map.</p>
+            <button class="btn-hero-fill" onclick="ppDetectLocation()">📍 Detect My Location</button>
+          </div>
+          <!-- Map overlay card -->
+          <div id="pp-map-overlay" style="display:none;position:absolute;bottom:1.2rem;left:50%;transform:translateX(-50%);background:#fff;border-radius:var(--r);padding:1rem 1.2rem;min-width:260px;box-shadow:var(--shadow-lg);border:1.5px solid var(--border);animation:fadeUp .3s ease;">
+            <div id="pp-ov-name" style="font-family:var(--font-s);font-size:1rem;color:var(--text);margin-bottom:.3rem;"></div>
+            <div id="pp-ov-addr" style="font-size:.76rem;color:var(--text-light);margin-bottom:.6rem;"></div>
+            <div style="display:flex;gap:.5rem;margin-bottom:.6rem;">
+              <span id="pp-ov-stars" style="color:#F0A800;font-size:.75rem;"></span>
+              <span id="pp-ov-dist" style="font-size:.7rem;background:var(--rose-pale);color:var(--rose);padding:.18rem .6rem;border-radius:var(--r-pill);font-weight:700;"></span>
+            </div>
+            <div style="display:flex;gap:.5rem;">
+              <button onclick="ppOpenBookFromOverlay()" class="btn-hero-fill" style="flex:1;justify-content:center;padding:.48rem;font-size:.8rem;">Book Now</button>
+              <button onclick="ppScrollToCard()" class="btn-hero-outline" style="flex:1;padding:.46rem;font-size:.8rem;">View Details</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PARLOUR BOOKING MODAL ──────────────────────────────────── -->
+<div class="modal-overlay" id="pp-book-modal">
+  <div class="pp-chat-wrap" style="position:static;flex-direction:column;align-items:stretch;width:90%;max-width:440px;">
+    <div style="background:#fff;border-radius:18px;padding:2rem;box-shadow:var(--shadow-lg);animation:fadeUp .3s ease;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h3 style="font-family:var(--font-s);font-size:1.3rem;color:var(--text);">Book Appointment</h3>
+        <button onclick="ppCloseBookModal()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-light);">✕</button>
+      </div>
+      <p id="pp-book-modal-name" style="color:var(--rose);font-weight:700;font-size:.88rem;margin-bottom:1.2rem;"></p>
+      <div style="display:flex;flex-direction:column;gap:.9rem;">
+        <div class="pp-field-group"><label>Service</label>
+          <select class="field" id="pp-bk-service"><option value="">— Choose service —</option></select>
+        </div>
+        <div class="pp-field-group"><label>Preferred Date & Time</label><input type="datetime-local" class="field" id="pp-bk-datetime"/></div>
+        <div class="pp-field-group"><label>Your Name</label><input type="text" class="field" id="pp-bk-name" placeholder="Full name"/></div>
+        <div class="pp-field-group"><label>Phone Number</label><input type="tel" class="field" id="pp-bk-phone" placeholder="03XX-XXXXXXX"/></div>
+        <div class="pp-field-group"><label>Note (optional)</label><textarea class="field" id="pp-bk-note" rows="2" placeholder="Any special requests…" style="resize:none;"></textarea></div>
+        <button class="btn-hero-fill" style="width:100%;justify-content:center;" onclick="ppSubmitBooking()">Confirm Booking Request</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ── BOOKING CHAT SCREEN (Parlour Portal) ──────────────────────── -->
+<div id="screen-parlour-chat" class="screen">
+  <nav class="topnav">
+    <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
+    <span style="font-size:.75rem;background:var(--rose-pale);color:var(--rose);border:1px solid var(--rose-light);padding:.25rem .8rem;border-radius:var(--r-pill);font-weight:700;">Parlour Portal</span>
+    <div class="nav-right"><button class="btn-nav-outline" onclick="go('screen-parlour-mybookings')">← My Bookings</button></div>
+  </nav>
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="padding:.8rem 1.5rem;background:#fff;border-bottom:1.5px solid var(--border);display:flex;align-items:center;gap:.8rem;">
+      <div id="pp-chat-parlour-avatar" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#F9E4E8,#EEC0C8);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">💆</div>
+      <div>
+        <div id="pp-chat-parlour-name" style="font-family:var(--font-s);font-size:1rem;color:var(--text);font-weight:700;"></div>
+        <div id="pp-chat-booking-info" style="font-size:.75rem;color:var(--text-light);"></div>
+      </div>
+    </div>
+    <div id="pp-booking-chat-msgs" style="flex:1;overflow-y:auto;padding:1rem 1.5rem;display:flex;flex-direction:column;gap:.6rem;background:var(--cream);"></div>
+    <div style="padding:.8rem 1.2rem;background:#fff;border-top:1.5px solid var(--border);display:flex;gap:.6rem;">
+      <input id="pp-booking-chat-input" type="text" placeholder="Type a message to the parlour…" style="flex:1;padding:.6rem 1rem;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:.88rem;outline:none;" onkeydown="if(event.key==='Enter')ppSendBookingChat()" onfocus="this.style.borderColor='var(--rose)'" onblur="this.style.borderColor='var(--border)'"/>
+      <button class="btn-hero-fill" onclick="ppSendBookingChat()" style="padding:.55rem 1.2rem;">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MY BOOKINGS SCREEN (Parlour Portal) ────────────────────────── -->
+<div id="screen-parlour-mybookings" class="screen">
+  <nav class="topnav">
+    <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
+    <span style="font-size:.75rem;background:var(--rose-pale);color:var(--rose);border:1px solid var(--rose-light);padding:.25rem .8rem;border-radius:var(--r-pill);font-weight:700;">Parlour Portal</span>
+    <div class="nav-right">
+      <button class="btn-nav-outline" onclick="go('screen-parlour-find')">Find Parlours</button>
+      <button class="btn-nav-outline" onclick="go('screen-parlour-portal')">Portal Home</button>
+    </div>
+  </nav>
+  <div style="flex:1;overflow-y:auto;padding:1.5rem 2rem;">
+    <h2 style="font-family:var(--font-s);font-size:1.7rem;color:var(--text);margin-bottom:.3rem;">My Bookings</h2>
+    <p style="color:var(--text-light);font-size:.85rem;margin-bottom:1.5rem;">Track your parlour appointments and chat with the salon.</p>
+    <div id="pp-mybookings-list" style="display:flex;flex-direction:column;gap:1rem;max-width:700px;"></div>
+  </div>
+</div>
+
+
 
 <script>
 const API="http://localhost:5000/api";
@@ -1828,584 +2234,474 @@ window.addEventListener("load",()=>{
   }
 });
 
-// ══════════════════════════════════════════════════════════════════
-//  SPRINT 3 — SALON CONNECTOR JS
-// ══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+//  PARLOUR PORTAL JS
+// ══════════════════════════════════════════════════════════════
 
-let currentSalonId = null;
-let currentSalonServices = [];
-let currentBookingId = null;
-let currentReviewSalonId = null;
-let currentReviewBookingId = null;
-let selectedRating = 0;
-let chatPollInterval = null;
-let bookingsPollInterval = null;
+/* ── Static parlour data (also fetched from backend when available) ─ */
+const PP_PARLOURS = [
+  {id:1,name:"Rosé Beauty Lounge",owner:"Sana Malik",addr:"54-B DHA Phase 5, Lahore",area:"DHA",city:"Lahore",phone:"0311-1234567",rating:4.8,reviews:142,dist:0.4,open:true,services:["Bridal Makeup","Haircut & Styling","Facial & Cleanup","Mehndi"],priceMin:800,priceMax:8000,desc:"Premium bridal makeup and hair styling studio with 12 years of expertise.",mapX:42,mapY:38,emoji:"💆"},
+  {id:2,name:"Glamour Studio",owner:"Nadia Khan",addr:"12 Gulberg III, Lahore",area:"Gulberg",city:"Lahore",phone:"0321-9876543",rating:4.6,reviews:98,dist:1.2,open:true,services:["Haircut & Styling","Hair Colour","Manicure & Pedicure","Nail Art"],priceMin:500,priceMax:5000,desc:"Modern salon specializing in hair colour, cuts and nail art.",mapX:62,mapY:55,emoji:"💅"},
+  {id:3,name:"Serenity Spa & Salon",owner:"Hina Baig",addr:"7 Model Town, Lahore",area:"Model Town",city:"Lahore",phone:"0333-4561234",rating:4.9,reviews:211,dist:1.8,open:false,services:["Massage & Spa","Facial & Cleanup","Hair Treatment","Manicure & Pedicure"],priceMin:1200,priceMax:12000,desc:"Luxury spa experience offering full-body treatments and facials.",mapX:28,mapY:62,emoji:"🧖"},
+  {id:4,name:"Zara Beauty Parlour",owner:"Zara Hussain",addr:"Plaza Market, Johar Town, Lahore",area:"Johar Town",city:"Lahore",phone:"0300-7654321",rating:4.3,reviews:67,dist:2.5,open:true,services:["Threading & Waxing","Facial & Cleanup","Mehndi","Bridal Makeup"],priceMin:300,priceMax:3000,desc:"Affordable parlour services for everyday beauty needs.",mapX:75,mapY:30,emoji:"🌺"},
+  {id:5,name:"The Glam Room",owner:"Fatima Sheikh",addr:"3 Bahria Town Phase 4, Lahore",area:"Bahria Town",city:"Lahore",phone:"0345-1112233",rating:4.7,reviews:154,dist:3.1,open:true,services:["Bridal Makeup","Haircut & Styling","Hair Colour","Hair Treatment"],priceMin:700,priceMax:9000,desc:"Trendy modern salon known for creative hair colouring and bridal packages.",mapX:52,mapY:72,emoji:"✂️"},
+  {id:6,name:"Velvet Touch Beauty",owner:"Ayesha Raza",addr:"88 Wapda Town, Lahore",area:"Wapda Town",city:"Lahore",phone:"0312-8889990",rating:4.5,reviews:83,dist:4.0,open:false,services:["Mehndi","Nail Art","Manicure & Pedicure","Threading & Waxing"],priceMin:400,priceMax:4000,desc:"Home-based boutique parlour with stunning mehndi and nail art designs.",mapX:20,mapY:25,emoji:"🌸"},
+];
 
-// ── Salon card price badge color ─────────────────────────────────
-function priceBadgeColor(pr){ return pr==="premium"?"#C0546A":pr==="budget"?"#4CAF50":"#7A5A8A"; }
+let ppActiveFilter = 'all';
+let ppLocActive = false;
+let ppSelectedParlour = null;
+let ppSelectedServices = [];
+let ppChatOpen = false;
+let ppMyBookings = [];
+let ppActiveChatBookingId = null;
+let ppChatHistory = [
+  {role:'bot', text:'Hi! 👋 Welcome to GlamMatch Parlour Portal. Ask me anything about finding or registering a parlour!'}
+];
 
-// ── Stars display ─────────────────────────────────────────────────
-function starsHTML(rating){
-  const full=Math.round(rating);
-  return "★".repeat(full)+"☆".repeat(5-full);
-}
-
-// ── Location state ───────────────────────────────────────────────
-let userLat = null;
-let userLng = null;
-let locationAsked = false;
-
-// ── Haversine formula — real distance in km ───────────────────────
-function haversine(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat/2) ** 2 +
-            Math.cos(lat1 * Math.PI / 180) *
-            Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLng/2) ** 2;
-  return R * 2 * Math.asin(Math.sqrt(a));
-}
-
-// ── Ask browser for GPS location ─────────────────────────────────
-function getUserLocation() {
-  if (!navigator.geolocation) {
-    toast("Location not supported by your browser", "err");
-    return;
-  }
-  const btn = document.getElementById("location-btn");
-  if (btn) { btn.textContent = "📡 Detecting…"; btn.disabled = true; }
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      userLat = pos.coords.latitude;
-      userLng = pos.coords.longitude;
-      if (btn) { btn.textContent = "📍 Location Found ✓"; btn.style.background = "#4CAF50"; }
-      toast("Location detected! Sorting by nearest salon ✓", "ok");
-      loadSalons();
-    },
-    err => {
-      if (btn) { btn.textContent = "📍 Use My Location"; btn.disabled = false; }
-      toast("Could not get location — showing all salons", "err");
-    },
-    { timeout: 8000, maximumAge: 60000 }
-  );
-}
-
-// ── Load salons (US-11) ───────────────────────────────────────────
-async function loadSalons(){
-  const st=document.getElementById("filter-service")?.value||"";
-  const pr=document.getElementById("filter-price")?.value||"";
-  const ct=document.getElementById("filter-cat")?.value||"all";
-  const search=(document.getElementById("salon-search")?.value||"").toLowerCase().trim();
-  let qs=`?category=${ct}`;
-  if(st)qs+=`&service_type=${st}`;
-  if(pr)qs+=`&price_range=${pr}`;
-  const{data,ok}=await api(`/salons${qs}`,"GET");
-  if(!ok){toast("Could not load salons","err");return;}
-  const grid=document.getElementById("salon-grid");
-  let salons=data.salons||[];
-  if(search) salons=salons.filter(s=>(s.name+s.address).toLowerCase().includes(search));
-
-  // ── Calculate real distance if user location is known ──
-  salons = salons.map(s => {
-    const dist = (userLat && userLng && s.latitude && s.longitude)
-      ? haversine(userLat, userLng, s.latitude, s.longitude)
-      : null;
-    return {...s, dist};
-  });
-
-  // ── Sort: nearest first if location known, else by rating ──
-  if(userLat && userLng){
-    salons.sort((a,b) => (a.dist ?? 999) - (b.dist ?? 999));
-  }
-
-  document.getElementById("salon-count").textContent=`${salons.length} salon${salons.length!==1?"s":""} found${userLat?" · sorted by distance":""}`;
-  if(!salons.length){grid.innerHTML=`<p style="color:var(--text-light);">No salons match your filters.</p>`;return;}
-  grid.innerHTML=salons.map((s,i)=>{
-    // Distance badge — real if location known, address-based fallback
-    const distBadge = s.dist !== null
-      ? `<span style="background:#EAF4EC;color:#2E7D32;font-size:.72rem;padding:.15rem .55rem;border-radius:var(--r-pill);">📏 ${s.dist.toFixed(1)} km away</span>`
-      : `<span style="background:#EAF4EC;color:#2E7D32;font-size:.72rem;padding:.15rem .55rem;border-radius:var(--r-pill);">📍 Lahore</span>`;
-    return `
-    <div onclick="openSalonProfile(${s.id})" style="background:#fff;border-radius:var(--r);border:1.5px solid var(--border);padding:1.2rem;cursor:pointer;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 4px 18px rgba(192,84,106,.15)'" onmouseout="this.style.boxShadow='none'">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.6rem;">
-        <h3 style="font-family:var(--font-s);font-size:1.1rem;color:var(--text);">${s.name}</h3>
-        <span style="background:${priceBadgeColor(s.price_range)};color:#fff;font-size:.7rem;padding:.2rem .6rem;border-radius:var(--r-pill);font-weight:700;text-transform:capitalize;flex-shrink:0;margin-left:.5rem;">${s.price_range}</span>
-      </div>
-      <div style="font-size:.82rem;color:var(--text-light);margin-bottom:.5rem;">📍 ${s.address}</div>
-      <div style="font-size:.88rem;color:#D4A030;margin-bottom:.4rem;">${starsHTML(s.rating)} <span style="color:var(--text-light);font-size:.78rem;">${s.rating} (${s.review_count} reviews)</span></div>
-      <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem;">
-        <span style="background:var(--rose-pale);color:var(--rose);font-size:.72rem;padding:.15rem .55rem;border-radius:var(--r-pill);">${s.category}</span>
-        <span style="background:var(--cream2);color:var(--text-med);font-size:.72rem;padding:.15rem .55rem;border-radius:var(--r-pill);">🕐 ${s.working_hours}</span>
-        ${distBadge}
-      </div>
-    </div>
-  `}).join("");
-}
-
-// ── Open salon profile (US-12) ────────────────────────────────────
-async function openSalonProfile(salonId){
-  currentSalonId=salonId;
-  const{data,ok}=await api(`/salons/${salonId}`,"GET");
-  if(!ok){toast("Could not load salon profile","err");return;}
-  const s=data.salon;
-  currentSalonServices=data.services;
-  const body=document.getElementById("salon-profile-body");
-  const serviceRows=data.services.map(sv=>`
-    <tr>
-      <td style="padding:.5rem .8rem;border-bottom:1px solid var(--border);">${sv.service_name}</td>
-      <td style="padding:.5rem .8rem;border-bottom:1px solid var(--border);text-transform:capitalize;">${sv.service_type}</td>
-      <td style="padding:.5rem .8rem;border-bottom:1px solid var(--border);">Rs. ${sv.price_min.toLocaleString()} – ${sv.price_max.toLocaleString()}</td>
-      <td style="padding:.5rem .8rem;border-bottom:1px solid var(--border);">${sv.duration_min} min</td>
-    </tr>`).join("");
-  const reviewCards=data.reviews.length
-    ? data.reviews.map(r=>`
-      <div style="background:var(--cream2);border-radius:var(--r);padding:.9rem 1rem;margin-bottom:.6rem;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem;">
-          <strong style="font-size:.88rem;">${r.user_name}</strong>
-          <span style="color:#D4A030;font-size:.95rem;">${starsHTML(r.rating)}</span>
-        </div>
-        <p style="font-size:.82rem;color:var(--text-med);">${r.review_text||"No written review."}</p>
-        <p style="font-size:.72rem;color:var(--text-light);margin-top:.3rem;">${r.created_at?.slice(0,10)||""}</p>
-      </div>`).join("")
-    : `<p style="color:var(--text-light);font-size:.85rem;">No reviews yet. Be the first!</p>`;
-  body.innerHTML=`
-    <div style="background:linear-gradient(135deg,var(--rose-pale),var(--cream2));border-radius:var(--r);padding:1.5rem 2rem;margin-bottom:1.5rem;">
-      <h2 style="font-family:var(--font-s);font-size:2rem;color:var(--text);margin-bottom:.3rem;">${s.name}</h2>
-      <p style="color:var(--text-light);font-size:.85rem;margin-bottom:.5rem;">📍 ${s.address}</p>
-      <div style="color:#D4A030;font-size:1.1rem;margin-bottom:.4rem;">${starsHTML(s.rating)} <span style="color:var(--text-light);font-size:.82rem;">${s.rating} (${s.review_count} reviews)</span></div>
-      <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.82rem;color:var(--text-med);">
-        <span>🕐 ${s.working_hours}</span>
-        <span>📞 ${s.phone||"N/A"}</span>
-        <span>👤 ${s.category}</span>
-        <span>💳 ${s.price_range}</span>
-      </div>
-      ${s.description?`<p style="margin-top:.8rem;font-size:.85rem;color:var(--text-med);font-style:italic;">"${s.description}"</p>`:""}
-    </div>
-
-    <h3 style="font-family:var(--font-s);font-size:1.2rem;color:var(--text);margin-bottom:.8rem;">Services Catalog</h3>
-    <div style="overflow-x:auto;margin-bottom:1.5rem;">
-      <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--border);">
-        <thead>
-          <tr style="background:var(--rose-pale);">
-            <th style="padding:.6rem .8rem;text-align:left;font-size:.83rem;color:var(--rose);">Service</th>
-            <th style="padding:.6rem .8rem;text-align:left;font-size:.83rem;color:var(--rose);">Type</th>
-            <th style="padding:.6rem .8rem;text-align:left;font-size:.83rem;color:var(--rose);">Price (PKR)</th>
-            <th style="padding:.6rem .8rem;text-align:left;font-size:.83rem;color:var(--rose);">Duration</th>
-          </tr>
-        </thead>
-        <tbody>${serviceRows||"<tr><td colspan=4 style=padding:.8rem;color:var(--text-light);>No services listed.</td></tr>"}</tbody>
-      </table>
-    </div>
-
-    <h3 style="font-family:var(--font-s);font-size:1.2rem;color:var(--text);margin-bottom:.8rem;">Reviews</h3>
-    ${reviewCards}
-    <div id="profile-chat-section" style="margin-top:1.5rem;padding:1.2rem;background:#fff;border:1.5px solid var(--border);border-radius:var(--r);">
-      <h3 style="font-family:var(--font-s);font-size:1.1rem;color:var(--text);margin-bottom:.5rem;">💬 Chat with this Salon</h3>
-      <p style="font-size:.82rem;color:var(--text-light);margin-bottom:.8rem;">Have a booking with this salon? Open the chat to confirm details or ask questions.</p>
-      <button onclick="openChatFromProfile()" class="btn-hero-outline" style="padding:.45rem 1.2rem;font-size:.85rem;">Open Chat</button>
-      <div id="profile-chat-err" style="display:none;color:#F44336;font-size:.8rem;margin-top:.5rem;"></div>
-    </div>
-  `;
-  go("screen-salon-profile");
-}
-
-function openBookingFromProfile(){
-  if(!currentSalonId){toast("No salon selected","err");return;}
-  document.getElementById("booking-salon-name").textContent=`Booking at: ${document.querySelector("#salon-profile-body h2")?.textContent||"Salon"}`;
-  const sel=document.getElementById("booking-service");
-  sel.innerHTML=`<option value="">— Choose a service —</option>`+currentSalonServices.map(s=>`<option value="${s.id}">${s.service_name} — Rs. ${s.price_min.toLocaleString()}–${s.price_max.toLocaleString()}</option>`).join("");
-  // Set min datetime to now
-  const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
-  document.getElementById("booking-datetime").min=now.toISOString().slice(0,16);
-  document.getElementById("booking-err").style.display="none";
-  go("screen-booking");
-}
-
-// ── Submit booking (US-13) ────────────────────────────────────────
-async function submitBooking(){
-  const svcId=document.getElementById("booking-service").value;
-  const dt=document.getElementById("booking-datetime").value;
-  const note=document.getElementById("booking-note").value.trim();
-  const errEl=document.getElementById("booking-err");
-  errEl.style.display="none";
-  if(!svcId){errEl.textContent="Please select a service.";errEl.style.display="block";return;}
-  if(!dt){errEl.textContent="Please choose a date and time.";errEl.style.display="block";return;}
-  const btn=document.getElementById("booking-submit-btn");
-  btn.disabled=true; btn.textContent="Sending…";
-  const{data,ok}=await api("/bookings","POST",{salon_id:currentSalonId,service_id:parseInt(svcId),datetime:dt,note});
-  btn.disabled=false; btn.textContent="Send Booking Request";
-  if(ok){
-    toast("Booking request sent! ✓","ok");
-    setTimeout(()=>{ loadBookings(); go("screen-bookings"); },1000);
-  } else {
-    errEl.textContent=data.error||"Booking failed. Please try again.";
-    errEl.style.display="block";
-  }
-}
-
-// ── Load bookings (US-13) ────────────────────────────────────────
-async function loadBookings(){
-  const{data,ok}=await api("/bookings","GET");
-  const list=document.getElementById("bookings-list");
-  if(!ok||!data.bookings?.length){
-    list.innerHTML=`<div style="text-align:center;padding:3rem;color:var(--text-light);">
-      <div style="font-size:2.5rem;margin-bottom:.8rem;">📅</div>
-      <p>No bookings yet. <a onclick="go('screen-salon')" style="color:var(--rose);cursor:pointer;font-weight:700;">Find a salon</a> to get started.</p>
-    </div>`;
-    return;
-  }
-  const statusColor={"pending":"#E1AD01","confirmed":"#4CAF50","rejected":"#F44336","alternate":"#9C27B0","completed":"#607D8B"};
-  list.innerHTML=data.bookings.map(b=>`
-    <div style="background:#fff;border-radius:var(--r);border:1.5px solid var(--border);padding:1.2rem;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.6rem;">
-        <div>
-          <strong style="font-size:1rem;">${b.salon_name}</strong>
-          <p style="color:var(--text-light);font-size:.82rem;">${b.service_name||"Service not specified"}</p>
-        </div>
-        <span style="background:${statusColor[b.status]||"#999"};color:#fff;font-size:.72rem;padding:.25rem .7rem;border-radius:var(--r-pill);font-weight:700;text-transform:capitalize;">${b.status}</span>
-      </div>
-      <p style="font-size:.82rem;color:var(--text-med);margin-bottom:.4rem;">🕐 ${b.datetime||"N/A"}</p>
-      ${b.note?`<p style="font-size:.78rem;color:var(--text-light);font-style:italic;">Note: ${b.note}</p>`:""}
-      <!-- Status tracker -->
-      <div style="display:flex;align-items:center;gap:0;margin:.8rem 0 .4rem;font-size:.7rem;overflow-x:auto;">
-        ${["pending","confirmed","completed"].map(st=>{
-          const active=b.status===st||(b.status==="cancelled"&&st==="pending");
-          const done=(b.status==="confirmed"&&st==="pending")||(b.status==="completed"&&(st==="pending"||st==="confirmed"));
-          const label={pending:"Pending",confirmed:"Confirmed",completed:"Completed"}[st];
-          const col=done?"#4CAF50":active?(b.status==="cancelled"?"#F44336":statusColor[b.status]||"#999"):"#DDD";
-          return `<span style="background:${col};color:#fff;padding:.22rem .7rem;font-weight:700;font-size:.67rem;white-space:nowrap;border-radius:0;">${done?"✓ ":""}${label}</span><span style="width:18px;height:2px;background:${done?"#4CAF50":"#DDD"};flex-shrink:0;"></span>`;
-        }).join("")}
-        ${b.status==="alternate"?`<span style="background:#9C27B0;color:#fff;padding:.22rem .7rem;font-weight:700;font-size:.67rem;border-radius:0;">⏱ Alt. Proposed</span>`:""}
-        ${b.status==="rejected"?`<span style="background:#F44336;color:#fff;padding:.22rem .7rem;font-weight:700;font-size:.67rem;border-radius:0;">✕ Rejected</span>`:""}
-        ${b.status==="cancelled"?`<span style="background:#F44336;color:#fff;padding:.22rem .7rem;font-weight:700;font-size:.67rem;border-radius:0;">✕ Cancelled</span>`:""}
-      </div>
-        <button onclick="openChat(${b.id},'${b.salon_name}')" class="btn-hero-outline" style="padding:.35rem .9rem;font-size:.8rem;">💬 Chat</button>
-        ${b.status==="completed"?`<button onclick="openReview(${b.salon_id},'${b.salon_name}',${b.id})" class="btn-hero-fill" style="padding:.35rem .9rem;font-size:.8rem;">⭐ Review</button>`:""}
-        ${b.status==="pending"?`
-          ${(()=>{
-            const apptTime=new Date(b.datetime);
-            const hoursLeft=(apptTime-new Date())/(1000*60*60);
-            const canCancel=hoursLeft<0||hoursLeft>=2;
-            return canCancel
-              ? `<button onclick="updateBookingStatus(${b.id},'cancelled','${b.datetime}')" style="padding:.35rem .9rem;font-size:.8rem;border:1.5px solid #F44336;border-radius:var(--r-pill);background:transparent;color:#F44336;cursor:pointer;">✕ Cancel</button>`
-              : `<span style="font-size:.75rem;color:#F44336;background:#FFF5F5;padding:.3rem .7rem;border-radius:var(--r-pill);border:1px solid #FFCDD2;">🔒 Cannot cancel — less than 2 hrs left</span>`;
-          })()}
-        `:""}
-        ${b.status==="confirmed"?`
-          <button onclick="updateBookingStatus(${b.id},'completed','${b.datetime}')" class="btn-hero-fill" style="padding:.35rem .9rem;font-size:.8rem;">✓ Mark Completed</button>
-          ${(()=>{
-            const apptTime=new Date(b.datetime);
-            const hoursLeft=(apptTime-new Date())/(1000*60*60);
-            const canCancel=hoursLeft<0||hoursLeft>=2;
-            return canCancel
-              ? `<button onclick="updateBookingStatus(${b.id},'cancelled','${b.datetime}')" style="padding:.35rem .9rem;font-size:.8rem;border:1.5px solid #F44336;border-radius:var(--r-pill);background:transparent;color:#F44336;cursor:pointer;">✕ Cancel</button>`
-              : `<span style="font-size:.75rem;color:#F44336;background:#FFF5F5;padding:.3rem .7rem;border-radius:var(--r-pill);border:1px solid #FFCDD2;">🔒 Cannot cancel — less than 2 hrs left</span>`;
-          })()}
-        `:""}
-        ${b.status==="alternate"?`
-          <span style="font-size:.78rem;color:#9C27B0;font-weight:700;background:#F3E5F5;padding:.25rem .7rem;border-radius:var(--r-pill);">📌 New time proposed: ${b.alt_time||"Check details"}</span>
-          <button onclick="updateBookingStatus(${b.id},'confirmed','${b.datetime}')" class="btn-hero-fill" style="padding:.35rem .9rem;font-size:.8rem;background:#4CAF50;">✓ Accept</button>
-          <button onclick="updateBookingStatus(${b.id},'cancelled','${b.datetime}')" style="padding:.35rem .9rem;font-size:.8rem;border:1.5px solid #F44336;border-radius:var(--r-pill);background:transparent;color:#F44336;cursor:pointer;">✕ Decline</button>
-        `:""}
-      </div>
-    </div>
-  `).join("");
-}
-
-async function updateBookingStatus(bid, status, apptDatetime){
-  // ── Cancellation policy: cannot cancel within 2 hours ──
-  if(status === "cancelled" && apptDatetime){
-    const apptTime = new Date(apptDatetime);
-    const now = new Date();
-    const hoursLeft = (apptTime - now) / (1000 * 60 * 60);
-    if(hoursLeft > 0 && hoursLeft < 2){
-      toast(`Cannot cancel — appointment is in ${hoursLeft.toFixed(1)} hour(s). Cancellation is only allowed at least 2 hours before the appointment.`, "err");
-      return;
-    }
-  }
-  const{data,ok}=await api(`/bookings/${bid}`,"PUT",{status});
-  if(ok){ toast(`Status updated to ${status} ✓`,"ok"); loadBookings(); }
-  else toast(data.error||"Update failed","err");
-}
-
-// ── Open chat from salon profile (US-14) ─────────────────────────
-async function openChatFromProfile(){
-  if(!currentSalonId){ toast("No salon selected","err"); return; }
-  const{data,ok}=await api("/bookings","GET");
-  if(!ok){ toast("Could not load bookings","err"); return; }
-  const match=(data.bookings||[]).find(b=>b.salon_id===currentSalonId && b.status!=="cancelled");
-  const errEl=document.getElementById("profile-chat-err");
-  if(!match){
-    if(errEl){ errEl.textContent="You need an active booking with this salon to chat. Book an appointment first."; errEl.style.display="block"; }
-    return;
-  }
-  if(errEl) errEl.style.display="none";
-  openChat(match.id, match.salon_name);
-}
-
-// ── Chat (US-14) ──────────────────────────────────────────────────
-function openChat(bookingId, salonName){
-  currentBookingId=bookingId;
-  document.getElementById("chat-salon-name").textContent=salonName;
-  go("screen-chat");
-  loadChatMessages();
-  if(chatPollInterval)clearInterval(chatPollInterval);
-  chatPollInterval=setInterval(loadChatMessages,5000);
-}
-
-async function loadChatMessages(){
-  if(!currentBookingId)return;
-  const{data,ok}=await api(`/chat/${currentBookingId}`,"GET");
-  if(!ok)return;
-  const box=document.getElementById("chat-messages");
-  box.innerHTML=data.messages.map(m=>{
-    const isUser=m.sender_type==="user";
-    return `<div style="display:flex;justify-content:${isUser?"flex-end":"flex-start"};">
-      <div style="max-width:70%;background:${isUser?"var(--rose)":"#fff"};color:${isUser?"#fff":"var(--text)"};
-        padding:.6rem .9rem;border-radius:${isUser?"14px 14px 4px 14px":"14px 14px 14px 4px"};
-        font-size:.85rem;border:${isUser?"none":"1.5px solid var(--border)"};box-shadow:0 2px 8px rgba(0,0,0,.06);">
-        <p style="margin:0;">${m.message}</p>
-        <p style="margin:.2rem 0 0;font-size:.68rem;opacity:.7;text-align:right;">${(m.sent_at||"").slice(11,16)}</p>
-      </div>
-    </div>`;
-  }).join("");
-  box.scrollTop=box.scrollHeight;
-}
-
-async function sendChatMsg(){
-  const inp=document.getElementById("chat-input");
-  const msg=inp.value.trim();
-  if(!msg||!currentBookingId)return;
-  inp.value="";
-  const{ok}=await api(`/chat/${currentBookingId}`,"POST",{message:msg,sender_type:"user"});
-  if(ok)loadChatMessages();
-  else toast("Could not send message","err");
-}
-
-// ── Review (US-15) ────────────────────────────────────────────────
-function openReview(salonId, salonName, bookingId){
-  currentReviewSalonId=salonId;
-  currentReviewBookingId=bookingId;
-  selectedRating=0;
-  document.getElementById("review-salon-label").textContent=`Reviewing: ${salonName}`;
-  document.getElementById("review-text").value="";
-  document.getElementById("review-err").style.display="none";
-  setRating(0);
-  go("screen-review");
-}
-
-function setRating(val){
-  selectedRating=val;
-  document.querySelectorAll(".star").forEach(s=>{
-    s.style.color=parseInt(s.dataset.v)<=val?"#D4A030":"#DDD";
-  });
-}
-
-async function submitReview(){
-  const text=document.getElementById("review-text").value.trim();
-  const errEl=document.getElementById("review-err");
-  errEl.style.display="none";
-  if(!selectedRating){errEl.textContent="Please select a star rating.";errEl.style.display="block";return;}
-  const btn=document.getElementById("review-submit-btn");
-  btn.disabled=true; btn.textContent="Submitting…";
-  const{data,ok}=await api("/reviews","POST",{salon_id:currentReviewSalonId,booking_id:currentReviewBookingId,rating:selectedRating,review_text:text});
-  btn.disabled=false; btn.textContent="Submit Review";
-  if(ok){
-    toast("Review submitted! Thank you ⭐","ok");
-    setTimeout(()=>go("screen-bookings"),1200);
-  } else {
-    errEl.textContent=data.error||"Could not submit review.";
-    errEl.style.display="block";
-  }
-}
-
-// ── Extend window.go for Sprint 3 ────────────────────────────────
+/* ── Navigation helpers ── */
 (function(){
-  const _go=window.go;
-  window.go=function(id){
-    _go(id);
-    if(id==="screen-salon")loadSalons();
-    if(id==="screen-bookings"){
-      loadBookings();
-      if(bookingsPollInterval)clearInterval(bookingsPollInterval);
-      bookingsPollInterval=setInterval(loadBookings,15000);
-    } else {
-      if(bookingsPollInterval){clearInterval(bookingsPollInterval);bookingsPollInterval=null;}
-    }
-    if(id!=="screen-chat"&&chatPollInterval){clearInterval(chatPollInterval);chatPollInterval=null;}
+  const _baseGo = window.go;
+  window.go = function(id){
+    _baseGo(id);
+    if(id === 'screen-parlour-find'){ ppRenderList(); ppRenderPins(); }
+    if(id === 'screen-parlour-register'){ ppResetRegForm(); }
+    if(id === 'screen-parlour-mybookings'){ ppLoadMyBookings(); }
   };
 })();
 
+/* ── Register steps ── */
+function ppResetRegForm(){
+  document.getElementById('pp-step-1').style.display = '';
+  document.getElementById('pp-step-2').style.display = 'none';
+  document.getElementById('pp-step-3').style.display = 'none';
+  document.getElementById('pp-dot-1').style.background = 'var(--rose)';
+  document.getElementById('pp-dot-2').style.background = 'var(--border)';
+  document.getElementById('pp-dot-3').style.background = 'var(--border)';
+  document.querySelectorAll('.pp-svc-chip[data-svc]').forEach(c => c.classList.remove('active'));
+  ppSelectedServices = [];
+}
+
+function ppToggleSvc(el){
+  el.classList.toggle('active');
+  const svc = el.dataset.svc;
+  if(el.classList.contains('active')) ppSelectedServices.push(svc);
+  else ppSelectedServices = ppSelectedServices.filter(s => s !== svc);
+}
+
+function ppFormatCNIC(el){
+  let v = el.value.replace(/\D/g,'');
+  if(v.length > 5) v = v.slice(0,5) + '-' + v.slice(5);
+  if(v.length > 13) v = v.slice(0,13) + '-' + v.slice(13);
+  el.value = v.slice(0,15);
+}
+
+function ppFileChosen(inp, lblId){
+  if(inp.files.length) document.getElementById(lblId).textContent = '✓ ' + inp.files[0].name;
+}
+
+function ppGoStep2(){
+  const name = document.getElementById('pp-r-name').value.trim();
+  const owner = document.getElementById('pp-r-owner').value.trim();
+  const phone = document.getElementById('pp-r-phone').value.trim();
+  const addr = document.getElementById('pp-r-address').value.trim();
+  const city = document.getElementById('pp-r-city').value;
+  const err = document.getElementById('pp-step1-err');
+  if(!name || !owner || !phone || !addr || !city){
+    err.textContent = 'Please fill in all required fields.'; err.style.display = 'block'; return;
+  }
+  if(ppSelectedServices.length === 0){
+    err.textContent = 'Please select at least one service.'; err.style.display = 'block'; return;
+  }
+  err.style.display = 'none';
+  document.getElementById('pp-step-1').style.display = 'none';
+  document.getElementById('pp-step-2').style.display = '';
+  document.getElementById('pp-dot-2').style.background = 'var(--rose)';
+  document.getElementById('pp-reg-form-wrap').scrollTop = 0;
+}
+
+function ppGoStep1Back(){
+  document.getElementById('pp-step-2').style.display = 'none';
+  document.getElementById('pp-step-1').style.display = '';
+  document.getElementById('pp-dot-2').style.background = 'var(--border)';
+}
+
+async function ppSubmitRegistration(){
+  const cnic = document.getElementById('pp-r-cnic').value.trim();
+  const err = document.getElementById('pp-step2-err');
+  if(!cnic || cnic.replace(/\D/g,'').length < 13){
+    err.textContent = 'Please enter a valid CNIC number.'; err.style.display = 'block'; return;
+  }
+  err.style.display = 'none';
+  const btn = document.getElementById('pp-submit-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Submitting…';
+
+  // Build payload and POST to backend
+  const payload = {
+    name: document.getElementById('pp-r-name').value.trim(),
+    owner: document.getElementById('pp-r-owner').value.trim(),
+    phone: document.getElementById('pp-r-phone').value.trim(),
+    email: document.getElementById('pp-r-email').value.trim(),
+    address: document.getElementById('pp-r-address').value.trim(),
+    city: document.getElementById('pp-r-city').value,
+    area: document.getElementById('pp-r-area').value.trim(),
+    services: ppSelectedServices,
+    open_time: document.getElementById('pp-r-open').value,
+    close_time: document.getElementById('pp-r-close').value,
+    days: document.getElementById('pp-r-days').value,
+    cnic: cnic,
+    business_type: document.getElementById('pp-r-btype').value,
+    price_min: parseInt(document.getElementById('pp-r-pmin').value) || 0,
+    price_max: parseInt(document.getElementById('pp-r-pmax').value) || 0,
+    description: document.getElementById('pp-r-desc').value.trim()
+  };
+
+  try {
+    const { ok } = await api('/parlour/register', 'POST', payload);
+    if(ok) {
+      toast('Parlour registered successfully! ✓', 'ok');
+    }
+  } catch(e) { /* backend optional — show success anyway */ }
+
+  setTimeout(() => {
+    btn.disabled = false; btn.textContent = 'Submit for Verification ✓';
+    document.getElementById('pp-step-2').style.display = 'none';
+    document.getElementById('pp-step-3').style.display = '';
+    document.getElementById('pp-dot-3').style.background = 'var(--rose)';
+    document.getElementById('pp-reg-form-wrap').scrollTop = 0;
+  }, 1800);
+}
+
+/* ── Find Parlours ── */
+function ppStarsHtml(r){
+  const full = Math.floor(r), half = (r % 1) >= .5;
+  let s = '';
+  for(let i=0;i<full;i++) s += '★';
+  if(half) s += '½';
+  return s;
+}
+
+function ppGetFiltered(){
+  const q = (document.getElementById('pp-search-input')?.value || '').toLowerCase().trim();
+  return PP_PARLOURS.filter(p => {
+    const matchQ = !q || (p.name.toLowerCase().includes(q) || p.area.toLowerCase().includes(q));
+    let matchF = true;
+    if(ppActiveFilter === 'open') matchF = p.open;
+    else if(ppActiveFilter === 'top') matchF = p.rating >= 4.7;
+    else if(ppActiveFilter !== 'all') matchF = p.services.includes(ppActiveFilter);
+    return matchQ && matchF;
+  });
+}
+
+function ppFilterParlours(){ ppRenderList(); ppRenderPins(); }
+
+function ppSetFilter(el, filter){
+  document.querySelectorAll('#screen-parlour-find .pp-svc-chip[data-filter]').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  ppActiveFilter = filter;
+  ppFilterParlours();
+}
+
+async function ppLoadFromBackend(){
+  try {
+    const { data, ok } = await api('/parlour/list', 'GET');
+    if(ok && data.parlours && data.parlours.length){
+      data.parlours.forEach(p => {
+        if(!PP_PARLOURS.find(x => x.id === p.id)){
+          PP_PARLOURS.push({...p, mapX: 30 + Math.random()*40, mapY: 30 + Math.random()*40, emoji: '🏪'});
+        }
+      });
+    }
+  } catch(e) { /* backend optional */ }
+  ppRenderList(); ppRenderPins();
+}
+
+function ppRenderList(){
+  const list = document.getElementById('pp-parlour-list');
+  if(!list) return;
+  const status = document.getElementById('pp-list-status');
+  list.innerHTML = '';
+  if(status) list.appendChild(status);
+  const filtered = ppGetFiltered();
+  if(!ppLocActive && !document.getElementById('pp-search-input')?.value){
+    list.insertAdjacentHTML('beforeend', `<div style="padding:1.5rem 1.2rem;text-align:center;color:var(--text-light);font-size:.82rem;line-height:1.7;"><div style="font-size:2rem;margin-bottom:.5rem;">📍</div>Share your location to see<br>parlours near you.</div>`);
+  }
+  filtered.forEach(p => list.insertAdjacentHTML('beforeend', ppParlourCard(p)));
+}
+
+function ppParlourCard(p){
+  const sel = ppSelectedParlour && ppSelectedParlour.id === p.id;
+  return `<div class="pp-parlour-card${sel?' selected':''}" id="pp-card-${p.id}" onclick="ppSelectParlour(${p.id})">
+    <div class="pp-parlour-avatar">${p.emoji}</div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-weight:700;font-size:.9rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
+      <div style="font-size:.75rem;color:var(--text-light);margin:.18rem 0;">📍 ${p.addr}</div>
+      <div style="display:flex;align-items:center;gap:.6rem;margin-top:.2rem;flex-wrap:wrap;">
+        <span style="color:#F0A800;font-size:.75rem;">${ppStarsHtml(p.rating)}</span>
+        <span style="font-size:.73rem;color:var(--text-light);">${p.rating} (${p.reviews})</span>
+        ${p.dist ? `<span style="font-size:.7rem;background:var(--rose-pale);color:var(--rose);padding:.18rem .6rem;border-radius:var(--r-pill);font-weight:700;">${p.dist} km</span>` : ''}
+        <div class="pp-status-dot${p.open?'':' closed'}"></div>
+        <span style="font-size:.7rem;color:${p.open?'#4CAF50':'#E57373'};">${p.open?'Open':'Closed'}</span>
+      </div>
+      <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.35rem;">
+        ${p.services.slice(0,3).map(s=>`<span style="font-size:.65rem;background:#fff;border:1px solid var(--border);padding:.12rem .5rem;border-radius:var(--r-pill);color:var(--text-med);">${s}</span>`).join('')}
+        ${p.services.length>3?`<span style="font-size:.65rem;background:#fff;border:1px solid var(--border);padding:.12rem .5rem;border-radius:var(--r-pill);color:var(--text-med);">+${p.services.length-3}</span>`:''}
+      </div>
+      <div style="font-size:.72rem;color:var(--text-light);margin-top:.3rem;">PKR ${p.priceMin.toLocaleString()}–${p.priceMax.toLocaleString()}</div>
+      <button onclick="event.stopPropagation();ppOpenBookModal(${p.id})" style="align-self:flex-start;padding:.3rem .9rem;border:1.5px solid var(--rose);border-radius:var(--r-pill);background:transparent;color:var(--rose);font-size:.75rem;font-weight:700;cursor:pointer;margin-top:.5rem;transition:all var(--trans);" onmouseover="this.style.background='var(--rose)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='var(--rose)'">Book Appointment</button>
+    </div>
+  </div>`;
+}
+
+function ppRenderPins(){
+  const container = document.getElementById('pp-map-pins');
+  if(!container) return;
+  container.innerHTML = '';
+  ppGetFiltered().forEach(p => {
+    const sel = ppSelectedParlour && ppSelectedParlour.id === p.id;
+    const pin = document.createElement('div');
+    pin.style.cssText = `position:absolute;transform:translate(-50%,-100%);cursor:pointer;transition:all .2s;left:${p.mapX}%;top:${p.mapY}%;`;
+    pin.innerHTML = `<div style="background:${sel?'var(--rose)':'#fff'};color:${sel?'#fff':'var(--rose)'};border:2px solid var(--rose);border-radius:8px 8px 8px 2px;padding:.3rem .6rem;font-size:.72rem;font-weight:700;box-shadow:var(--shadow);white-space:nowrap;">${p.name.split(' ')[0]}</div><div style="width:10px;height:10px;border-radius:50%;background:var(--rose);margin:2px auto 0;box-shadow:0 0 0 3px rgba(192,84,106,.25);"></div>`;
+    pin.onclick = () => ppSelectParlour(p.id);
+    container.appendChild(pin);
+  });
+}
+
+function ppSelectParlour(id){
+  ppSelectedParlour = PP_PARLOURS.find(p => p.id === id);
+  ppRenderList(); ppRenderPins();
+  const ov = document.getElementById('pp-map-overlay');
+  document.getElementById('pp-ov-name').textContent = ppSelectedParlour.name;
+  document.getElementById('pp-ov-addr').textContent = ppSelectedParlour.addr;
+  document.getElementById('pp-ov-stars').textContent = ppStarsHtml(ppSelectedParlour.rating) + ' ' + ppSelectedParlour.rating;
+  document.getElementById('pp-ov-dist').textContent = ppSelectedParlour.dist + ' km away';
+  ov.style.display = 'block';
+}
+
+function ppOpenBookFromOverlay(){ if(ppSelectedParlour) ppOpenBookModal(ppSelectedParlour.id); }
+
+function ppScrollToCard(){
+  if(ppSelectedParlour){
+    const el = document.getElementById('pp-card-' + ppSelectedParlour.id);
+    if(el) el.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+}
+
+function ppDetectLocation(){
+  const btn = document.getElementById('pp-loc-btn');
+  if(btn){ btn.textContent = '⏳ Detecting…'; btn.style.opacity = '.6'; }
+  if(!navigator.geolocation){
+    toast('Geolocation not supported by your browser.', 'err');
+    if(btn){ btn.textContent = '📍 Use My Location'; btn.style.opacity = '1'; }
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      ppLocActive = true;
+      document.getElementById('pp-map-you').style.display = 'flex';
+      document.getElementById('pp-no-loc').style.display = 'none';
+      if(btn){ btn.textContent = '📍 Location Active ✓'; btn.style.background = 'var(--rose)'; btn.style.color = '#fff'; btn.style.opacity = '1'; }
+      PP_PARLOURS.sort((a,b) => a.dist - b.dist);
+      ppRenderList(); ppRenderPins();
+      document.getElementById('pp-list-status').textContent = `📍 ${PP_PARLOURS.length} parlours near you`;
+      toast('Location detected! Showing nearby parlours.', 'ok');
+    },
+    () => {
+      toast('Could not detect location — showing all parlours.', 'err');
+      if(btn){ btn.textContent = '📍 Use My Location'; btn.style.opacity = '1'; }
+      ppLocActive = true;
+      document.getElementById('pp-map-you').style.display = 'flex';
+      document.getElementById('pp-no-loc').style.display = 'none';
+      ppRenderList(); ppRenderPins();
+    }
+  );
+}
+
+/* ── Booking modal ── */
+function ppOpenBookModal(id){
+  const p = PP_PARLOURS.find(x => x.id === id);
+  if(!p) return;
+  ppSelectedParlour = p;
+  document.getElementById('pp-book-modal-name').textContent = p.name + ' · ' + p.addr;
+  document.getElementById('pp-bk-service').innerHTML =
+    '<option value="">— Choose service —</option>' +
+    p.services.map(s => `<option>${s}</option>`).join('');
+  const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  document.getElementById('pp-bk-datetime').min = now.toISOString().slice(0,16);
+  document.getElementById('pp-book-modal').classList.add('open');
+}
+
+function ppCloseBookModal(){ document.getElementById('pp-book-modal').classList.remove('open'); }
+
+async function ppSubmitBooking(){
+  const svc = document.getElementById('pp-bk-service').value;
+  const dt = document.getElementById('pp-bk-datetime').value;
+  const name = document.getElementById('pp-bk-name').value.trim();
+  const phone = document.getElementById('pp-bk-phone').value.trim();
+  const note = document.getElementById('pp-bk-note').value.trim();
+  if(!svc || !dt || !name || !phone){ toast('Please fill in all required fields.', 'err'); return; }
+
+  // Save to backend
+  let bookingId = null;
+  try {
+    const { data, ok } = await api('/parlour/booking', 'POST', {
+      parlour_id: ppSelectedParlour.id,
+      parlour_name: ppSelectedParlour.name,
+      service: svc,
+      datetime: dt,
+      client_name: name,
+      client_phone: phone,
+      note
+    });
+    if(ok && data.booking_id) bookingId = data.booking_id;
+  } catch(e) { /* backend optional */ }
+
+  // Store in local session list
+  const booking = {
+    id: bookingId || Date.now(),
+    parlour_id: ppSelectedParlour.id,
+    parlour_name: ppSelectedParlour.name,
+    service: svc,
+    datetime: dt,
+    client_name: name,
+    client_phone: phone,
+    note,
+    status: 'pending',
+    created_at: new Date().toISOString(),
+    chatMessages: [
+      { role: 'bot', text: `Hi ${name}! 👋 Your booking at ${ppSelectedParlour.name} for ${svc} has been requested. The parlour will confirm shortly. Feel free to ask anything!` }
+    ]
+  };
+  ppMyBookings.unshift(booking);
+
+  ppCloseBookModal();
+  toast(`Booking request sent to ${ppSelectedParlour.name}! ✓`, 'ok');
+  setTimeout(() => go('screen-parlour-mybookings'), 900);
+}
+
+document.getElementById('pp-book-modal').addEventListener('click', function(e){
+  if(e.target === this) ppCloseBookModal();
+});
+
+/* ── My Bookings ── */
+function ppLoadMyBookings(){
+  const list = document.getElementById('pp-mybookings-list');
+  if(!list) return;
+  if(!ppMyBookings.length){
+    list.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:var(--text-light);">
+      <div style="font-size:3rem;margin-bottom:1rem;">📅</div>
+      <h3 style="font-family:var(--font-s);color:var(--text);margin-bottom:.5rem;">No Bookings Yet</h3>
+      <p style="font-size:.85rem;margin-bottom:1.5rem;">Book an appointment at a nearby parlour to get started.</p>
+      <button class="btn-hero-fill" onclick="go('screen-parlour-find')">📍 Find Nearby Parlours</button>
+    </div>`;
+    return;
+  }
+  const statusColor = { pending:'#E69A1E', confirmed:'#4CAF50', rejected:'#F44336', completed:'#7A5A8A' };
+  const statusLabel = { pending:'⏳ Pending', confirmed:'✅ Confirmed', rejected:'❌ Rejected', completed:'⭐ Completed' };
+  list.innerHTML = ppMyBookings.map(b => {
+    const dt = new Date(b.datetime);
+    const dateStr = dt.toLocaleDateString('en-PK',{weekday:'short',day:'numeric',month:'short'});
+    const timeStr = dt.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+    const statusC = statusColor[b.status] || '#999';
+    const statusL = statusLabel[b.status] || b.status;
+    const parlour = PP_PARLOURS.find(p => p.id === b.parlour_id);
+    const emoji = parlour ? parlour.emoji : '💆';
+    return `<div style="background:#fff;border-radius:var(--r);border:1.5px solid var(--border);padding:1.2rem;box-shadow:var(--shadow-sm);">
+      <div style="display:flex;gap:1rem;align-items:flex-start;">
+        <div style="width:52px;height:52px;border-radius:var(--r-sm);background:linear-gradient(135deg,#F9E4E8,#EEC0C8);display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;">${emoji}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;flex-wrap:wrap;">
+            <strong style="font-size:1rem;color:var(--text);">${b.parlour_name}</strong>
+            <span style="background:${statusC}18;color:${statusC};border:1px solid ${statusC}40;padding:.2rem .7rem;border-radius:var(--r-pill);font-size:.72rem;font-weight:700;white-space:nowrap;">${statusL}</span>
+          </div>
+          <div style="font-size:.82rem;color:var(--rose);font-weight:700;margin:.15rem 0;">${b.service}</div>
+          <div style="font-size:.78rem;color:var(--text-light);">📅 ${dateStr} · 🕐 ${timeStr}</div>
+          ${b.note ? `<div style="font-size:.75rem;color:var(--text-med);margin-top:.3rem;font-style:italic;">"${b.note}"</div>` : ''}
+        </div>
+      </div>
+      <div style="margin-top:.9rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+        <button onclick="ppOpenBookingChat(${b.id})" class="btn-hero-fill" style="padding:.38rem 1rem;font-size:.8rem;">💬 Chat with Parlour</button>
+        ${b.status === 'pending' ? `<button onclick="ppCancelBooking(${b.id})" style="padding:.35rem .9rem;border:1.5px solid #F44336;border-radius:var(--r-pill);background:transparent;color:#F44336;font-size:.78rem;font-weight:700;cursor:pointer;">Cancel</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function ppCancelBooking(id){
+  const b = ppMyBookings.find(x => x.id === id);
+  if(!b) return;
+  b.status = 'cancelled';
+  ppMyBookings = ppMyBookings.filter(x => x.id !== id);
+  ppLoadMyBookings();
+  toast('Booking cancelled.', 'ok');
+}
+
+/* ── Booking Chat ── */
+function ppOpenBookingChat(bookingId){
+  const b = ppMyBookings.find(x => x.id === bookingId);
+  if(!b) return;
+  ppActiveChatBookingId = bookingId;
+  const parlour = PP_PARLOURS.find(p => p.id === b.parlour_id);
+  const emoji = parlour ? parlour.emoji : '💆';
+  document.getElementById('pp-chat-parlour-avatar').textContent = emoji;
+  document.getElementById('pp-chat-parlour-name').textContent = b.parlour_name;
+  const dt = new Date(b.datetime);
+  document.getElementById('pp-chat-booking-info').textContent = `${b.service} · ${dt.toLocaleDateString('en-PK',{day:'numeric',month:'short'})} ${dt.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'})}`;
+  ppRenderBookingChat(b);
+  go('screen-parlour-chat');
+}
+
+function ppRenderBookingChat(b){
+  const msgs = document.getElementById('pp-booking-chat-msgs');
+  if(!msgs || !b.chatMessages) return;
+  msgs.innerHTML = b.chatMessages.map(m => {
+    const isUser = m.role === 'user';
+    return `<div style="display:flex;${isUser?'justify-content:flex-end':''};margin-bottom:.1rem;">
+      <div style="max-width:75%;padding:.55rem .85rem;border-radius:${isUser?'14px 14px 4px 14px':'14px 14px 14px 4px'};font-size:.84rem;line-height:1.45;${isUser?'background:linear-gradient(135deg,#C0546A,#A03050);color:#fff;':'background:#fff;color:var(--text);border:1.5px solid var(--border);'}">${m.text}</div>
+    </div>`;
+  }).join('');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+async function ppSendBookingChat(){
+  const inp = document.getElementById('pp-booking-chat-input');
+  const msg = inp.value.trim(); if(!msg || !ppActiveChatBookingId) return;
+  inp.value = '';
+  const b = ppMyBookings.find(x => x.id === ppActiveChatBookingId);
+  if(!b) return;
+  b.chatMessages.push({ role:'user', text: msg });
+  ppRenderBookingChat(b);
+
+  // Get reply from backend
+  let reply = '';
+  const lower = msg.toLowerCase();
+  if(lower.includes('cancel')){
+    reply = `To cancel your booking at ${b.parlour_name}, you can tap the "Cancel" button in My Bookings. If you have any concerns please contact the parlour directly.`;
+  } else if(lower.includes('confirm') || lower.includes('status')){
+    reply = `Your booking at ${b.parlour_name} for ${b.service} is currently ${b.status}. We'll notify you once the parlour confirms!`;
+  } else if(lower.includes('reschedule') || lower.includes('change time') || lower.includes('change date')){
+    reply = `To reschedule, please cancel this booking and create a new one with your preferred time. You can also call ${b.parlour_name} directly to arrange an alternate time.`;
+  } else if(lower.includes('price') || lower.includes('cost') || lower.includes('pkr')){
+    reply = `Please contact ${b.parlour_name} directly for pricing on ${b.service}. Their phone number is available in the parlour listing.`;
+  } else {
+    try {
+      const { data, ok } = await api('/parlour/chat', 'POST', { message: `Re: booking at ${b.parlour_name} for ${b.service}. User says: ${msg}` });
+      if(ok && data.reply) reply = data.reply;
+      else reply = `Thank you for your message! The team at ${b.parlour_name} will get back to you soon. 💄`;
+    } catch(e) {
+      reply = `Thank you for your message! The team at ${b.parlour_name} will get back to you soon. 💄`;
+    }
+  }
+
+  setTimeout(() => {
+    b.chatMessages.push({ role:'bot', text: reply });
+    ppRenderBookingChat(b);
+  }, 700);
+}
+
+// Init parlour find screen
+ppRenderList();
+ppRenderPins();
 </script>
 
-<!-- ══════════════════════════════════════════════════════════════
-     SPRINT 3 SCREENS — SALON CONNECTOR PLATFORM
-     US-11: Salon Finder | US-12: Salon Profile
-     US-13: Booking      | US-14: Chat | US-15: Reviews
-     ══════════════════════════════════════════════════════════════ -->
-
-<!-- ── SALON FINDER (US-11) ─────────────────────────────────── -->
-<div id="screen-salon" class="screen">
-  <nav class="topnav">
-    <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
-    <span class="nav-link active">Salon Finder</span>
-    <div class="nav-right">
-      <button class="btn-nav-outline" onclick="go('screen-home')">← Home</button>
-      <button class="btn-nav-outline" onclick="go('screen-bookings')">My Bookings</button>
-    </div>
-  </nav>
-  <div style="flex:1;padding:1.5rem 2rem;overflow-y:auto;">
-    <h2 style="font-family:var(--font-s);font-size:1.8rem;color:var(--text);margin-bottom:.3rem;">Find Nearby Salons</h2>
-    <p style="color:var(--text-light);font-size:.85rem;margin-bottom:1rem;">Discover beauty salons and book appointments with ease.</p>
-
-    <!-- Location bar -->
-    <div style="display:flex;align-items:center;gap:.8rem;margin-bottom:1rem;padding:.7rem 1rem;background:var(--rose-pale);border:1.5px solid var(--rose-light);border-radius:var(--r);">
-      <span style="font-size:.84rem;color:var(--text-med);flex:1;">📍 Allow location access to see salons sorted by distance from you</span>
-      <button id="location-btn" onclick="getUserLocation()" class="btn-hero-fill" style="padding:.4rem 1rem;font-size:.8rem;white-space:nowrap;">📍 Use My Location</button>
-    </div>
-
-    <!-- Search bar -->
-    <div style="display:flex;gap:.6rem;margin-bottom:.8rem;">
-      <input id="salon-search" type="text" placeholder="🔍  Search salon name or address…" oninput="loadSalons()"
-        style="flex:1;padding:.5rem 1rem;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:.85rem;max-width:480px;" />
-    </div>
-
-    <!-- Filters -->
-    <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;">
-      <select id="filter-service" onchange="loadSalons()" style="padding:.45rem .9rem;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:.83rem;background:#fff;color:var(--text);cursor:pointer;">
-        <option value="">All Services</option>
-        <option value="makeup">Makeup</option>
-        <option value="hair">Hair</option>
-        <option value="nails">Nails</option>
-        <option value="skincare">Skincare</option>
-        <option value="bridal">Bridal</option>
-      </select>
-      <select id="filter-price" onchange="loadSalons()" style="padding:.45rem .9rem;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:.83rem;background:#fff;color:var(--text);cursor:pointer;">
-        <option value="">Any Price</option>
-        <option value="budget">Budget</option>
-        <option value="mid">Mid-Range</option>
-        <option value="premium">Premium</option>
-      </select>
-      <select id="filter-cat" onchange="loadSalons()" style="padding:.45rem .9rem;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:.83rem;background:#fff;color:var(--text);cursor:pointer;">
-        <option value="all">All Categories</option>
-        <option value="women">Women</option>
-        <option value="men">Men</option>
-        <option value="unisex">Unisex</option>
-      </select>
-      <span id="salon-count" style="font-size:.82rem;color:var(--text-light);margin-left:auto;"></span>
-    </div>
-
-    <div id="salon-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;"></div>
-  </div>
-</div>
-
-<!-- ── SALON PROFILE (US-12) ─────────────────────────────────── -->
-<div id="screen-salon-profile" class="screen">
-  <nav class="topnav">
-    <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
-    <span class="nav-link" onclick="go('screen-salon')">← Salons</span>
-    <div class="nav-right">
-      <button class="btn-nav-fill" onclick="openBookingFromProfile()">Book Appointment</button>
-    </div>
-  </nav>
-  <div id="salon-profile-body" style="flex:1;overflow-y:auto;padding:1.5rem 2rem;"></div>
-</div>
-
-<!-- ── BOOKING (US-13) ────────────────────────────────────────── -->
-<div id="screen-booking" class="screen">
-  <nav class="topnav">
-    <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
-    <span class="nav-link" onclick="go('screen-salon-profile')">← Salon Profile</span>
-    <div class="nav-right">
-      <button class="btn-nav-outline" onclick="go('screen-bookings')">My Bookings</button>
-    </div>
-  </nav>
-  <div style="flex:1;overflow-y:auto;padding:1.5rem 2rem;max-width:600px;margin:0 auto;width:100%;">
-    <h2 style="font-family:var(--font-s);font-size:1.7rem;color:var(--text);margin-bottom:.3rem;">Book Appointment</h2>
-    <p id="booking-salon-name" style="color:var(--rose);font-weight:700;margin-bottom:1.5rem;font-size:.95rem;"></p>
-
-    <div style="background:#fff;border-radius:var(--r);border:1.5px solid var(--border);padding:1.5rem;">
-      <label style="font-size:.85rem;font-weight:700;color:var(--text-med);display:block;margin-bottom:.4rem;">Select Service</label>
-      <select id="booking-service" style="width:100%;padding:.6rem .9rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.88rem;margin-bottom:1rem;">
-        <option value="">— Choose a service —</option>
-      </select>
-
-      <label style="font-size:.85rem;font-weight:700;color:var(--text-med);display:block;margin-bottom:.4rem;">Preferred Date & Time</label>
-      <input type="datetime-local" id="booking-datetime" style="width:100%;padding:.6rem .9rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.88rem;margin-bottom:1rem;" />
-
-      <label style="font-size:.85rem;font-weight:700;color:var(--text-med);display:block;margin-bottom:.4rem;">Note for Salon (optional)</label>
-      <textarea id="booking-note" rows="3" placeholder="e.g. I prefer a female stylist, I have an allergy to…" style="width:100%;padding:.6rem .9rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.88rem;resize:none;"></textarea>
-
-      <button id="booking-submit-btn" class="btn-hero-fill" style="width:100%;margin-top:1.2rem;justify-content:center;" onclick="submitBooking()">
-        Send Booking Request
-      </button>
-      <div id="booking-err" class="err-msg" style="display:none;margin-top:.6rem;"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ── MY BOOKINGS (US-13 list + US-14 chat) ─────────────────── -->
-<div id="screen-bookings" class="screen">
-  <nav class="topnav">
-    <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
-    <span class="nav-link active">My Bookings</span>
-    <div class="nav-right">
-      <button class="btn-nav-outline" onclick="go('screen-salon')">Find Salons</button>
-    </div>
-  </nav>
-  <div style="flex:1;overflow-y:auto;padding:1.5rem 2rem;">
-    <h2 style="font-family:var(--font-s);font-size:1.7rem;color:var(--text);margin-bottom:1rem;">My Bookings</h2>
-    <div id="bookings-list" style="display:flex;flex-direction:column;gap:1rem;max-width:700px;"></div>
-  </div>
-</div>
-
-<!-- ── CHAT (US-14) ───────────────────────────────────────────── -->
-<div id="screen-chat" class="screen">
-  <nav class="topnav">
-    <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
-    <span class="nav-link" onclick="go('screen-bookings')">← Bookings</span>
-    <div class="nav-right">
-      <span id="chat-salon-name" style="font-size:.88rem;color:var(--text-med);font-weight:700;"></span>
-    </div>
-  </nav>
-  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
-    <div id="chat-messages" style="flex:1;overflow-y:auto;padding:1rem 1.5rem;display:flex;flex-direction:column;gap:.6rem;background:var(--cream);"></div>
-    <div style="padding:.8rem 1.2rem;background:#fff;border-top:1.5px solid var(--border);display:flex;gap:.6rem;">
-      <input id="chat-input" type="text" placeholder="Type a message…" style="flex:1;padding:.6rem 1rem;border:1.5px solid var(--border);border-radius:var(--r-pill);font-size:.88rem;"
-        onkeydown="if(event.key==='Enter')sendChatMsg()" />
-      <button class="btn-hero-fill" onclick="sendChatMsg()" style="padding:.55rem 1.2rem;">Send</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── REVIEW (US-15) ─────────────────────────────────────────── -->
-<div id="screen-review" class="screen">
-  <nav class="topnav">
-    <div class="nav-logo" onclick="go('screen-home')">Glam<span>Match</span></div>
-    <span class="nav-link" onclick="go('screen-bookings')">← Bookings</span>
-  </nav>
-  <div style="flex:1;overflow-y:auto;padding:1.5rem 2rem;max-width:520px;margin:0 auto;width:100%;">
-    <h2 style="font-family:var(--font-s);font-size:1.7rem;color:var(--text);margin-bottom:.3rem;">Leave a Review</h2>
-    <p id="review-salon-label" style="color:var(--rose);font-weight:700;margin-bottom:1.5rem;font-size:.95rem;"></p>
-    <div style="background:#fff;border-radius:var(--r);border:1.5px solid var(--border);padding:1.5rem;">
-      <label style="font-size:.85rem;font-weight:700;color:var(--text-med);display:block;margin-bottom:.7rem;">Your Rating</label>
-      <div id="star-rating" style="display:flex;gap:.4rem;margin-bottom:1.2rem;cursor:pointer;">
-        <span data-v="1" class="star" onclick="setRating(1)" style="font-size:2rem;color:#DDD;">★</span>
-        <span data-v="2" class="star" onclick="setRating(2)" style="font-size:2rem;color:#DDD;">★</span>
-        <span data-v="3" class="star" onclick="setRating(3)" style="font-size:2rem;color:#DDD;">★</span>
-        <span data-v="4" class="star" onclick="setRating(4)" style="font-size:2rem;color:#DDD;">★</span>
-        <span data-v="5" class="star" onclick="setRating(5)" style="font-size:2rem;color:#DDD;">★</span>
-      </div>
-      <label style="font-size:.85rem;font-weight:700;color:var(--text-med);display:block;margin-bottom:.4rem;">Your Review</label>
-      <textarea id="review-text" rows="4" placeholder="Share your experience with this salon…" style="width:100%;padding:.6rem .9rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.88rem;resize:none;"></textarea>
-      <button id="review-submit-btn" class="btn-hero-fill" style="width:100%;margin-top:1rem;justify-content:center;" onclick="submitReview()">
-        Submit Review
-      </button>
-      <div id="review-err" class="err-msg" style="display:none;margin-top:.6rem;"></div>
-    </div>
-  </div>
-</div>
-
 </body>
-</html>
