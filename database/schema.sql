@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     password   TEXT    NOT NULL,
     undertone  TEXT,
     body_type  TEXT,
-    face_shape TEXT,                          -- added Sprint 2
+    face_shape TEXT,
     created    TEXT    DEFAULT (datetime('now'))
 );
 
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS wardrobe (
     filename  TEXT    NOT NULL,
     category  TEXT,
     style_tag TEXT,
-    color     TEXT,                           -- added Sprint 2
+    color     TEXT,
     added     TEXT    DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS wardrobe (
 CREATE TABLE IF NOT EXISTS quiz_log (
     id      INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
-    type    TEXT    NOT NULL,                 -- 'undertone' | 'bodytype' | 'outfit_fav'
+    type    TEXT    NOT NULL,
     answers TEXT    NOT NULL,
     result  TEXT    NOT NULL,
     taken   TEXT    DEFAULT (datetime('now')),
@@ -62,20 +62,20 @@ CREATE TABLE IF NOT EXISTS photo_analysis (
     skin_tone   TEXT,
     undertone   TEXT,
     face_shape  TEXT,
-    photo_saved INTEGER DEFAULT 0,            -- 1 = kept, 0 = deleted after analysis
+    photo_saved INTEGER DEFAULT 0,
     created_at  TEXT    DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE IF NOT EXISTS product_recommendations (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    category     TEXT NOT NULL,               -- 'makeup' | 'clothing'
-    sub_category TEXT,                        -- 'foundation' | 'blush' | 'lipstick' etc.
-    undertone    TEXT NOT NULL,               -- 'warm' | 'cool' | 'neutral'
+    category     TEXT NOT NULL,
+    sub_category TEXT,
+    undertone    TEXT NOT NULL,
     brand        TEXT,
     product_name TEXT NOT NULL,
     shade_name   TEXT,
-    swatch_color TEXT,                        -- hex colour code e.g. '#C8906A'
+    swatch_color TEXT,
     product_link TEXT
 );
 
@@ -91,8 +91,8 @@ CREATE TABLE IF NOT EXISTS wishlist (
 
 CREATE TABLE IF NOT EXISTS style_suggestions (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    face_shape      TEXT NOT NULL,            -- 'oval' | 'round' | 'square' | 'heart' | 'oblong'
-    category        TEXT NOT NULL,            -- 'hairstyle' | 'hijab' | 'earring'
+    face_shape      TEXT NOT NULL,
+    category        TEXT NOT NULL,
     suggestion_name TEXT NOT NULL,
     description     TEXT
 );
@@ -114,13 +114,15 @@ CREATE TABLE IF NOT EXISTS salons (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     name          TEXT    NOT NULL,
     address       TEXT,
-    category      TEXT    DEFAULT 'women',    -- 'women' | 'men' | 'unisex'
-    price_range   TEXT    DEFAULT 'mid',      -- 'budget' | 'mid' | 'premium'
+    category      TEXT    DEFAULT 'women',
+    price_range   TEXT    DEFAULT 'mid',
     rating        REAL    DEFAULT 0.0,
     review_count  INTEGER DEFAULT 0,
-    working_hours TEXT    DEFAULT '9:00 AM – 8:00 PM',
+    working_hours TEXT    DEFAULT '9:00 AM - 8:00 PM',
     phone         TEXT,
     description   TEXT,
+    latitude      REAL    DEFAULT 0.0,    -- GPS latitude for distance calculation
+    longitude     REAL    DEFAULT 0.0,    -- GPS longitude for distance calculation
     created_at    TEXT    DEFAULT (datetime('now'))
 );
 
@@ -128,10 +130,10 @@ CREATE TABLE IF NOT EXISTS salon_services (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
     salon_id     INTEGER NOT NULL,
     service_name TEXT    NOT NULL,
-    service_type TEXT,                        -- 'makeup' | 'hair' | 'nails' | 'skincare' | 'bridal'
+    service_type TEXT,                    -- 'makeup' | 'hair' | 'nails' | 'skincare' | 'bridal'
     price_min    INTEGER DEFAULT 0,
     price_max    INTEGER DEFAULT 0,
-    duration_min INTEGER DEFAULT 60,          -- duration in minutes
+    duration_min INTEGER DEFAULT 60,
     FOREIGN KEY (salon_id) REFERENCES salons(id)
 );
 
@@ -141,9 +143,9 @@ CREATE TABLE IF NOT EXISTS bookings (
     salon_id   INTEGER NOT NULL,
     service_id INTEGER,
     datetime   TEXT    NOT NULL,
-    status     TEXT    DEFAULT 'pending',     -- 'pending' | 'confirmed' | 'rejected' | 'alternate' | 'completed' | 'cancelled'
+    status     TEXT    DEFAULT 'pending', -- 'pending'|'confirmed'|'rejected'|'alternate'|'completed'|'cancelled'
     note       TEXT,
-    alt_time   TEXT,                          -- alternate time proposed by salon
+    alt_time   TEXT,                      -- alternate time proposed by salon
     created_at TEXT    DEFAULT (datetime('now')),
     FOREIGN KEY (user_id)    REFERENCES users(id),
     FOREIGN KEY (salon_id)   REFERENCES salons(id),
@@ -153,7 +155,7 @@ CREATE TABLE IF NOT EXISTS bookings (
 CREATE TABLE IF NOT EXISTS chat_messages (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     booking_id  INTEGER NOT NULL,
-    sender_type TEXT    NOT NULL,             -- 'user' | 'salon'
+    sender_type TEXT    NOT NULL,         -- 'user' | 'salon'
     message     TEXT    NOT NULL,
     sent_at     TEXT    DEFAULT (datetime('now')),
     FOREIGN KEY (booking_id) REFERENCES bookings(id)
@@ -164,11 +166,20 @@ CREATE TABLE IF NOT EXISTS reviews (
     user_id     INTEGER NOT NULL,
     salon_id    INTEGER NOT NULL,
     booking_id  INTEGER,
-    rating      INTEGER NOT NULL,             -- 1 to 5
+    rating      INTEGER NOT NULL,         -- 1 to 5
     review_text TEXT,
     created_at  TEXT    DEFAULT (datetime('now')),
-    UNIQUE(user_id, booking_id),              -- one review per appointment
+    UNIQUE(user_id, booking_id),          -- one review per appointment
     FOREIGN KEY (user_id)    REFERENCES users(id),
     FOREIGN KEY (salon_id)   REFERENCES salons(id),
     FOREIGN KEY (booking_id) REFERENCES bookings(id)
 );
+
+-- ============================================================
+-- BOOKING STATUS FLOW
+-- ============================================================
+-- pending → confirmed → completed  (auto when datetime passes)
+--         → rejected
+--         → alternate → confirmed → completed
+-- pending/confirmed → cancelled    (only if 2+ hours before appointment)
+-- ============================================================

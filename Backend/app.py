@@ -1015,6 +1015,8 @@ def init_salon_db():
             working_hours TEXT DEFAULT '9:00 AM – 8:00 PM',
             phone         TEXT,
             description   TEXT,
+            latitude      REAL DEFAULT 0.0,
+            longitude     REAL DEFAULT 0.0,
             created_at    TEXT DEFAULT(datetime('now'))
         );
         CREATE TABLE IF NOT EXISTS salon_services(
@@ -1068,17 +1070,17 @@ def init_salon_db():
     # Seed salons if empty
     if not c.execute("SELECT 1 FROM salons LIMIT 1").fetchone():
         salons = [
-            ("Glamour Studio",    "12 Mall Road, Lahore",       "women",  "mid",      4.7, 38, "10:00 AM – 9:00 PM",  "+92-300-1234567", "Premium beauty studio specializing in bridal and editorial makeup."),
-            ("The Beauty Lounge", "45 DHA Phase 5, Lahore",     "women",  "premium",  4.5, 22, "9:00 AM – 8:00 PM",   "+92-321-9876543", "Relaxing lounge offering hair, skin, and nail treatments."),
-            ("Zara Salon",        "88 Johar Town, Lahore",      "unisex", "budget",   4.2, 55, "8:30 AM – 9:30 PM",   "+92-333-5551234", "Affordable salon for everyday cuts, color, and grooming."),
-            ("Bridal Affairs",    "3 Gulberg III, Lahore",      "women",  "premium",  4.9, 14, "10:00 AM – 7:00 PM",  "+92-311-7778888", "Exclusive bridal studio with full event packages."),
-            ("SnipMaster",        "22 Model Town, Lahore",      "men",    "budget",   4.3, 41, "9:00 AM – 10:00 PM",  "+92-345-4440000", "Classic barbershop with modern grooming services."),
-            ("Nails & Beyond",    "67 Bahria Town, Lahore",     "women",  "mid",      4.6, 29, "10:00 AM – 8:00 PM",  "+92-300-9990001", "Nail art, gel extensions, and pedicure specialist."),
-            ("Style Hub",         "11 Faisal Town, Lahore",     "unisex", "mid",      4.1, 63, "9:00 AM – 9:00 PM",   "+92-322-1231231", "Full-service salon covering all hair and beauty needs."),
-            ("Elite Spa & Salon", "5 Cantt, Lahore",            "women",  "premium",  4.8, 18, "10:00 AM – 7:30 PM",  "+92-301-5556789", "Luxury spa and salon experience with trained therapists."),
+            ("Glamour Studio",    "12 Mall Road, Lahore",       "women",  "mid",      4.7, 38, "10:00 AM – 9:00 PM",  "+92-300-1234567", "Premium beauty studio specializing in bridal and editorial makeup.",        31.5620, 74.3578),
+            ("The Beauty Lounge", "45 DHA Phase 5, Lahore",     "women",  "premium",  4.5, 22, "9:00 AM – 8:00 PM",   "+92-321-9876543", "Relaxing lounge offering hair, skin, and nail treatments.",                31.4813, 74.4025),
+            ("Zara Salon",        "88 Johar Town, Lahore",      "unisex", "budget",   4.2, 55, "8:30 AM – 9:30 PM",   "+92-333-5551234", "Affordable salon for everyday cuts, color, and grooming.",                31.4697, 74.2728),
+            ("Bridal Affairs",    "3 Gulberg III, Lahore",      "women",  "premium",  4.9, 14, "10:00 AM – 7:00 PM",  "+92-311-7778888", "Exclusive bridal studio with full event packages.",                        31.5204, 74.3587),
+            ("SnipMaster",        "22 Model Town, Lahore",      "men",    "budget",   4.3, 41, "9:00 AM – 10:00 PM",  "+92-345-4440000", "Classic barbershop with modern grooming services.",                        31.4833, 74.3292),
+            ("Nails & Beyond",    "67 Bahria Town, Lahore",     "women",  "mid",      4.6, 29, "10:00 AM – 8:00 PM",  "+92-300-9990001", "Nail art, gel extensions, and pedicure specialist.",                       31.3647, 74.1875),
+            ("Style Hub",         "11 Faisal Town, Lahore",     "unisex", "mid",      4.1, 63, "9:00 AM – 9:00 PM",   "+92-322-1231231", "Full-service salon covering all hair and beauty needs.",                   31.5022, 74.2942),
+            ("Elite Spa & Salon", "5 Cantt, Lahore",            "women",  "premium",  4.8, 18, "10:00 AM – 7:30 PM",  "+92-301-5556789", "Luxury spa and salon experience with trained therapists.",                 31.5553, 74.3614),
         ]
         c.executemany(
-            "INSERT INTO salons(name,address,category,price_range,rating,review_count,working_hours,phone,description) VALUES(?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO salons(name,address,category,price_range,rating,review_count,working_hours,phone,description,latitude,longitude) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
             salons
         )
         c.commit()
@@ -1193,6 +1195,16 @@ def get_salon(salon_id):
 @auth
 def get_bookings():
     c = db()
+    # ── Auto-complete: if confirmed booking's datetime has passed → mark completed ──
+    now_str = dt.datetime.utcnow().strftime("%Y-%m-%dT%H:%M")
+    c.execute(
+        """UPDATE bookings SET status='completed'
+           WHERE user_id=? AND status='confirmed'
+           AND datetime <= ?""",
+        (request.uid, now_str)
+    )
+    c.commit()
+    # ─────────────────────────────────────────────────────────────────────────────
     rows = c.execute(
         """SELECT b.*, s.name as salon_name, sv.service_name
            FROM bookings b
@@ -1253,8 +1265,29 @@ def update_booking(bid):
     allowed = ("confirmed", "rejected", "alternate", "completed", "cancelled")
     if status not in allowed:
         return jsonify({"error": f"status must be one of {allowed}"}), 400
+
     c = db()
-    # Verify booking belongs to this user (or allow any update for demo)
+    booking = c.execute("SELECT * FROM bookings WHERE id=?", (bid,)).fetchone()
+    if not booking:
+        c.close()
+        return jsonify({"error": "Booking not found"}), 404
+
+    # ── Cancellation policy: cannot cancel within 2 hours of appointment ──
+    if status == "cancelled":
+        try:
+            appt_dt = dt.datetime.fromisoformat(booking["datetime"])
+            now     = dt.datetime.utcnow()
+            hours_left = (appt_dt - now).total_seconds() / 3600
+            if 0 < hours_left < 2:
+                c.close()
+                return jsonify({
+                    "error": f"Cancellation not allowed. Appointment is in {hours_left:.1f} hour(s). You can only cancel at least 2 hours before the appointment time.",
+                    "hours_left": round(hours_left, 1)
+                }), 400
+        except Exception:
+            pass  # if datetime parse fails, allow cancellation
+    # ─────────────────────────────────────────────────────────────────────
+
     c.execute("UPDATE bookings SET status=?, alt_time=? WHERE id=?", (status, alt, bid))
     c.commit(); c.close()
     return jsonify({"booking_id": bid, "status": status})
