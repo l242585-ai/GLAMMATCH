@@ -1152,11 +1152,43 @@ def parlour_booking():
 @app.route("/api/parlour/my-bookings", methods=["GET"])
 @auth
 def parlour_my_bookings():
-    # bookings submitted by current user (matched by future user_id column extension)
     c   = db()
     rows = c.execute("SELECT * FROM parlour_bookings WHERE user_id=? ORDER BY created_at DESC", (request.uid,)).fetchall()
     c.close()
     return jsonify({"bookings": [dict(r) for r in rows]})
+
+# ── PP-05b: Cancel a booking ──────────────────────────────────────
+@app.route("/api/parlour/booking/<int:bid>/cancel", methods=["POST"])
+@auth
+def cancel_booking(bid):
+    import datetime as dt
+    c = db()
+    bk = c.execute("SELECT * FROM parlour_bookings WHERE id=? AND user_id=?",
+                   (bid, request.uid)).fetchone()
+    if not bk:
+        c.close()
+        return jsonify({"error": "Booking not found"}), 404
+    if bk["status"] not in ("pending", "confirmed"):
+        c.close()
+        return jsonify({"error": f"Cannot cancel a booking with status: {bk['status']}"}), 400
+    # 2-hour rule — block cancellation if appointment is within 2 hours
+    try:
+        booking_dt = dt.datetime.fromisoformat(bk["datetime"])
+        now        = dt.datetime.now()
+        hours_left = (booking_dt - now).total_seconds() / 3600
+        if 0 < hours_left < 2:
+            c.close()
+            return jsonify({
+                "error": f"Cannot cancel — your appointment is in {hours_left:.1f} hour(s). Cancellation is not allowed within 2 hours of the booking time.",
+                "hours_left": round(hours_left, 1)
+            }), 400
+    except Exception:
+        pass
+    c.execute("UPDATE parlour_bookings SET status='cancelled' WHERE id=? AND user_id=?",
+              (bid, request.uid))
+    c.commit()
+    c.close()
+    return jsonify({"cancelled": True})
 
 # ── PP-06: Parlour portal chatbot ─────────────────────────────────
 # ── PP-07b: Get parlour booking chat messages ─────────────────────
@@ -1207,9 +1239,23 @@ def send_parlour_booking_chat(bid):
 @app.route("/api/parlour/chat", methods=["POST"])
 @auth
 def parlour_chat():
-    msg = ((request.get_json() or {}).get("message") or "").strip()
+    d   = request.get_json() or {}
+    msg = (d.get("message") or "").strip()
+    parlour_id = d.get("parlour_id")
     if not msg:
         return jsonify({"error": "message is required"}), 400
+
+    # Look up parlour phone from DB if parlour_id provided
+    parlour_phone = None
+    if parlour_id:
+        try:
+            conn = db()
+            p = conn.execute("SELECT phone FROM parlours WHERE id=?", (int(parlour_id),)).fetchone()
+            conn.close()
+            if p and p["phone"]:
+                parlour_phone = p["phone"]
+        except Exception:
+            pass
 
     # Simple rule-based replies (no external AI needed)
     lower = msg.lower()
@@ -1230,6 +1276,10 @@ def parlour_chat():
     else:
         reply = "Great question! I can help with parlour registration, finding salons near you, booking appointments, and pricing. What would you like to know? 💄"
 
+    # Append parlour phone number from DB so client always gets the contact
+    if parlour_phone:
+        reply += f"\n\n📞 For further queries, you can contact the parlour directly at: {parlour_phone}"
+
     # Log the conversation
     try:
         c = db()
@@ -1240,7 +1290,7 @@ def parlour_chat():
     except Exception:
         pass
 
-    return jsonify({"reply": reply})
+    return jsonify({"reply": reply, "parlour_phone": parlour_phone})
 
 # ── PP-07: Parlour stats for landing page ─────────────────────────
 @app.route("/api/parlour/stats", methods=["GET"])

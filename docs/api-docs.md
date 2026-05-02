@@ -1,433 +1,601 @@
-# GlamMatch API Documentation
-## Sprint 1, 2 & 3 — REST API Endpoints
+# GlamMatch — Full API Documentation
+# All Sprints (1, 2 & 3)
 
-**Base URL:** `http://localhost:5000/api`
-**Auth:** Bearer token in `Authorization` header (except register, login, forgot-password, reset-password)
+Base URL: `http://localhost:5000/api`
+Auth header: `Authorization: Bearer <token>`
 
 ---
 
-## Auth Endpoints
+# Sprint 1 — Auth, Quiz, Palette, Tips, Wardrobe
+
+---
+
+## US-01: Authentication
 
 ### POST /register
-Register a new user.
+Create a new user account. **No auth required.**
+
 **Body:**
 ```json
-{ "name": "Anoushay", "email": "a@test.com", "password": "test1234" }
+{ "name": "Ayza", "email": "ayza@example.com", "password": "test1234" }
 ```
-**Response:**
-```json
-{ "token": "...", "name": "Anoushay" }
-```
+
 **Validation:**
-- Name, email and password are all required
-- Email must contain @
-- Password must be 8+ characters with at least one number
+- All fields required
+- Email must contain `@`
+- Password: 8+ characters, at least one number
+
+**Response:** `201 { "token": "...", "name": "Ayza" }`
+
+**Errors:** `400` missing fields / weak password — `409` email already registered
 
 ---
 
 ### POST /login
-Login existing user.
+Login and receive a JWT token. **No auth required.**
+
 **Body:**
 ```json
-{ "email": "a@test.com", "password": "test1234" }
+{ "email": "ayza@example.com", "password": "test1234" }
 ```
+
 **Response:**
 ```json
-{ "token": "...", "name": "Anoushay", "undertone": "warm", "body_type": "hourglass", "face_shape": "oval" }
+{ "token": "...", "name": "Ayza", "undertone": "warm", "body_type": "hourglass", "face_shape": "oval" }
 ```
+
+**Error:** `401` incorrect email or password
 
 ---
 
 ### GET /profile
-Get current user profile. **Requires auth.**
+Get the logged-in user's profile including saved bookmarks. **Requires auth.**
+
 **Response:**
 ```json
 {
-  "id": 1, "name": "Anoushay", "email": "a@test.com",
+  "id": 1, "name": "Ayza", "email": "ayza@example.com",
   "undertone": "warm", "body_type": "hourglass", "face_shape": "oval",
-  "created": "2024-01-01 12:00:00", "bookmarks": ["w1", "w3"]
+  "created": "2025-01-01 10:00:00", "bookmarks": ["w1", "w3"]
 }
 ```
 
 ---
 
-## Forgot / Reset Password
-
 ### POST /forgot-password
-Request a password reset link. Does NOT require auth.
-**Body:** `{ "email": "a@test.com" }`
+Request a password reset email. **No auth required.**
+
+**Body:** `{ "email": "ayza@example.com" }`
+
 **Response:** `{ "message": "If that email is registered, a reset link has been sent." }`
+
 **Notes:**
-- Always returns success to prevent email enumeration
-- Token expires after 1 hour
+- Sends HTML email with reset link valid for 1 hour
+- Always returns same message whether email exists or not (security)
 
 ---
 
 ### POST /reset-password
-Set a new password using a reset token. Does NOT require auth.
-**Body:** `{ "token": "abc123...", "password": "newpass1" }`
+Set a new password using the reset token. **No auth required.**
+
+**Body:** `{ "token": "...", "password": "newpass1" }`
+
+**Validation:** Password must be 8+ characters with at least one number
+
 **Response:** `{ "message": "Password reset successfully" }`
 
+**Errors:** `400` invalid/expired token — `400` weak password
+
 ---
 
-## Undertone Quiz (US-02)
+## US-02: Undertone Quiz
 
 ### GET /quiz/undertone/questions
-Get all 6 undertone quiz questions. **Requires auth.**
-
-### POST /quiz/undertone/submit
-Submit quiz answers. **Requires auth.**
-**Body:** `{ "answers": { "1": "a", "2": "b", "3": "a", "4": "b", "5": "a", "6": "b" } }`
-**Response:** `{ "undertone": "cool", "description": "...", "tips": [...] }`
-**Result values:** `warm` | `cool` | `neutral`
-
----
-
-## Colour Palette (US-03)
-
-### GET /palette
-Get personalised colour palette based on saved undertone. **Requires auth.**
-**Error (no undertone):** `400 { "error": "Complete the undertone quiz first" }`
-
----
-
-## Styling Tips (US-04)
-
-### GET /tips
-Get styling tips for user's undertone. **Requires auth.**
-
-### POST /bookmarks
-Toggle bookmark on a styling tip. **Requires auth.**
-**Body:** `{ "tip_id": "w1" }`
-**Response:** `{ "bookmarked": true }` or `{ "bookmarked": false }`
-
----
-
-## Body Type Quiz (US-05)
-
-### GET /quiz/bodytype/questions
-Get all 5 body type quiz questions. **Requires auth.**
-
-### POST /quiz/bodytype/submit
-Submit body type answers. **Requires auth.**
-**Body:** `{ "answers": { "1": "a", "2": "a", "3": "c", "4": "d", "5": "a" } }`
-**Result values:** `hourglass` | `pear` | `apple` | `rectangle` | `inverted_triangle`
-
----
-
-## Photo Analysis (US-06 & US-07)
-
-### POST /photo/save-result
-Save skin tone and face shape from photo analysis. **Requires auth.**
-**Body:**
-```json
-{
-  "undertone": "warm", "skin_tone": "medium",
-  "face_shape": "oval", "swatch_color": "#C8906A", "save_photo": true
-}
-```
-**Notes:** `save_photo: false` = privacy mode — analyze then discard
-
-### GET /face-shape
-Get saved face shape. **Requires auth.**
-**Face shape values:** `oval` | `round` | `square` | `heart` | `oblong`
-
-### GET /face-shape/quiz/questions
-Get 4 manual face shape quiz questions. **Requires auth.**
-
-### POST /face-shape/quiz/submit
-Submit face shape quiz. **Requires auth.**
-**Body:** `{ "answers": { "1": "b", "2": "b", "3": "b", "4": "a" } }`
-
----
-
-## Style Suggestions (US-10)
-
-### GET /style-suggestions
-Get hairstyle/hijab/earring suggestions for face shape. **Requires auth.**
-Optional: `?category=hairstyle` | `hijab` | `earring`
-
-### POST /bookmarks/style
-Toggle style suggestion bookmark. **Requires auth.**
-**Body:** `{ "suggestion_id": 1 }`
-
----
-
-## Products & Wishlist (US-08)
-
-### GET /products
-Get recommendations by undertone. **Requires auth.**
-Optional: `?category=makeup` | `clothing`
-
-### GET /wishlist
-Get user's wishlist. **Requires auth.**
-
-### POST /wishlist
-Toggle product in wishlist. **Requires auth.**
-**Body:** `{ "product_id": 3 }`
-
----
-
-## Wardrobe & Outfits (US-09)
-
-### GET /wardrobe
-Get all wardrobe items. **Requires auth.**
-
-### POST /wardrobe
-Add wardrobe item. **Requires auth.**
-**Body:** `{ "filename": "top.jpg", "category": "Top", "style_tag": "Casual", "color": "red" }`
-
-### DELETE /wardrobe/\<id\>
-Delete wardrobe item. **Requires auth.**
-
-### POST /wardrobe/outfit
-Generate event-based outfit combinations. **Requires auth.**
-**Body:** `{ "event_type": "casual" }`
-**Event types:** `casual` | `formal` | `party` | `traditional` | `sports`
-
-### POST /wardrobe/favourite
-Save a favourite outfit. **Requires auth.**
-**Body:** `{ "item_ids": [1, 2, 3] }`
-
----
-
----
-
-# Sprint 3 — Salon Connector Platform
-
-## Salon Discovery (US-11)
-
-### GET /salons
-Get list of salons with optional filters. **Requires auth.**
-
-**Query Parameters (all optional):**
-
-| Param | Values | Description |
-|---|---|---|
-| `category` | `women` \| `men` \| `unisex` \| `all` | Filter by salon category |
-| `price_range` | `budget` \| `mid` \| `premium` | Filter by price range |
-| `service_type` | `makeup` \| `hair` \| `nails` \| `skincare` \| `bridal` | Filter by service type |
+Get the 6 undertone quiz questions with options and scores. **Requires auth.**
 
 **Response:**
 ```json
 {
-  "salons": [
+  "questions": [
     {
       "id": 1,
-      "name": "Glamour Studio",
-      "address": "12 Mall Road, Lahore",
-      "category": "women",
-      "price_range": "mid",
-      "rating": 4.7,
-      "review_count": 38,
-      "working_hours": "10:00 AM - 9:00 PM",
-      "phone": "+92-300-1234567",
-      "description": "Premium beauty studio...",
-      "latitude": 31.5620,
-      "longitude": 74.3578
+      "q": "Look at the inner side of your wrist...",
+      "opts": [
+        { "id": "a", "t": "Pinkish or reddish", "score": { "cool": 2 } },
+        { "id": "b", "t": "Yellowish or golden", "score": { "warm": 2 } },
+        { "id": "c", "t": "A mix of both",       "score": { "neutral": 2 } }
+      ]
     }
   ],
-  "count": 1
+  "total": 6
 }
+```
+
+---
+
+### POST /quiz/undertone/submit
+Submit undertone quiz answers and get result. **Requires auth.**
+
+**Body:** `{ "answers": { "1": "a", "2": "b", "3": "a", "4": "b", "5": "c", "6": "a" } }`
+
+**Response:**
+```json
+{ "undertone": "warm", "description": "Your warm undertone glows with earthy, golden tones.", "tips": [...] }
 ```
 
 **Notes:**
-- `latitude` and `longitude` are returned so the frontend can calculate real distance using the Haversine formula
-- Frontend sorts salons nearest-first when user grants location permission
-- Results ordered by rating when location is not available
+- Result saved to `users.undertone` and logged in `quiz_log`
+- Possible values: `warm` | `cool` | `neutral`
 
 ---
 
-## Salon Profile (US-12)
+## US-03: Colour Palette
 
-### GET /salons/\<salon_id\>
-Full salon profile with services and reviews. **Requires auth.**
+### GET /palette
+Get personalized colour palette for the logged-in user's undertone. **Requires auth.**
 
 **Response:**
 ```json
 {
-  "salon": { "id": 1, "name": "Glamour Studio", "latitude": 31.5620, "longitude": 74.3578, "..." : "..." },
-  "services": [
-    { "id": 1, "service_name": "Bridal Makeup", "service_type": "bridal", "price_min": 8000, "price_max": 15000, "duration_min": 180 }
-  ],
-  "reviews": [
-    { "id": 1, "user_name": "Eman", "rating": 5, "review_text": "Amazing!", "created_at": "2024-05-01 14:30:00" }
+  "undertone": "warm",
+  "palette": {
+    "desc": "Your warm undertone glows with earthy, golden tones.",
+    "clothing": {
+      "rec":   [{ "n": "Terracotta", "h": "#C45C3A" }],
+      "avoid": [{ "n": "Icy Blue",   "h": "#A5C8E1", "r": "Washes out warm skin" }]
+    },
+    "makeup": {
+      "rec":   [{ "n": "Peachy Blush", "h": "#FFAE87" }],
+      "avoid": [{ "n": "Cool Pink Lip", "h": "#FF69B4", "r": "Creates ashy effect" }]
+    }
+  }
+}
+```
+
+**Error:** `400` undertone quiz not yet completed
+
+---
+
+## US-04: Styling Tips & Bookmarks
+
+### GET /tips
+Get styling tips for the user's undertone. **Requires auth.**
+
+**Response:**
+```json
+{
+  "tips": [
+    { "id": "w1", "cat": "Clothing", "emoji": "👗", "tip": "Opt for earth tones..." }
   ]
 }
 ```
 
 ---
 
-## Appointment Booking (US-13)
+### POST /bookmarks
+Toggle a styling tip bookmark. **Requires auth.**
 
-### GET /bookings
-Get all bookings for current user. **Requires auth.**
+**Body:** `{ "tip_id": "w1" }`
 
-**Note — Auto-Complete Logic:**
-Every time this endpoint is called, the backend checks if any `confirmed` booking's `datetime` has already passed. If so, it automatically updates the status to `completed`. This means the user does not need to manually mark an appointment as done — it completes itself once the time passes.
+**Response:** `{ "bookmarked": true }` or `{ "bookmarked": false }`
+
+---
+
+## US-05: Body Type Quiz
+
+### GET /quiz/bodytype/questions
+Get the 5 body type quiz questions. **Requires auth.**
+
+**Response:** `{ "questions": [...], "total": 5 }`
+
+---
+
+### POST /quiz/bodytype/submit
+Submit body type quiz answers. **Requires auth.**
+
+**Body:** `{ "answers": { "1": "b", "2": "a", "3": "d", "4": "c", "5": "d" } }`
+
+**Response:**
+```json
+{
+  "body_type": "hourglass",
+  "info": {
+    "name": "Hourglass", "emoji": "⏳",
+    "desc": "Balanced shoulders and hips with a well-defined waist.",
+    "tips": ["Wrap dresses highlight your curves"],
+    "avoid": ["Shapeless boxy cuts"]
+  }
+}
+```
+
+**Notes:** Result saved to `users.body_type` and logged in `quiz_log`
+
+---
+
+## US-08 (partial): Wardrobe
+
+### GET /wardrobe
+Get all wardrobe items for the logged-in user. **Requires auth.**
+
+**Response:** `{ "items": [{ "id": 1, "filename": "top1.jpg", "category": "Top", "style_tag": "Casual", "color": "terracotta", "added": "..." }] }`
+
+---
+
+### POST /wardrobe
+Add a clothing item. **Requires auth.**
+
+**Body:** `{ "filename": "top1.jpg", "category": "Top", "style_tag": "Casual", "color": "terracotta" }`
+
+**Response:** `201 { "id": 1, "filename": "top1.jpg", "category": "Top", "style_tag": "Casual", "color": "terracotta" }`
+
+---
+
+### DELETE /wardrobe/\<item_id\>
+Delete a wardrobe item. **Requires auth.**
+
+**Response:** `{ "deleted": true }`
+
+---
+
+### POST /wardrobe/outfit
+Generate event-based outfit combinations. **Requires auth.**
+
+**Body:** `{ "event_type": "casual" }` — options: `casual` | `formal` | `party` | `traditional` | `sports`
+
+**Response:**
+```json
+{
+  "outfits": [
+    { "items": [...], "event": "casual", "badge": "Casual Chic ✦", "hijab_color": "#C9956C" }
+  ],
+  "accessory_tip": "Pair with gold accessories",
+  "hijab_color": "#C9956C",
+  "badge": "Casual Chic ✦"
+}
+```
+
+**Error:** `400` fewer than 2 wardrobe items
+
+---
+
+### POST /wardrobe/favourite
+Save a favourite outfit. **Requires auth.**
+
+**Body:** `{ "item_ids": [1, 3] }`
+
+**Response:** `{ "message": "Outfit saved ⭐" }`
+
+---
+
+---
+
+# Sprint 2 — Photo Analysis, Products, Style Suggestions
+
+---
+
+## US-06 & US-07: Photo Analysis & Face Shape
+
+### POST /photo/save-result
+Save skin tone, undertone and face shape results from face-api.js. **Requires auth.**
+
+**Body:**
+```json
+{
+  "undertone": "warm", "skin_tone": "medium",
+  "face_shape": "oval", "save_photo": false, "swatch_color": "#C8A882"
+}
+```
+
+**Response:** `{ "saved": true, "undertone": "warm", "face_shape": "oval" }`
+
+**Notes:** Updates `users.undertone` and `users.face_shape`; logs to `photo_analysis`
+
+---
+
+### GET /face-shape
+Get the user's saved face shape. **Requires auth.**
+
+**Response:** `{ "face_shape": "oval", "description": "Slightly wider at cheekbones — the most versatile shape." }`
+
+Possible values: `oval` | `round` | `square` | `heart` | `oblong`
+
+---
+
+### GET /face-shape/quiz/questions
+Get the 4 manual face shape quiz questions. **Requires auth.**
+
+**Response:** `{ "questions": [...] }`
+
+---
+
+### POST /face-shape/quiz/submit
+Submit manual face shape quiz. **Requires auth.**
+
+**Body:** `{ "answers": { "1": "b", "2": "a", "3": "b", "4": "a" } }`
+
+**Response:** `{ "face_shape": "oval" }`
+
+---
+
+## US-08: Products & Wishlist
+
+### GET /products
+Get makeup and clothing recommendations by undertone. **Requires auth.**
+
+**Query:** `?category=makeup` or `?category=clothing` (optional)
+
+**Response:**
+```json
+{
+  "undertone": "warm",
+  "products": [
+    {
+      "id": 1, "category": "makeup", "sub_category": "foundation",
+      "brand": "L'Oreal", "product_name": "True Match Foundation",
+      "shade_name": "W3 Golden Beige", "swatch_color": "#C8906A",
+      "product_link": "https://www.loreal-paris.com"
+    }
+  ]
+}
+```
+
+**Notes:** Returns `{ "quiz_required": true }` if undertone quiz not done
+
+---
+
+### GET /wishlist
+Get user's saved products. **Requires auth.**
+
+**Response:** `{ "wishlist": [{ "wishlist_id": 1, "id": 3, "product_name": "..." }] }`
+
+---
+
+### POST /wishlist
+Toggle a product in the wishlist. **Requires auth.**
+
+**Body:** `{ "product_id": 3 }`
+
+**Response:** `{ "saved": true }` or `{ "saved": false }`
+
+---
+
+## US-10: Style Suggestions & Bookmarks
+
+### GET /style-suggestions
+Get style suggestions for the user's face shape. **Requires auth.**
+
+**Query:** `?category=hairstyle` | `?category=hijab` | `?category=earring` (optional)
+
+**Response:**
+```json
+{
+  "face_shape": "oval",
+  "suggestions": [
+    { "id": 1, "face_shape": "oval", "category": "hairstyle",
+      "suggestion_name": "Side-Swept Bangs", "description": "..." }
+  ]
+}
+```
+
+---
+
+### POST /bookmarks/style
+Toggle a style suggestion bookmark. **Requires auth.**
+
+**Body:** `{ "suggestion_id": 1 }`
+
+**Response:** `{ "bookmarked": true }` or `{ "bookmarked": false }`
+
+---
+
+---
+
+# Sprint 3 — Parlour Portal
+
+All Parlour Portal endpoints require auth except `/api/parlour/stats`.
+
+---
+
+## PP-01: Register a Parlour
+
+### POST /parlour/register
+Submit parlour for admin review. **Requires auth.**
+
+**Required fields:** `name`, `owner`, `phone`, `address`, `city`
+
+**Optional:** `email`, `area`, `services` (array), `open_time`, `close_time`, `days`, `cnic`, `business_type`, `price_min`, `price_max`, `description`
+
+**Response:** `201 { "message": "Parlour registration submitted for review.", "parlour_id": 1 }`
+
+**Notes:**
+- Phone stored in `parlours.phone` at registration — automatically sent to clients in chat
+- Status starts as `pending` until admin approves
+
+---
+
+## PP-02: List Approved Parlours
+
+### GET /parlour/list
+Get all approved parlours. **Requires auth.**
+
+**Query:** `?city=Lahore` (optional)
+
+**Response:** `{ "parlours": [...], "count": 6 }`
+
+**Notes:** Only `status = 'approved'` returned. Ordered by `rating DESC`.
+
+---
+
+## PP-03: Get Single Parlour
+
+### GET /parlour/\<parlour_id\>
+Full parlour detail including phone. **Requires auth.**
+
+**Response:** `{ "parlour": { "id": 1, "name": "Rosé Beauty Lounge", "phone": "0311-1234567", ... } }`
+
+**Error:** `404` not found
+
+---
+
+## PP-04: Book an Appointment
+
+### POST /parlour/booking
+Create a booking. **Requires auth.**
+
+**Required:** `parlour_id`, `parlour_name`, `service`, `datetime`, `client_name`, `client_phone`
+
+**Optional:** `note`
+
+**Response:** `201 { "booking_id": 5, "status": "pending" }`
+
+**Notes:** `user_id` saved from auth token — enables cross-session persistence
+
+---
+
+## PP-05: My Bookings
+
+### GET /parlour/my-bookings
+Get all bookings for logged-in user. **Requires auth.**
 
 **Response:**
 ```json
 {
   "bookings": [
     {
-      "id": 1,
-      "salon_name": "The Beauty Lounge",
-      "service_name": "Hair Cut & Blow Dry",
-      "datetime": "2024-05-10T14:00",
-      "status": "confirmed",
-      "note": "I prefer a female stylist",
-      "alt_time": null
+      "id": 5, "parlour_id": 1, "parlour_name": "Rosé Beauty Lounge",
+      "service": "Bridal Makeup", "datetime": "2025-06-15T14:00",
+      "client_name": "Ayza", "status": "pending", "created_at": "..."
     }
   ]
 }
 ```
 
----
-
-### POST /bookings
-Create a new booking request. **Requires auth.**
-**Body:**
-```json
-{ "salon_id": 2, "service_id": 5, "datetime": "2024-05-10T14:00", "note": "Optional note" }
-```
-**Response:** `{ "booking_id": 1, "status": "pending" }`
+**Notes:** Ordered by `created_at DESC`. Called on every page load to restore bookings after re-login.
 
 ---
 
-### GET /bookings/\<booking_id\>
-Get a single booking. **Requires auth.**
+## PP-05b: Cancel a Booking
 
----
+### POST /parlour/booking/\<booking_id\>/cancel
+Cancel a booking. **Requires auth.**
 
-### PUT /bookings/\<booking_id\>
-Update booking status. **Requires auth.**
-**Body:** `{ "status": "confirmed" }` or `{ "status": "alternate", "alt_time": "2024-05-11T10:00" }`
-
-**Status values:**
-
-| Value | Who sets it | Description |
-|---|---|---|
-| `confirmed` | Salon / User | Salon accepts, or user accepts an alternate slot |
-| `rejected` | Salon | Salon rejects the booking |
-| `alternate` | Salon | Salon proposes a new time — include `alt_time` |
-| `completed` | Auto / User | Set automatically when appointment datetime passes, or manually by user |
-| `cancelled` | User | User cancels — **only allowed if 2+ hours before appointment** |
-
-**Cancellation Policy:**
-- If the appointment is less than 2 hours away, `cancelled` status will be rejected
-- **Error:** `400 { "error": "Cancellation not allowed. Appointment is in 1.3 hour(s). You can only cancel at least 2 hours before the appointment time.", "hours_left": 1.3 }`
-- Frontend also checks this before sending the request and shows a lock badge instead of the cancel button
-
----
-
-## Chat (US-14)
-
-### GET /chat/\<booking_id\>
-Get all chat messages for a booking. **Requires auth.**
-**Notes:** Messages ordered oldest first. `sender_type` is `user` or `salon`.
-
-### POST /chat/\<booking_id\>
-Send a message. **Requires auth.**
-**Body:** `{ "message": "Is parking available?", "sender_type": "user" }`
-**Response:** `{ "message_id": 3, "sent": true }`
-
----
-
-## Reviews (US-15)
-
-### POST /reviews
-Submit a review after appointment. **Requires auth.**
-**Body:**
-```json
-{ "salon_id": 2, "booking_id": 1, "rating": 5, "review_text": "Loved it!" }
-```
-**Notes:**
-- Only one review per booking allowed
-- Review button only appears once booking status is `completed`
-- Salon average rating is recalculated automatically after each review
+**Response:** `{ "cancelled": true }`
 
 **Errors:**
-- `400` — missing salon_id or invalid rating (must be 1–5)
-- `409` — `{ "error": "You have already reviewed this appointment" }`
 
-### GET /salons/\<salon_id\>/reviews
-Get all reviews for a salon. **Requires auth.**
-
----
-
----
-
-## Database Tables
-
-### Sprint 1 & 2
-
-| Table | Purpose |
+| Code | Reason |
 |---|---|
-| `users` | Accounts — name, email, password hash, undertone, body_type, face_shape |
-| `wardrobe` | Clothing items per user |
-| `quiz_log` | All quiz submissions |
-| `bookmarks` | Saved styling tip IDs |
-| `password_reset_tokens` | Active reset tokens with expiry |
-| `photo_analysis` | Results from photo uploads |
-| `product_recommendations` | Seeded products by undertone |
-| `wishlist` | User-saved products |
-| `style_suggestions` | Hairstyle/hijab/earring suggestions by face shape |
-| `style_bookmarks` | User-saved style suggestions |
+| `404` | Booking not found or belongs to another user |
+| `400` | Booking status is not `pending` or `confirmed` |
+| `400` | Appointment is within 2 hours — cancellation blocked |
+
+**2-hour rule error response:**
+```json
+{
+  "error": "Cannot cancel — your appointment is in 1.3 hour(s). Cancellation is not allowed within 2 hours of the booking time.",
+  "hours_left": 1.3
+}
+```
+
+**Notes:**
+- Frontend also checks the 2-hour rule before calling this endpoint and shows a toast error to the user
+- On success, booking `status` is updated to `cancelled` in DB — the booking remains visible in My Bookings with a Cancelled badge
+
+---
+
+## PP-06: Automated Chat Bot (General)
+
+### POST /parlour/chat
+GlamMatch general landing-page chatbot. **Requires auth.**
+
+**Body:** `{ "message": "How do I register my salon?", "parlour_id": 1 }`
+
+**`parlour_id` optional** — when given, fetches parlour phone from DB and appends to reply:
+> 📞 For further queries, you can contact the parlour directly at: 0311-1234567
+
+**Response:** `{ "reply": "...", "parlour_phone": "0311-1234567" }`
+
+**Rule-based triggers:**
+
+| Keywords | Reply topic |
+|---|---|
+| `register`, `list`, `owner`, `partner` | How to register a parlour |
+| `book`, `appointment`, `reserve` | How to book |
+| `price`, `cost`, `rate`, `pkr`, `fee` | Pricing |
+| `bridal`, `wedding`, `dulhan` | Bridal services |
+| `location`, `near`, `city`, `lahore` | City coverage |
+| `hour`, `open`, `timing`, `time` | Operating hours |
+| `hi`, `hello`, `hey`, `salam` | Greeting |
+| *(anything else)* | General help |
+
+**Important:** This endpoint is for the **general chatbot only**. The per-booking chat (`/parlour/booking-chat/<id>`) does NOT call this — it generates contextual replies locally to avoid irrelevant "how to book" instructions inside a chat where the booking already exists.
+
+---
+
+## PP-07: Per-Booking Chat Thread
+
+### GET /parlour/booking-chat/\<booking_id\>
+Get all messages for a booking's chat thread. **Requires auth.**
+
+**Response:** `{ "messages": [{ "id": 1, "booking_id": 5, "message": "...", "reply": "...", "sent_at": "..." }] }`
+
+**Error:** `404` booking not found or belongs to another user
+
+---
+
+### POST /parlour/booking-chat/\<booking_id\>
+Send a message in a booking chat thread. **Requires auth.**
+
+**Body:** `{ "message": "Is there parking?" }`
+
+**Response:** `201 { "message_id": 3, "sent": true }`
+
+**Notes:** Frontend generates the reply locally based on message context:
+- "cancel" → cancel instructions
+- "confirm/status" → current booking status
+- "reschedule/change" → reschedule instructions
+- "price/cost/pkr" → contact parlour for pricing
+- anything else → "will get back to you" + parlour phone number
+
+---
+
+## PP-Stats: Public Stats
+
+### GET /parlour/stats
+Landing page counters. **No auth required.**
+
+**Response:** `{ "registered_parlours": 6, "cities": 8, "clients": "12K+", "avg_rating": 4.8 }`
+
+---
+
+---
+
+## Database Tables Summary
+
+### Sprint 1
+
+| Table | Key Columns | Purpose |
+|---|---|---|
+| `users` | `id`, `email`, `undertone`, `body_type`, `face_shape` | User accounts |
+| `wardrobe` | `user_id FK`, `category`, `style_tag`, `color` | Clothing items per user |
+| `quiz_log` | `user_id FK`, `type`, `answers`, `result` | All quiz submissions |
+| `bookmarks` | `user_id FK`, `tip_id` | Saved tip IDs — UNIQUE(user_id, tip_id) |
+| `password_reset_tokens` | `token PK`, `user_id FK`, `expires` | Reset tokens — 1 hour expiry |
+
+### Sprint 2
+
+| Table | Key Columns | Purpose |
+|---|---|---|
+| `photo_analysis` | `user_id FK`, `skin_tone`, `undertone`, `face_shape` | Photo / face-shape quiz results |
+| `product_recommendations` | `category`, `sub_category`, `undertone` | Seeded products by undertone |
+| `wishlist` | `user_id FK`, `product_id FK` | Saved products — UNIQUE(user_id, product_id) |
+| `style_suggestions` | `face_shape`, `category`, `suggestion_name` | Hairstyle/hijab/earring suggestions |
+| `style_bookmarks` | `user_id FK`, `suggestion_id FK` | Saved suggestions — UNIQUE(user_id, suggestion_id) |
 
 ### Sprint 3
 
 | Table | Key Columns | Purpose |
 |---|---|---|
-| `salons` | `latitude`, `longitude` | Salon profiles with GPS coordinates for distance |
-| `salon_services` | `service_type`, `price_min`, `price_max` | Services per salon |
-| `bookings` | `status`, `datetime`, `alt_time` | Appointments with full status tracking |
-| `chat_messages` | `sender_type`, `booking_id` | Chat thread per booking |
-| `reviews` | `rating`, `UNIQUE(user_id, booking_id)` | One review per appointment |
-
----
-
-## Booking Status Flow
-
-```
-User submits → [pending]
-                   |
-       ┌───────────┼────────────┐
-  [confirmed]  [rejected]  [alternate] ← salon proposes new time
-       |                       |
-       |              User accepts → [confirmed]
-       |                       |
-       └───────────┬───────────┘
-                   |
-            datetime passes
-            (auto by backend)
-                   ↓
-            [completed]
-                   ↓
-            Review button appears
-
-Cancel rules:
-- pending or confirmed → [cancelled]  only if 2+ hours before appointment
-- Less than 2 hours → BLOCKED (frontend badge + backend 400 error)
-```
-
----
-
-## Location & Distance (US-11)
-
-The frontend uses the browser `Geolocation API` to get the user's real GPS coordinates, then calculates the distance to each salon using the **Haversine formula** (straight-line distance in km).
-
-```
-User clicks "Use My Location"
-        ↓
-navigator.geolocation.getCurrentPosition()
-        ↓
-Real lat/lng obtained
-        ↓
-haversine(userLat, userLng, salon.latitude, salon.longitude)
-        ↓
-Salons sorted nearest → farthest
-Real "X.X km away" badge shown on each card
-```
-
-**No external API is used** — distance is calculated entirely in the browser using the coordinates stored in the database.
+| `parlours` | `phone`, `status` | Parlour profiles; phone sent to clients via chat |
+| `parlour_bookings` | `user_id FK`, `parlour_id FK`, `status` | Appointments; `user_id` enables cross-session persistence |
+| `parlour_chat_log` | `booking_id FK`, `message`, `reply` | Chat messages per booking thread |

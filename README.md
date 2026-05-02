@@ -219,20 +219,19 @@ Full documentation is in `docs/api-docs.md`. Summary below:
 | GET | `/api/wishlist` | ✅ | Get user's saved wishlist |
 | POST | `/api/wishlist` | ✅ | Toggle product in wishlist |
 
-### Salon Connector — Sprint 3
+### Parlour Portal — Sprint 3
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/api/salons` | ✅ | List salons with filters (category, price_range, service_type) |
-| GET | `/api/salons/<id>` | ✅ | Full salon profile with services and reviews |
-| GET | `/api/salons/<id>/reviews` | ✅ | Get all reviews for a salon |
-| GET | `/api/bookings` | ✅ | Get all bookings for current user |
-| POST | `/api/bookings` | ✅ | Create new booking request |
-| GET | `/api/bookings/<id>` | ✅ | Get a single booking |
-| PUT | `/api/bookings/<id>` | ✅ | Update booking status |
-| GET | `/api/chat/<booking_id>` | ✅ | Get chat messages for a booking |
-| POST | `/api/chat/<booking_id>` | ✅ | Send a chat message |
-| POST | `/api/reviews` | ✅ | Submit a salon review |
+| POST | `/api/parlour/register` | ✅ | Register a new parlour (submitted for admin review) |
+| GET | `/api/parlour/list` | ✅ | List all approved parlours; optional `?city=Lahore` filter |
+| GET | `/api/parlour/<id>` | ✅ | Full detail for a single parlour including phone |
+| POST | `/api/parlour/booking` | ✅ | Create an appointment booking |
+| GET | `/api/parlour/my-bookings` | ✅ | Get all bookings for the logged-in user (persists after re-login) |
+| POST | `/api/parlour/chat` | ✅ | Automated bot reply; pass `parlour_id` to get parlour phone from DB |
+| GET | `/api/parlour/booking-chat/<id>` | ✅ | Get chat messages for a specific booking thread |
+| POST | `/api/parlour/booking-chat/<id>` | ✅ | Send a message in a booking-specific chat thread |
+| GET | `/api/parlour/stats` | ❌ | Public stats for landing page (no auth needed) |
 
 ---
 
@@ -244,17 +243,15 @@ Full documentation is in `docs/api-docs.md`. Summary below:
 | `quiz_log` | All quiz submissions with answers and results | 1 |
 | `wardrobe` | Clothing items per user — category, style tag, colour | 1 |
 | `bookmarks` | Saved styling tip IDs per user | 1 |
-| `password_reset_tokens` | Active password reset tokens with expiry | 1 |
+| `password_reset_tokens` | Active password reset tokens with 1-hour expiry | 1 |
 | `photo_analysis` | Skin tone and face shape results from photo uploads | 2 |
 | `product_recommendations` | Makeup and clothing products seeded by undertone | 2 |
 | `wishlist` | User-saved products from recommendations | 2 |
 | `style_suggestions` | Hairstyle, hijab, earring suggestions per face shape | 2 |
 | `style_bookmarks` | User-saved style suggestions | 2 |
-| `salons` | Salon profiles — name, address, category, price range, rating | 3 |
-| `salon_services` | Services per salon — type, price range, duration | 3 |
-| `bookings` | Appointment requests with status tracking | 3 |
-| `chat_messages` | Chat thread messages per booking | 3 |
-| `reviews` | Post-appointment ratings and reviews | 3 |
+| `parlours` | Parlour profiles — name, owner, **phone**, address, services, status | 3 |
+| `parlour_bookings` | Appointment requests linked to `user_id` for cross-session persistence | 3 |
+| `parlour_chat_log` | Automated chat replies per booking; reply includes parlour phone from DB | 3 |
 
 ---
 

@@ -2235,19 +2235,47 @@ async function ppSubmitBooking(){
   if(!svc||!dt||!name||!phone){toast('Please fill in all required fields.','err');return;}
   let bookingId=null;
   try{const{data,ok}=await api('/parlour/booking','POST',{parlour_id:ppSelectedParlour.id,parlour_name:ppSelectedParlour.name,service:svc,datetime:dt,client_name:name,client_phone:phone,note});if(ok&&data.booking_id)bookingId=data.booking_id;}catch(e){}
-  const booking={id:bookingId||Date.now(),parlour_id:ppSelectedParlour.id,parlour_name:ppSelectedParlour.name,service:svc,datetime:dt,client_name:name,client_phone:phone,note,status:'pending',created_at:new Date().toISOString(),chatMessages:[{role:'bot',text:`Hi ${name}! Your booking at ${ppSelectedParlour.name} for ${svc} has been requested. The parlour will confirm shortly. Feel free to ask anything!`}]};
+  const parlourPhone=ppSelectedParlour.phone||'';
+  const booking={id:bookingId||Date.now(),parlour_id:ppSelectedParlour.id,parlour_name:ppSelectedParlour.name,parlour_phone:parlourPhone,service:svc,datetime:dt,client_name:name,client_phone:phone,note,status:'pending',created_at:new Date().toISOString(),chatMessages:[]};
   ppMyBookings.unshift(booking);ppCloseBookModal();toast(`Booking request sent to ${ppSelectedParlour.name}!`,'ok');setTimeout(()=>go('screen-parlour-mybookings'),900);
 }
 document.getElementById('pp-book-modal').addEventListener('click',function(e){if(e.target===this)ppCloseBookModal();});
-function ppLoadMyBookings(){
+async function ppLoadMyBookings(){
   const list=document.getElementById('pp-mybookings-list');if(!list)return;
+  // Fetch bookings from backend so they persist across sign-out/login
+  if(token){
+    try{
+      const{data,ok}=await api('/parlour/my-bookings','GET');
+      if(ok&&data.bookings){
+        data.bookings.forEach(b=>{
+          if(!ppMyBookings.find(x=>x.id===b.id)){
+            // Try to get parlour phone from PP_PARLOURS local list
+            const parlour=PP_PARLOURS.find(p=>p.id===b.parlour_id);
+            const phone=parlour?parlour.phone:'';
+            ppMyBookings.push({
+              ...b,
+              parlour_phone:phone,
+              chatMessages:[]
+            });
+          }
+        });
+        // Sort by created_at descending
+        ppMyBookings.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+      }
+    }catch(e){}
+  }
   if(!ppMyBookings.length){list.innerHTML=`<div style="text-align:center;padding:3rem 1rem;color:var(--text-light);"><div style="font-size:2.5rem;margin-bottom:.85rem;">📅</div><h3 style="font-family:var(--font-s);color:var(--text-main);margin-bottom:.4rem;">No Bookings Yet</h3><p style="font-size:.82rem;margin-bottom:1.3rem;">Book an appointment at a nearby parlour to get started.</p><button class="btn-nav-fill" onclick="go('screen-parlour-find')">Find Nearby Parlours</button></div>`;return;}
-  const statusColor={pending:'#E69A1E',confirmed:'#4CAF50',rejected:'#F44336',completed:'#7A5A8A'};
-  const statusLabel={pending:'Pending',confirmed:'Confirmed',rejected:'Rejected',completed:'Completed'};
+  const statusColor={pending:'#E69A1E',confirmed:'#4CAF50',rejected:'#F44336',completed:'#7A5A8A',cancelled:'#888888'};
+  const statusLabel={pending:'Pending',confirmed:'Confirmed',rejected:'Rejected',completed:'Done ✓',cancelled:'Cancelled'};
   list.innerHTML=ppMyBookings.map(b=>{
-    const dt=new Date(b.datetime),dateStr=dt.toLocaleDateString('en-PK',{weekday:'short',day:'numeric',month:'short'}),timeStr=dt.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
-    const statusC=statusColor[b.status]||'#999',statusL=statusLabel[b.status]||b.status;
+    const dt=new Date(b.datetime),now=new Date();
+    const dateStr=dt.toLocaleDateString('en-PK',{weekday:'short',day:'numeric',month:'short'}),timeStr=dt.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+    const isPast=dt<now;
+    const effStatus=(isPast&&(b.status==='confirmed'||b.status==='pending'))?'completed':b.status;
+    const statusC=statusColor[effStatus]||'#999',statusL=statusLabel[effStatus]||effStatus;
     const parlour=PP_PARLOURS.find(p=>p.id===b.parlour_id),emoji=parlour?parlour.emoji:'💆';
+    const showChat=effStatus!=='cancelled'&&effStatus!=='completed';
+    const showCancel=!isPast&&b.status==='pending';
     return`<div class="glow-card" style="padding:1.1rem;border-radius:var(--r);">
       <div style="display:flex;gap:.9rem;align-items:flex-start;">
         <div style="width:48px;height:48px;border-radius:var(--r-sm);background:linear-gradient(135deg,#F9E4E8,#EEC0C8);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">${emoji}</div>
@@ -2262,13 +2290,23 @@ function ppLoadMyBookings(){
         </div>
       </div>
       <div style="margin-top:.8rem;display:flex;gap:.45rem;flex-wrap:wrap;">
-        <button onclick="ppOpenBookingChat(${b.id})" class="btn-nav-fill" style="padding:.35rem .9rem;font-size:.76rem;">Chat with Parlour</button>
-        ${b.status==='pending'?`<button onclick="ppCancelBooking(${b.id})" style="padding:.32rem .85rem;border:1.5px solid #F44336;border-radius:var(--r-pill);background:transparent;color:#F44336;font-size:.74rem;font-weight:700;cursor:pointer;">Cancel</button>`:''}
+        ${showChat?`<button onclick="ppOpenBookingChat(${b.id})" class="btn-nav-fill" style="padding:.35rem .9rem;font-size:.76rem;">Chat with Parlour</button>`:''}
+        ${showCancel?`<button onclick="ppCancelBooking(${b.id})" style="padding:.32rem .85rem;border:1.5px solid #F44336;border-radius:var(--r-pill);background:transparent;color:#F44336;font-size:.74rem;font-weight:700;cursor:pointer;">Cancel</button>`:''}
       </div>
     </div>`;
   }).join('');
 }
-function ppCancelBooking(id){const b=ppMyBookings.find(x=>x.id===id);if(!b)return;ppMyBookings=ppMyBookings.filter(x=>x.id!==id);ppLoadMyBookings();toast('Booking cancelled.','ok');}
+async function ppCancelBooking(id){
+  const b=ppMyBookings.find(x=>x.id===id);if(!b)return;
+  // Frontend 2-hour check
+  const bookingDt=new Date(b.datetime),now=new Date(),hoursLeft=(bookingDt-now)/(1000*60*60);
+  if(hoursLeft>0&&hoursLeft<2){toast(`Cannot cancel — booking is in ${hoursLeft.toFixed(1)} hour(s). Cancellation is not allowed within 2 hours of the appointment time.`,'err');return;}
+  try{
+    const{data,ok}=await api(`/parlour/booking/${id}/cancel`,'POST');
+    if(ok){b.status='cancelled';ppLoadMyBookings();toast('Booking cancelled successfully.','ok');}
+    else toast(data.error||'Could not cancel booking.','err');
+  }catch(e){toast('Could not cancel booking.','err');}
+}
 function ppOpenBookingChat(bookingId){
   const b=ppMyBookings.find(x=>x.id===bookingId);if(!b)return;ppActiveChatBookingId=bookingId;
   const parlour=PP_PARLOURS.find(p=>p.id===b.parlour_id),emoji=parlour?parlour.emoji:'💆';
@@ -2288,11 +2326,12 @@ async function ppSendBookingChat(){
   const b=ppMyBookings.find(x=>x.id===ppActiveChatBookingId);if(!b)return;
   b.chatMessages.push({role:'user',text:msg});ppRenderBookingChat(b);
   const lower=msg.toLowerCase();let reply='';
-  if(lower.includes('cancel'))reply=`To cancel your booking at ${b.parlour_name}, tap the "Cancel" button in My Bookings.`;
-  else if(lower.includes('confirm')||lower.includes('status'))reply=`Your booking at ${b.parlour_name} for ${b.service} is currently ${b.status}. We will notify you once confirmed!`;
-  else if(lower.includes('reschedule')||lower.includes('change'))reply=`To reschedule, please cancel this booking and create a new one with your preferred time.`;
-  else if(lower.includes('price')||lower.includes('cost')||lower.includes('pkr'))reply=`Please contact ${b.parlour_name} directly for pricing on ${b.service}.`;
-  else{try{const{data,ok}=await api('/parlour/chat','POST',{message:`Re: booking at ${b.parlour_name} for ${b.service}. User says: ${msg}`});if(ok&&data.reply)reply=data.reply;else reply=`Thank you! The team at ${b.parlour_name} will get back to you soon.`;}catch(e){reply=`Thank you! The team at ${b.parlour_name} will get back to you soon.`;}}
+  const ph=b.parlour_phone?`\n\n📞 For further queries, you can contact ${b.parlour_name} directly at: ${b.parlour_phone}`:'';
+  if(lower.includes('cancel'))reply=`To cancel your booking at ${b.parlour_name}, tap the "Cancel" button in My Bookings.${ph}`;
+  else if(lower.includes('confirm')||lower.includes('status'))reply=`Your booking at ${b.parlour_name} for ${b.service} is currently ${b.status}. We will notify you once confirmed!${ph}`;
+  else if(lower.includes('reschedule')||lower.includes('change'))reply=`To reschedule, please cancel this booking and create a new one with your preferred time.${ph}`;
+  else if(lower.includes('price')||lower.includes('cost')||lower.includes('pkr'))reply=`Please contact ${b.parlour_name} directly for pricing on ${b.service}.${ph}`;
+  else reply=`Thank you for your message! The team at ${b.parlour_name} will get back to you shortly.${ph}`;
   setTimeout(()=>{b.chatMessages.push({role:'bot',text:reply});ppRenderBookingChat(b);},700);
 }
 ppRenderList();ppRenderPins();
