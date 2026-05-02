@@ -3,7 +3,7 @@ GlamMatch — Sprint 1 Backend
 Flask REST API: Auth, Undertone/Body Quiz, Color Palette, Wardrobe, Styling Tips
 """
 from flask import Flask, request, jsonify, send_from_directory
-import sqlite3, hashlib, os, json, functools
+import sqlite3, hashlib, os, json, functools, datetime as py_datetime
 
 try:
     import jwt, datetime
@@ -12,7 +12,7 @@ except ImportError:
     JWT_AVAILABLE = False
 
 # ── Setup ────────────────────────────────────────────────────────
-app = Flask(__name__, static_folder="../frontend", template_folder="../frontend")
+app = Flask(__name__, static_folder="../Frontend", template_folder="../Frontend")
 DB  = os.path.join(os.path.dirname(__file__), "glammatch.db")
 SECRET = "glammatch_sprint1_secret"
 SMTP_HOST = "smtp.gmail.com"
@@ -999,11 +999,340 @@ def reset_password():
 #  PARLOUR PORTAL — US-PP: Register, List, Book, Chat
 # ══════════════════════════════════════════════════════════════════
 
+ADMIN_CODE = os.environ.get("GLAMMATCH_ADMIN_CODE", "12345678")
+
+
+def _ensure_columns(conn, table, columns):
+    """Small SQLite migration helper for older project databases."""
+    existing = {row[1] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+    for name, definition in columns.items():
+        if name not in existing:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {definition}")
+
+
+def _mask_cnic(cnic):
+    digits = "".join(ch for ch in (cnic or "") if ch.isdigit())
+    if len(digits) != 13:
+        return ""
+    return f"{digits[:5]}-*******-{digits[-1]}"
+
+
+def _parse_services(value):
+    try:
+        return json.loads(value or "[]")
+    except Exception:
+        return []
+
+
+def _parse_booking_datetime(value):
+    """Parse datetime-local values from the frontend and basic ISO strings."""
+    if not value:
+        return None
+    text = str(value).strip()
+    try:
+        return py_datetime.datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except Exception:
+        for fmt in ("%Y-%m-%d %H:%M", "%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M"):
+            try:
+                return py_datetime.datetime.strptime(text, fmt)
+            except Exception:
+                pass
+    return None
+
+
+DAY_ORDER = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+DAY_ALIASES = {
+    "mon": "mon", "monday": "mon",
+    "tue": "tue", "tues": "tue", "tuesday": "tue",
+    "wed": "wed", "wednesday": "wed",
+    "thu": "thu", "thur": "thu", "thurs": "thu", "thursday": "thu",
+    "fri": "fri", "friday": "fri",
+    "sat": "sat", "saturday": "sat",
+    "sun": "sun", "sunday": "sun",
+}
+
+
+def _parse_time_value(value):
+    """Return datetime.time for HH:MM / HH:MM:SS values."""
+    if not value:
+        return None
+    text = str(value).strip()
+    for fmt in ("%H:%M", "%H:%M:%S"):
+        try:
+            return py_datetime.datetime.strptime(text, fmt).time()
+        except Exception:
+            pass
+    return None
+
+
+def _valid_time_range(open_time, close_time):
+    op = _parse_time_value(open_time)
+    cl = _parse_time_value(close_time)
+    return bool(op and cl and op != cl)
+
+
+def _time_to_minutes(t):
+    return t.hour * 60 + t.minute
+
+
+def _day_token(token):
+    cleaned = ''.join(ch for ch in (token or '').lower() if ch.isalpha())
+    return DAY_ALIASES.get(cleaned)
+
+
+def _range_days(start, end):
+    if start not in DAY_ORDER or end not in DAY_ORDER:
+        return set()
+    i, j = DAY_ORDER.index(start), DAY_ORDER.index(end)
+    if i <= j:
+        return set(DAY_ORDER[i:j + 1])
+    return set(DAY_ORDER[i:] + DAY_ORDER[:j + 1])
+
+
+def _parse_open_days(days_text):
+    """Parse common UI day strings like 'Mon – Sat', 'Weekends only', or comma lists."""
+    text = (days_text or '').strip().lower().replace('—', '-').replace('–', '-').replace('to', '-')
+    text = text.replace('only', '').strip()
+    if not text or text in {"daily", "everyday", "every day", "all days"}:
+        return set(DAY_ORDER)
+    if "weekend" in text:
+        return {"sat", "sun"}
+    if "weekday" in text:
+        return {"mon", "tue", "wed", "thu", "fri"}
+    if '-' in text:
+        left, right = [x.strip() for x in text.split('-', 1)]
+        a, b = _day_token(left), _day_token(right)
+        ranged = _range_days(a, b)
+        if ranged:
+            return ranged
+    result = set()
+    for part in text.replace('/', ',').replace('&', ',').split(','):
+        token = _day_token(part)
+        if token:
+            result.add(token)
+    return result
+
+
+def _parlour_is_open_at(parlour, booking_dt):
+    if not booking_dt:
+        return False, "Please choose a valid appointment date and time."
+    op = _parse_time_value(parlour["open_time"] if hasattr(parlour, "keys") else parlour.get("open_time"))
+    cl = _parse_time_value(parlour["close_time"] if hasattr(parlour, "keys") else parlour.get("close_time"))
+    days_text = parlour["days"] if hasattr(parlour, "keys") else parlour.get("days")
+    if not op or not cl:
+        return False, "Parlour timing is not configured correctly."
+    open_days = _parse_open_days(days_text)
+    day_key = DAY_ORDER[booking_dt.weekday()]
+    if open_days and day_key not in open_days:
+        return False, f"This parlour is closed on {booking_dt.strftime('%A')}. Please select another day."
+    minute = booking_dt.hour * 60 + booking_dt.minute
+    open_min, close_min = _time_to_minutes(op), _time_to_minutes(cl)
+    if open_min < close_min:
+        ok = open_min <= minute < close_min
+    else:
+        # Overnight shifts, e.g. 20:00 to 02:00
+        ok = minute >= open_min or minute < close_min
+    if not ok:
+        return False, f"This parlour is open from {op.strftime('%H:%M')} to {cl.strftime('%H:%M')} on selected days."
+    return True, ""
+
+
+def _valid_phone(value):
+    digits = ''.join(ch for ch in (value or '') if ch.isdigit())
+    return 10 <= len(digits) <= 15
+
+
+def _valid_email(value):
+    text = (value or '').strip()
+    if not text:
+        return True
+    return '@' in text and '.' in text.split('@')[-1] and ' ' not in text
+
+
+def _valid_document_data(value):
+    text = (value or '').strip()
+    if not text:
+        return False
+    if not text.startswith('data:'):
+        return False
+    allowed = ('data:image/jpeg', 'data:image/jpg', 'data:image/png', 'data:image/webp', 'data:application/pdf')
+    return text.lower().startswith(allowed) and ';base64,' in text[:80].lower()
+
+
+def _validate_parlour_payload(d, require_documents=False):
+    if not _valid_phone(d.get('phone')):
+        return "Please enter a valid phone number."
+    if not _valid_email(d.get('email')):
+        return "Please enter a valid email address."
+    if not _valid_time_range(d.get('open_time', '09:00'), d.get('close_time', '21:00')):
+        return "Opening and closing time must be valid and cannot be the same."
+    if not _parse_open_days(d.get('days', 'Mon – Sat')):
+        return "Please select valid opening days."
+    services = d.get('services') or []
+    if not isinstance(services, list) or not [s for s in services if str(s).strip()]:
+        return "Please select at least one service."
+    try:
+        price_min = int(d.get('price_min', 0) or 0)
+        price_max = int(d.get('price_max', 0) or 0)
+    except Exception:
+        return "Price range must contain valid numbers."
+    if price_min < 0 or price_max < 0:
+        return "Price range cannot be negative."
+    if price_max and price_min and price_min > price_max:
+        return "Starting price cannot be greater than maximum price."
+    if require_documents:
+        if not _valid_document_data(d.get('cnic_front_file')):
+            return "CNIC front file must be JPG, PNG, WEBP or PDF."
+        if not _valid_document_data(d.get('cnic_back_file')):
+            return "CNIC back file must be JPG, PNG, WEBP or PDF."
+    return None
+
+
+def _validate_booking_payload(conn, parlour, d):
+    dt_value = _parse_booking_datetime(d.get('datetime'))
+    if not dt_value:
+        return "Please choose a valid appointment date and time."
+    now = py_datetime.datetime.now(dt_value.tzinfo) if dt_value.tzinfo is not None else py_datetime.datetime.now()
+    if dt_value <= now:
+        return "Appointment date and time must be in the future."
+    # Keep the demo practical and avoid accidental far-future bookings.
+    if dt_value > now + py_datetime.timedelta(days=90):
+        return "Appointments can be booked up to 90 days in advance only."
+    ok, reason = _parlour_is_open_at(parlour, dt_value)
+    if not ok:
+        return reason
+    if not (d.get('client_name') or '').strip() or len((d.get('client_name') or '').strip()) < 2:
+        return "Please enter a valid client name."
+    if not _valid_phone(d.get('client_phone')):
+        return "Please enter a valid client phone number."
+    if len((d.get('note') or '')) > 500:
+        return "Booking note is too long. Please keep it under 500 characters."
+    existing = conn.execute(
+        """SELECT id FROM parlour_bookings
+           WHERE parlour_id=? AND parlour_name=? AND datetime=?
+             AND status IN ('pending','confirmed')
+           LIMIT 1""",
+        (parlour['id'], parlour['name'], d.get('datetime'))
+    ).fetchone()
+    if existing:
+        return "This time slot is already booked or waiting for approval. Please choose another time."
+    return None
+
+
+def _booking_is_past(value):
+    dt_value = _parse_booking_datetime(value)
+    if not dt_value:
+        return False
+    if dt_value.tzinfo is not None:
+        return dt_value <= py_datetime.datetime.now(dt_value.tzinfo)
+    return dt_value <= py_datetime.datetime.now()
+
+
+def _booking_minutes_until(value):
+    dt_value = _parse_booking_datetime(value)
+    if not dt_value:
+        return None
+    now = py_datetime.datetime.now(dt_value.tzinfo) if dt_value.tzinfo is not None else py_datetime.datetime.now()
+    return (dt_value - now).total_seconds() / 60
+
+
+def _booking_is_within_lock_window(value, hours=2):
+    minutes = _booking_minutes_until(value)
+    if minutes is None:
+        return False
+    return 0 <= minutes < (hours * 60)
+
+
+def _booking_can_cancel_or_reject(row):
+    status_value = row["status"] if hasattr(row, "keys") else row.get("status", "")
+    status = (status_value or "").lower()
+    value = row["datetime"] if hasattr(row, "keys") else row.get("datetime")
+    return status in {"pending", "confirmed"} and not _booking_is_past(value) and not _booking_is_within_lock_window(value)
+
+
+CLOSED_BOOKING_STATUSES = {"rejected", "cancelled", "completed"}
+
+
+def _booking_can_chat(row):
+    status_value = row["status"] if hasattr(row, "keys") else row.get("status", "")
+    status = (status_value or "").lower()
+    value = row["datetime"] if hasattr(row, "keys") else row.get("datetime")
+    return status not in CLOSED_BOOKING_STATUSES and not _booking_is_past(value)
+
+
+def _auto_complete_past_bookings(conn, extra_where="", params=()):
+    """Move active bookings to completed only after their appointment time has passed."""
+    query = "SELECT id, datetime FROM parlour_bookings WHERE status IN ('pending','confirmed')"
+    if extra_where:
+        query += " AND " + extra_where
+    rows = conn.execute(query, params).fetchall()
+    changed = False
+    for row in rows:
+        if _booking_is_past(row["datetime"]):
+            conn.execute("UPDATE parlour_bookings SET status='completed' WHERE id=?", (row["id"],))
+            changed = True
+    if changed:
+        conn.commit()
+
+
+def _booking_row(row):
+    data = dict(row)
+    if (data.get("status") or "").lower() in {"pending", "confirmed"} and _booking_is_past(data.get("datetime")):
+        data["status"] = "completed"
+    data["is_past"] = _booking_is_past(data.get("datetime"))
+    data["is_within_2_hours"] = _booking_is_within_lock_window(data.get("datetime"))
+    minutes = _booking_minutes_until(data.get("datetime"))
+    data["minutes_until"] = round(minutes, 1) if minutes is not None else None
+    data["can_chat"] = _booking_can_chat(data)
+    data["can_cancel"] = _booking_can_cancel_or_reject(data)
+    data["can_reject"] = _booking_can_cancel_or_reject(data)
+    return data
+
+
+def _notify_user(conn, user_id, booking_id, title, message, kind="booking", recipient_role="client"):
+    if not user_id:
+        return
+    conn.execute(
+        """INSERT INTO parlour_notifications(user_id, booking_id, kind, title, message, recipient_role)
+           VALUES(?,?,?,?,?,?)""",
+        (user_id, booking_id, kind, title, message, recipient_role)
+    )
+
+
+def _parlour_row(row, include_documents=False):
+    if not row:
+        return None
+    data = dict(row)
+    data["services"] = _parse_services(data.get("services"))
+    data["masked_cnic"] = _mask_cnic(data.get("cnic"))
+    if not include_documents:
+        data.pop("cnic", None)
+        data.pop("cnic_front_file", None)
+        data.pop("cnic_back_file", None)
+    return data
+
+
+def _admin_ok():
+    payload = request.get_json(silent=True) or {}
+    code = request.headers.get("X-Admin-Code") or request.args.get("admin_code") or payload.get("admin_code")
+    return code == ADMIN_CODE
+
+
+def admin_required(f):
+    @functools.wraps(f)
+    def w(*a, **kw):
+        if not _admin_ok():
+            return jsonify({"error": "Invalid admin code"}), 401
+        return f(*a, **kw)
+    return w
+
+
 def init_parlour_db():
     c = db()
     c.executescript("""
         CREATE TABLE IF NOT EXISTS parlours(
             id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id       INTEGER,
             name          TEXT NOT NULL,
             owner         TEXT NOT NULL,
             phone         TEXT NOT NULL,
@@ -1016,6 +1345,9 @@ def init_parlour_db():
             close_time    TEXT DEFAULT '21:00',
             days          TEXT DEFAULT 'Mon – Sat',
             cnic          TEXT,
+            cnic_front_file TEXT,
+            cnic_back_file  TEXT,
+            cnic_verification_note TEXT,
             business_type TEXT,
             price_min     INTEGER DEFAULT 0,
             price_max     INTEGER DEFAULT 0,
@@ -1023,7 +1355,8 @@ def init_parlour_db():
             rating        REAL DEFAULT 0.0,
             review_count  INTEGER DEFAULT 0,
             status        TEXT DEFAULT 'pending',
-            created_at    TEXT DEFAULT(datetime('now'))
+            created_at    TEXT DEFAULT(datetime('now')),
+            updated_at    TEXT
         );
         CREATE TABLE IF NOT EXISTS parlour_bookings(
             id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1042,255 +1375,583 @@ def init_parlour_db():
         CREATE TABLE IF NOT EXISTS parlour_chat_log(
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id    INTEGER,
+            booking_id INTEGER,
+            sender_type TEXT DEFAULT 'user',
             message    TEXT NOT NULL,
-            reply      TEXT NOT NULL,
+            reply      TEXT DEFAULT '',
             sent_at    TEXT DEFAULT(datetime('now'))
         );
+        CREATE TABLE IF NOT EXISTS parlour_notifications(
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id    INTEGER NOT NULL,
+            booking_id INTEGER,
+            kind       TEXT DEFAULT 'booking',
+            recipient_role TEXT DEFAULT 'general',
+            title      TEXT NOT NULL,
+            message    TEXT NOT NULL,
+            is_read    INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT(datetime('now'))
+        );
     """)
+    _ensure_columns(c, "parlours", {
+        "user_id": "INTEGER",
+        "cnic_front_file": "TEXT",
+        "cnic_back_file": "TEXT",
+        "cnic_verification_note": "TEXT",
+        "updated_at": "TEXT"
+    })
+    _ensure_columns(c, "parlour_chat_log", {
+        "booking_id": "INTEGER",
+        "sender_type": "TEXT DEFAULT 'user'"
+    })
+    _ensure_columns(c, "parlour_notifications", {
+        "booking_id": "INTEGER",
+        "kind": "TEXT DEFAULT 'booking'",
+        "recipient_role": "TEXT DEFAULT 'general'",
+        "is_read": "INTEGER DEFAULT 0"
+    })
     c.commit()
     c.close()
 
-# ── PP-01: Register a parlour ─────────────────────────────────────
+
+# ── PP-01: Register a parlour with CNIC documents ────────────────
 @app.route("/api/parlour/register", methods=["POST"])
 @auth
 def parlour_register():
     d = request.get_json() or {}
-    required = ["name", "owner", "phone", "address", "city"]
+    required = ["name", "owner", "phone", "address", "city", "cnic", "cnic_front_file", "cnic_back_file"]
     for field in required:
         if not (d.get(field) or "").strip():
             return jsonify({"error": f"{field} is required"}), 400
+
+    cnic_digits = "".join(ch for ch in d.get("cnic", "") if ch.isdigit())
+    if len(cnic_digits) != 13:
+        return jsonify({"error": "CNIC must contain exactly 13 digits"}), 400
+
+    validation_error = _validate_parlour_payload(d, require_documents=True)
+    if validation_error:
+        return jsonify({"error": validation_error}), 400
+
     c = db()
+    existing = c.execute("SELECT id,status FROM parlours WHERE user_id=? ORDER BY id DESC LIMIT 1", (request.uid,)).fetchone()
+    if existing:
+        c.close()
+        return jsonify({"error": "You have already registered a parlour", "parlour_id": existing["id"], "status": existing["status"]}), 409
+
     c.execute(
         """INSERT INTO parlours
-           (name,owner,phone,email,address,city,area,services,open_time,close_time,
-            days,cnic,business_type,price_min,price_max,description)
-           VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+           (user_id,name,owner,phone,email,address,city,area,services,open_time,close_time,
+            days,cnic,cnic_front_file,cnic_back_file,business_type,price_min,price_max,description,status)
+           VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
-            d.get("name","").strip(),
-            d.get("owner","").strip(),
-            d.get("phone","").strip(),
-            d.get("email","").strip(),
-            d.get("address","").strip(),
-            d.get("city","").strip(),
-            d.get("area","").strip(),
-            json.dumps(d.get("services",[])),
-            d.get("open_time","09:00"),
-            d.get("close_time","21:00"),
-            d.get("days","Mon – Sat"),
-            d.get("cnic","").strip(),
-            d.get("business_type",""),
-            int(d.get("price_min",0) or 0),
-            int(d.get("price_max",0) or 0),
-            d.get("description","").strip(),
+            request.uid,
+            d.get("name", "").strip(),
+            d.get("owner", "").strip(),
+            d.get("phone", "").strip(),
+            d.get("email", "").strip(),
+            d.get("address", "").strip(),
+            d.get("city", "").strip(),
+            d.get("area", "").strip(),
+            json.dumps(d.get("services", [])),
+            d.get("open_time", "09:00"),
+            d.get("close_time", "21:00"),
+            d.get("days", "Mon – Sat"),
+            cnic_digits,
+            d.get("cnic_front_file", ""),
+            d.get("cnic_back_file", ""),
+            d.get("business_type", ""),
+            int(d.get("price_min", 0) or 0),
+            int(d.get("price_max", 0) or 0),
+            d.get("description", "").strip(),
+            "pending",
         )
     )
     c.commit()
     pid = c.execute("SELECT last_insert_rowid()").fetchone()[0]
     c.close()
-    return jsonify({"message": "Parlour registration submitted for review.", "parlour_id": pid}), 201
+    return jsonify({"message": "Parlour registration submitted for admin CNIC verification.", "parlour_id": pid, "status": "pending"}), 201
+
+
+# ── Owner dashboard: registered parlour + bookings for that parlour ──
+@app.route("/api/parlour/owner-dashboard", methods=["GET"])
+@auth
+def parlour_owner_dashboard():
+    c = db()
+    parlour = c.execute("SELECT * FROM parlours WHERE user_id=? ORDER BY id DESC LIMIT 1", (request.uid,)).fetchone()
+    if not parlour:
+        c.close()
+        return jsonify({"registered": False})
+    if parlour["status"] == "approved":
+        _auto_complete_past_bookings(c, "parlour_id=? AND parlour_name=?", (parlour["id"], parlour["name"]))
+        bookings = c.execute(
+            """SELECT * FROM parlour_bookings
+               WHERE parlour_id=? AND parlour_name=?
+               ORDER BY created_at DESC""",
+            (parlour["id"], parlour["name"])
+        ).fetchall()
+    else:
+        bookings = []
+    c.close()
+    return jsonify({
+        "registered": True,
+        "parlour": _parlour_row(parlour),
+        "bookings": [_booking_row(b) for b in bookings]
+    })
+
+
+# ── Owner can edit own parlour details ───────────────────────────
+@app.route("/api/parlour/my-parlour", methods=["PUT"])
+@auth
+def update_my_parlour():
+    d = request.get_json() or {}
+    c = db()
+    parlour = c.execute("SELECT * FROM parlours WHERE user_id=? ORDER BY id DESC LIMIT 1", (request.uid,)).fetchone()
+    if not parlour:
+        c.close()
+        return jsonify({"error": "No parlour registered for this user"}), 404
+
+    merged = dict(parlour)
+    merged["services"] = d.get("services") if "services" in d else _parse_services(parlour["services"])
+    for key in ["phone", "email", "open_time", "close_time", "days", "price_min", "price_max"]:
+        if key in d:
+            merged[key] = d.get(key)
+    validation_error = _validate_parlour_payload(merged, require_documents=False)
+    if validation_error:
+        c.close()
+        return jsonify({"error": validation_error}), 400
+
+    allowed = ["name", "owner", "phone", "email", "address", "city", "area", "open_time", "close_time", "days", "business_type", "description"]
+    updates, params = [], []
+    for field in allowed:
+        if field in d:
+            updates.append(f"{field}=?")
+            params.append((d.get(field) or "").strip())
+
+    if "services" in d:
+        updates.append("services=?")
+        params.append(json.dumps(d.get("services") or []))
+    if "price_min" in d:
+        updates.append("price_min=?")
+        params.append(int(d.get("price_min") or 0))
+    if "price_max" in d:
+        updates.append("price_max=?")
+        params.append(int(d.get("price_max") or 0))
+
+    cnic_changed = False
+    if d.get("cnic"):
+        cnic_digits = "".join(ch for ch in d.get("cnic", "") if ch.isdigit())
+        if len(cnic_digits) != 13:
+            c.close()
+            return jsonify({"error": "CNIC must contain exactly 13 digits"}), 400
+        updates.append("cnic=?")
+        params.append(cnic_digits)
+        cnic_changed = True
+    if d.get("cnic_front_file"):
+        if not _valid_document_data(d.get("cnic_front_file")):
+            c.close()
+            return jsonify({"error": "CNIC front file must be JPG, PNG, WEBP or PDF."}), 400
+        updates.append("cnic_front_file=?")
+        params.append(d.get("cnic_front_file"))
+        cnic_changed = True
+    if d.get("cnic_back_file"):
+        if not _valid_document_data(d.get("cnic_back_file")):
+            c.close()
+            return jsonify({"error": "CNIC back file must be JPG, PNG, WEBP or PDF."}), 400
+        updates.append("cnic_back_file=?")
+        params.append(d.get("cnic_back_file"))
+        cnic_changed = True
+    if cnic_changed:
+        updates.append("status='pending'")
+        updates.append("cnic_verification_note='CNIC resubmitted by owner; pending admin review'")
+
+    if not updates:
+        c.close()
+        return jsonify({"error": "No fields to update"}), 400
+    updates.append("updated_at=datetime('now')")
+    params.append(parlour["id"])
+    c.execute(f"UPDATE parlours SET {', '.join(updates)} WHERE id=?", params)
+    c.commit()
+    row = c.execute("SELECT * FROM parlours WHERE id=?", (parlour["id"],)).fetchone()
+    c.close()
+    return jsonify({"message": "Parlour details updated", "parlour": _parlour_row(row)})
+
 
 # ── PP-02: List all approved parlours ─────────────────────────────
 @app.route("/api/parlour/list", methods=["GET"])
 @auth
 def parlour_list():
-    c   = db()
+    c = db()
     city = request.args.get("city", "")
-    q   = "SELECT * FROM parlours WHERE status='approved'"
-    p   = []
+    q = "SELECT * FROM parlours WHERE status='approved'"
+    p = []
     if city:
         q += " AND city=?"; p.append(city)
-    q += " ORDER BY rating DESC"
+    q += " ORDER BY rating DESC, created_at DESC"
     rows = c.execute(q, p).fetchall()
     c.close()
-    result = []
-    for r in rows:
-        row = dict(r)
-        try:
-            row["services"] = json.loads(row["services"] or "[]")
-        except Exception:
-            row["services"] = []
-        result.append(row)
+    result = [_parlour_row(r) for r in rows]
     return jsonify({"parlours": result, "count": len(result)})
+
 
 # ── PP-03: Get single parlour ─────────────────────────────────────
 @app.route("/api/parlour/<int:pid>", methods=["GET"])
 @auth
 def parlour_detail(pid):
     c = db()
-    r = c.execute("SELECT * FROM parlours WHERE id=?", (pid,)).fetchone()
+    r = c.execute("SELECT * FROM parlours WHERE id=? AND status='approved'", (pid,)).fetchone()
     c.close()
     if not r:
-        return jsonify({"error": "Parlour not found"}), 404
-    row = dict(r)
-    try:
-        row["services"] = json.loads(row["services"] or "[]")
-    except Exception:
-        row["services"] = []
-    return jsonify({"parlour": row})
+        return jsonify({"error": "Approved parlour not found"}), 404
+    return jsonify({"parlour": _parlour_row(r)})
+
 
 # ── PP-04: Book appointment at a parlour ──────────────────────────
 @app.route("/api/parlour/booking", methods=["POST"])
 @auth
 def parlour_booking():
     d = request.get_json() or {}
-    required = ["parlour_id", "parlour_name", "service", "datetime", "client_name", "client_phone"]
+    required = ["parlour_id", "service", "datetime", "client_name", "client_phone"]
     for field in required:
         if not d.get(field):
             return jsonify({"error": f"{field} is required"}), 400
+
+    try:
+        parlour_id = int(d.get("parlour_id"))
+    except Exception:
+        return jsonify({"error": "Invalid parlour selected"}), 400
+
     c = db()
+    parlour = c.execute("SELECT * FROM parlours WHERE id=? AND status='approved'", (parlour_id,)).fetchone()
+    if not parlour:
+        c.close()
+        return jsonify({"error": "This parlour is not approved yet, so bookings are not allowed."}), 403
+
+    _auto_complete_past_bookings(c, "parlour_id=? AND parlour_name=?", (parlour["id"], parlour["name"]))
+
+    services = _parse_services(parlour["services"])
+    if services and d.get("service") not in services:
+        c.close()
+        return jsonify({"error": "Selected service is not offered by this parlour"}), 400
+
+    booking_error = _validate_booking_payload(c, parlour, d)
+    if booking_error:
+        c.close()
+        return jsonify({"error": booking_error}), 400
+
     c.execute(
-        "INSERT INTO parlour_bookings(user_id,parlour_id,parlour_name,service,datetime,client_name,client_phone,note) VALUES(?,?,?,?,?,?,?,?)",
-        (request.uid, d["parlour_id"], d["parlour_name"], d["service"], d["datetime"],
-         d["client_name"], d["client_phone"], d.get("note",""))
+        "INSERT INTO parlour_bookings(user_id,parlour_id,parlour_name,service,datetime,client_name,client_phone,note,status) VALUES(?,?,?,?,?,?,?,?,?)",
+        (request.uid, parlour["id"], parlour["name"], d["service"], d["datetime"],
+         d["client_name"], d["client_phone"], d.get("note", ""), "pending")
     )
     c.commit()
     bid = c.execute("SELECT last_insert_rowid()").fetchone()[0]
     c.close()
-    return jsonify({"booking_id": bid, "status": "pending"}), 201
+    return jsonify({"booking_id": bid, "status": "pending", "parlour_name": parlour["name"]}), 201
 
-# ── PP-05: My parlour bookings ────────────────────────────────────
+
+# ── Customer's own submitted bookings (kept internal; no top-nav link) ──
 @app.route("/api/parlour/my-bookings", methods=["GET"])
 @auth
 def parlour_my_bookings():
-    c   = db()
-    rows = c.execute("SELECT * FROM parlour_bookings WHERE user_id=? ORDER BY created_at DESC", (request.uid,)).fetchall()
-    c.close()
-    return jsonify({"bookings": [dict(r) for r in rows]})
-
-# ── PP-05b: Cancel a booking ──────────────────────────────────────
-@app.route("/api/parlour/booking/<int:bid>/cancel", methods=["POST"])
-@auth
-def cancel_booking(bid):
-    import datetime as dt
     c = db()
-    bk = c.execute("SELECT * FROM parlour_bookings WHERE id=? AND user_id=?",
-                   (bid, request.uid)).fetchone()
-    if not bk:
+    _auto_complete_past_bookings(c, "user_id=?", (request.uid,))
+    rows = c.execute("""
+        SELECT b.*,
+               p.address AS parlour_address,
+               p.city AS parlour_city,
+               p.area AS parlour_area,
+               p.phone AS parlour_phone,
+               p.status AS parlour_status
+        FROM parlour_bookings b
+        LEFT JOIN parlours p ON p.id=b.parlour_id AND p.name=b.parlour_name
+        WHERE b.user_id=?
+        ORDER BY b.created_at DESC
+    """, (request.uid,)).fetchall()
+    c.close()
+    return jsonify({"bookings": [_booking_row(r) for r in rows]})
+
+
+# ── In-app notifications for booking cancellations/rejections ─────
+@app.route("/api/parlour/notifications", methods=["GET"])
+@auth
+def get_parlour_notifications():
+    role = (request.args.get("role") or "client").strip().lower()
+    if role not in {"client", "owner"}:
+        role = "client"
+    c = db()
+    rows = c.execute(
+        """SELECT * FROM parlour_notifications
+           WHERE user_id=? AND recipient_role=?
+           ORDER BY is_read ASC, datetime(created_at) DESC
+           LIMIT 30""",
+        (request.uid, role)
+    ).fetchall()
+    unread = c.execute(
+        "SELECT COUNT(*) FROM parlour_notifications WHERE user_id=? AND recipient_role=? AND is_read=0",
+        (request.uid, role)
+    ).fetchone()[0]
+    c.close()
+    return jsonify({"notifications": [dict(r) for r in rows], "unread_count": unread})
+
+
+@app.route("/api/parlour/notifications/read-all", methods=["PUT"])
+@auth
+def read_all_parlour_notifications():
+    role = (request.args.get("role") or "client").strip().lower()
+    if role not in {"client", "owner"}:
+        role = "client"
+    c = db()
+    c.execute("UPDATE parlour_notifications SET is_read=1 WHERE user_id=? AND recipient_role=?", (request.uid, role))
+    c.commit(); c.close()
+    return jsonify({"message": "Notifications marked as read"})
+
+
+# ── Customer can cancel own active booking, but not within 2 hours ──
+@app.route("/api/parlour/booking/<int:bid>/cancel", methods=["PUT"])
+@auth
+def cancel_parlour_booking(bid):
+    c = db()
+    booking = c.execute(
+        """SELECT b.*, p.user_id AS owner_user_id, p.name AS live_parlour_name
+           FROM parlour_bookings b
+           LEFT JOIN parlours p ON p.id=b.parlour_id AND p.name=b.parlour_name
+           WHERE b.id=? AND b.user_id=?""",
+        (bid, request.uid)
+    ).fetchone()
+    if not booking:
         c.close()
         return jsonify({"error": "Booking not found"}), 404
-    if bk["status"] not in ("pending", "confirmed"):
+    if _booking_is_past(booking["datetime"]):
         c.close()
-        return jsonify({"error": f"Cannot cancel a booking with status: {bk['status']}"}), 400
-    # 2-hour rule — block cancellation if appointment is within 2 hours
-    try:
-        booking_dt = dt.datetime.fromisoformat(bk["datetime"])
-        now        = dt.datetime.now()
-        hours_left = (booking_dt - now).total_seconds() / 3600
-        if 0 < hours_left < 2:
-            c.close()
-            return jsonify({
-                "error": f"Cannot cancel — your appointment is in {hours_left:.1f} hour(s). Cancellation is not allowed within 2 hours of the booking time.",
-                "hours_left": round(hours_left, 1)
-            }), 400
-    except Exception:
-        pass
-    c.execute("UPDATE parlour_bookings SET status='cancelled' WHERE id=? AND user_id=?",
-              (bid, request.uid))
-    c.commit()
-    c.close()
-    return jsonify({"cancelled": True})
+        return jsonify({"error": "This appointment time has already passed, so it cannot be cancelled here."}), 400
+    if _booking_is_within_lock_window(booking["datetime"]):
+        c.close()
+        return jsonify({"error": "Bookings cannot be cancelled within 2 hours of the appointment time."}), 400
+    if booking["status"] not in ["pending", "confirmed"]:
+        c.close()
+        return jsonify({"error": "Only pending or confirmed bookings can be cancelled."}), 400
+    c.execute("UPDATE parlour_bookings SET status='cancelled' WHERE id=?", (bid,))
+    _notify_user(
+        c, booking["owner_user_id"], bid,
+        "Booking cancelled by client",
+        f"{booking['client_name']} cancelled the {booking['service']} booking at {booking['parlour_name']}.",
+        "booking_cancelled",
+        "owner"
+    )
+    c.commit(); c.close()
+    return jsonify({"message": "Booking cancelled. Notification sent.", "status": "cancelled"})
 
-# ── PP-06: Parlour portal chatbot ─────────────────────────────────
+
+# ── Owner accepts/rejects booking for own parlour ───────
+@app.route("/api/parlour/owner-booking/<int:bid>/status", methods=["PUT"])
+@auth
+def owner_update_booking_status(bid):
+    status = ((request.get_json() or {}).get("status") or "").strip().lower()
+    if status not in ["pending", "confirmed", "rejected"]:
+        return jsonify({"error": "Invalid booking status. Bookings are completed automatically after appointment time."}), 400
+    c = db()
+    parlour = c.execute("SELECT id,name,status,user_id FROM parlours WHERE user_id=? ORDER BY id DESC LIMIT 1", (request.uid,)).fetchone()
+    if not parlour:
+        c.close()
+        return jsonify({"error": "No parlour registered for this user"}), 404
+    if parlour["status"] != "approved":
+        c.close()
+        return jsonify({"error": "Bookings can be managed only after admin approval"}), 403
+    booking = c.execute("SELECT * FROM parlour_bookings WHERE id=? AND parlour_id=? AND parlour_name=?", (bid, parlour["id"], parlour["name"])).fetchone()
+    if not booking:
+        c.close()
+        return jsonify({"error": "Booking not found for your parlour"}), 404
+    if booking["status"] in ["pending", "confirmed"] and _booking_is_past(booking["datetime"]):
+        c.execute("UPDATE parlour_bookings SET status='completed' WHERE id=?", (bid,))
+        c.commit(); c.close()
+        return jsonify({"error": "Appointment time has passed. Booking is now marked Completed automatically."}), 400
+    if status == "rejected":
+        if booking["status"] not in ["pending", "confirmed"]:
+            c.close()
+            return jsonify({"error": "Only pending or confirmed bookings can be rejected."}), 400
+        if _booking_is_past(booking["datetime"]):
+            c.close()
+            return jsonify({"error": "This appointment time has already passed, so it cannot be rejected."}), 400
+        if _booking_is_within_lock_window(booking["datetime"]):
+            c.close()
+            return jsonify({"error": "Parlour cannot reject a booking within 2 hours of the appointment time."}), 400
+    c.execute("UPDATE parlour_bookings SET status=? WHERE id=?", (status, bid))
+    if status == "rejected":
+        _notify_user(
+            c, booking["user_id"], bid,
+            "Booking rejected by parlour",
+            f"{parlour['name']} rejected your {booking['service']} booking.",
+            "booking_rejected",
+            "client"
+        )
+    c.commit(); c.close()
+    return jsonify({"message": "Booking status updated" + (". Notification sent." if status == "rejected" else ""), "status": status})
+
+
 # ── PP-07b: Get parlour booking chat messages ─────────────────────
 @app.route("/api/parlour/booking-chat/<int:bid>", methods=["GET"])
 @auth
 def get_parlour_booking_chat(bid):
     c = db()
-    # Verify booking belongs to this user
-    bk = c.execute("SELECT * FROM parlour_bookings WHERE id=? AND user_id=?", (bid, request.uid)).fetchone()
+    bk = c.execute("""
+        SELECT b.*, p.user_id AS owner_user_id, p.status AS parlour_status
+        FROM parlour_bookings b
+        LEFT JOIN parlours p ON p.id=b.parlour_id AND p.name=b.parlour_name
+        WHERE b.id=? AND (b.user_id=? OR p.user_id=?)
+    """, (bid, request.uid, request.uid)).fetchone()
     if not bk:
         c.close()
         return jsonify({"error": "Booking not found"}), 404
-    try:
-        msgs = c.execute(
-            "SELECT * FROM parlour_chat_log WHERE booking_id=? ORDER BY sent_at ASC",
-            (bid,)
-        ).fetchall()
+    if bk["parlour_status"] != "approved" or not _booking_can_chat(bk):
         c.close()
-        return jsonify({"messages": [dict(m) for m in msgs]})
-    except Exception:
-        c.close()
-        return jsonify({"messages": []})
+        return jsonify({"error": "Chat is closed for this booking"}), 403
+    msgs = c.execute("SELECT * FROM parlour_chat_log WHERE booking_id=? ORDER BY sent_at ASC", (bid,)).fetchall()
+    c.close()
+    return jsonify({"booking": _booking_row(bk), "messages": [dict(m) for m in msgs]})
+
 
 @app.route("/api/parlour/booking-chat/<int:bid>", methods=["POST"])
 @auth
 def send_parlour_booking_chat(bid):
-    msg = ((request.get_json() or {}).get("message") or "").strip()
-    sender = (request.get_json() or {}).get("sender_type", "user")
+    d = request.get_json() or {}
+    msg = (d.get("message") or "").strip()
     if not msg:
         return jsonify({"error": "message is required"}), 400
     c = db()
-    try:
-        c.execute("ALTER TABLE parlour_chat_log ADD COLUMN booking_id INTEGER")
-        c.commit()
-    except Exception:
-        pass
-    try:
-        c.execute("INSERT INTO parlour_chat_log(user_id,booking_id,message,reply) VALUES(?,?,?,?)",
-                  (request.uid, bid, msg, ""))
-        c.commit()
-        mid = c.execute("SELECT last_insert_rowid()").fetchone()[0]
+    bk = c.execute("""
+        SELECT b.*, p.user_id AS owner_user_id, p.status AS parlour_status
+        FROM parlour_bookings b
+        LEFT JOIN parlours p ON p.id=b.parlour_id AND p.name=b.parlour_name
+        WHERE b.id=? AND (b.user_id=? OR p.user_id=?)
+    """, (bid, request.uid, request.uid)).fetchone()
+    if not bk:
         c.close()
-    except Exception:
+        return jsonify({"error": "Booking not found"}), 404
+    if bk["parlour_status"] != "approved" or not _booking_can_chat(bk):
         c.close()
-        return jsonify({"error": "Could not save message"}), 500
-    return jsonify({"message_id": mid, "sent": True}), 201
+        return jsonify({"error": "Chat is closed for this booking"}), 403
+    requested_sender = (d.get("sender_type") or d.get("sender") or "").strip().lower()
+    can_send_as_client = bk["user_id"] == request.uid
+    can_send_as_parlour = bk["owner_user_id"] == request.uid
+
+    # If the same logged-in user is testing both client and parlour flows, the
+    # frontend sends sender_type so the bubbles still appear from the correct side.
+    # If no sender_type is provided, keep the safe automatic fallback.
+    if requested_sender in {"client", "user"} and can_send_as_client:
+        sender = "client"
+    elif requested_sender == "parlour" and can_send_as_parlour:
+        sender = "parlour"
+    elif can_send_as_parlour and not can_send_as_client:
+        sender = "parlour"
+    elif can_send_as_client and not can_send_as_parlour:
+        sender = "client"
+    elif can_send_as_parlour:
+        sender = "parlour"
+    else:
+        c.close()
+        return jsonify({"error": "You are not allowed to send messages in this chat"}), 403
+
+    c.execute(
+        "INSERT INTO parlour_chat_log(user_id,booking_id,sender_type,message,reply) VALUES(?,?,?,?,?)",
+        (request.uid, bid, sender, msg, "")
+    )
+    c.commit()
+    mid = c.execute("SELECT last_insert_rowid()").fetchone()[0]
+    row = c.execute("SELECT * FROM parlour_chat_log WHERE id=?", (mid,)).fetchone()
+    c.close()
+    return jsonify({"message_id": mid, "sent": True, "chat_message": dict(row)}), 201
+
 
 @app.route("/api/parlour/chat", methods=["POST"])
 @auth
 def parlour_chat():
-    d   = request.get_json() or {}
-    msg = (d.get("message") or "").strip()
-    parlour_id = d.get("parlour_id")
+    msg = ((request.get_json() or {}).get("message") or "").strip()
     if not msg:
         return jsonify({"error": "message is required"}), 400
 
-    # Look up parlour phone from DB if parlour_id provided
-    parlour_phone = None
-    if parlour_id:
-        try:
-            conn = db()
-            p = conn.execute("SELECT phone FROM parlours WHERE id=?", (int(parlour_id),)).fetchone()
-            conn.close()
-            if p and p["phone"]:
-                parlour_phone = p["phone"]
-        except Exception:
-            pass
-
-    # Simple rule-based replies (no external AI needed)
     lower = msg.lower()
     if any(w in lower for w in ["register", "list", "owner", "partner"]):
-        reply = "To register your parlour on GlamMatch, go to Parlour Portal → Register My Parlour. Fill in your salon details, services offered, and CNIC. Verification takes 24–48 hours!"
+        reply = "To register your parlour on GlamMatch, go to Parlour Portal → Register Your Parlour. Fill salon details, CNIC front/back uploads, then wait for admin approval."
     elif any(w in lower for w in ["book", "appointment", "reserve"]):
-        reply = "To book an appointment, open Find Nearby Parlours, choose a salon, and tap 'Book Appointment'. Select your service and preferred time. ✨"
+        reply = "To book an appointment, open Find Parlours, choose a verified salon, and tap Book Appointment."
+    elif any(w in lower for w in ["cnic", "verify", "verification"]):
+        reply = "For safety, parlour owners submit CNIC number plus front/back CNIC images. Admin approves the parlour before it appears in Find Parlours."
     elif any(w in lower for w in ["price", "cost", "rate", "pkr", "fee"]):
-        reply = "Prices range from PKR 300 for basic services to 15,000+ for bridal packages. Each parlour card shows min–max pricing."
+        reply = "Prices vary by service. Each parlour card shows its starting and maximum price range."
     elif any(w in lower for w in ["bridal", "wedding", "dulhan"]):
-        reply = "We have specialist bridal studios! Use the 💄 Bridal filter in Find Parlours to see top-rated bridal makeup artists."
+        reply = "Use the Bridal filter in Find Parlours to see bridal makeup specialists."
     elif any(w in lower for w in ["location", "near", "city", "lahore", "karachi"]):
-        reply = "We cover Lahore, Karachi, Islamabad, Rawalpindi, Faisalabad, Multan, Peshawar and Quetta. Enable location access to see the nearest parlours!"
+        reply = "Use location or search by area to find nearby verified parlours."
     elif any(w in lower for w in ["hour", "open", "timing", "time"]):
-        reply = "Most parlours are open 9 AM – 9 PM. Check the 🟢 Open indicator on each card for live status."
+        reply = "Most parlours show their opening and closing hours in their listing card."
     elif any(w in lower for w in ["hi", "hello", "hey", "salam"]):
-        reply = "Hello! 👋 I'm your GlamMatch beauty assistant. I can help you find parlours, book appointments, or register your salon. What do you need?"
+        reply = "Hello! I can help you find parlours, book appointments, or register your salon."
     else:
-        reply = "Great question! I can help with parlour registration, finding salons near you, booking appointments, and pricing. What would you like to know? 💄"
+        reply = "I can help with parlour registration, CNIC verification, finding salons, bookings, and pricing."
 
-    # Append parlour phone number from DB so client always gets the contact
-    if parlour_phone:
-        reply += f"\n\n📞 For further queries, you can contact the parlour directly at: {parlour_phone}"
-
-    # Log the conversation
     try:
         c = db()
-        c.execute("INSERT INTO parlour_chat_log(user_id,message,reply) VALUES(?,?,?)",
-                  (request.uid, msg, reply))
-        c.commit()
-        c.close()
+        c.execute("INSERT INTO parlour_chat_log(user_id,message,reply) VALUES(?,?,?)", (request.uid, msg, reply))
+        c.commit(); c.close()
     except Exception:
         pass
+    return jsonify({"reply": reply})
 
-    return jsonify({"reply": reply, "parlour_phone": parlour_phone})
+
+# ── Admin portal endpoints ───────────────────────────────────────
+@app.route("/api/admin/login", methods=["POST"])
+def admin_login():
+    if not _admin_ok():
+        return jsonify({"error": "Invalid admin code"}), 401
+    return jsonify({"ok": True, "message": "Admin access granted"})
+
+
+@app.route("/api/admin/parlours", methods=["GET"])
+@admin_required
+def admin_parlours():
+    status = request.args.get("status", "")
+    c = db()
+    q, params = "SELECT * FROM parlours", []
+    if status and status != "all":
+        q += " WHERE status=?"; params.append(status)
+    q += " ORDER BY created_at DESC"
+    rows = c.execute(q, params).fetchall()
+    c.close()
+    return jsonify({"parlours": [_parlour_row(r, include_documents=True) for r in rows]})
+
+
+@app.route("/api/admin/parlours/<int:pid>/status", methods=["PUT"])
+@admin_required
+def admin_update_parlour_status(pid):
+    d = request.get_json() or {}
+    status = (d.get("status") or "").strip().lower()
+    note = (d.get("note") or "").strip()
+    if status not in ["pending", "approved", "rejected"]:
+        return jsonify({"error": "Status must be pending, approved, or rejected"}), 400
+    c = db()
+    row = c.execute("SELECT id FROM parlours WHERE id=?", (pid,)).fetchone()
+    if not row:
+        c.close()
+        return jsonify({"error": "Parlour not found"}), 404
+    c.execute("UPDATE parlours SET status=?, cnic_verification_note=?, updated_at=datetime('now') WHERE id=?", (status, note, pid))
+    c.commit(); c.close()
+    return jsonify({"message": "Parlour verification status updated", "status": status})
+
+
+@app.route("/api/admin/bookings", methods=["GET"])
+@admin_required
+def admin_bookings():
+    c = db()
+    _auto_complete_past_bookings(c)
+    rows = c.execute("""
+        SELECT b.*, p.owner, p.phone AS owner_phone, p.status AS parlour_status
+        FROM parlour_bookings b
+        LEFT JOIN parlours p ON p.id=b.parlour_id
+        ORDER BY b.created_at DESC
+    """).fetchall()
+    c.close()
+    return jsonify({"bookings": [_booking_row(r) for r in rows]})
+
 
 # ── PP-07: Parlour stats for landing page ─────────────────────────
 @app.route("/api/parlour/stats", methods=["GET"])
