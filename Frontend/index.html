@@ -612,7 +612,10 @@ body.dark-mode .suggestion-card{background:#1A1020;border-color:#3A2035;}
       <h2>Welcome Back</h2>
       <p class="sub">No account? <a onclick="transitionToRegister()">Create one</a></p>
       <input class="field" type="email" id="li-email" placeholder="Email" oninput="checkLoginBtn()"/>
-      <input class="field" type="password" id="li-pw" placeholder="Password" oninput="checkLoginBtn()" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <div style="position:relative;">
+        <input class="field" type="password" id="li-pw" placeholder="Password" oninput="checkLoginBtn()" onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:2.8rem;margin-bottom:.75rem;"/>
+        <button type="button" onclick="onPasswordToggle()" title="Show/hide password" style="position:absolute;right:.7rem;top:50%;transform:translateY(-65%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-light);padding:.2rem;line-height:1;" id="pw-eye-btn">👁️</button>
+      </div>
       <div id="li-err" class="err-msg" style="display:none"></div>
       <button class="btn-submit" id="li-btn" onclick="doLogin()" disabled>Sign In</button>
       <div style="text-align:center;margin-top:.7rem;">
@@ -1290,66 +1293,275 @@ function initStars(){
   bg.appendChild(layer);
 }
 
-// ── Glow card spotlight effect ────────────────────────────────
-document.addEventListener("pointermove",e=>{
-  document.querySelectorAll(".glow-card").forEach(card=>{
-    card.style.setProperty("--x",e.clientX.toFixed(2));
-    card.style.setProperty("--xp",(e.clientX/window.innerWidth).toFixed(2));
-    card.style.setProperty("--y",e.clientY.toFixed(2));
-    card.style.setProperty("--yp",(e.clientY/window.innerHeight).toFixed(2));
-  });
+/* ═══════════════════════════════════════════════════════════
+   ANIMATION ENGINE — React→Vanilla 1:1 conversion
+   All state via plain variables, all loops via rAF.
+   ═══════════════════════════════════════════════════════════ */
+
+// ── Mouse state (raw, updated every mousemove) ────────────────
+let rawMouseX = window.innerWidth / 2;
+let rawMouseY = window.innerHeight / 2;
+// Smooth interpolated mouse (lerped each rAF frame)
+let smoothMouseX = rawMouseX;
+let smoothMouseY = rawMouseY;
+const MOUSE_LERP = 0.12; // smoothing factor (0=no movement, 1=instant)
+
+document.addEventListener("mousemove", e => {
+  rawMouseX = e.clientX;
+  rawMouseY = e.clientY;
 });
 
-// ── Login character eye tracking ──────────────────────────────
-let charMouseX=0,charMouseY=0;
-document.addEventListener("mousemove",e=>{charMouseX=e.clientX;charMouseY=e.clientY;updateCharEyes();});
-let pwTyping=false,pwVisible=false;
-function updateCharEyes(){
-  const chars=[
-    {eyes:document.getElementById("c1-eyes"),pupils:document.querySelectorAll("#char1 .char-pupil"),maxDist:6},
-    {eyes:document.getElementById("c2-eyes"),pupils:document.querySelectorAll("#char2 .char-pupil"),maxDist:4},
-    {eyes:document.getElementById("c3-eyes"),pupils:document.querySelectorAll("#char3 .char-pupil"),maxDist:4},
-    {eyes:document.getElementById("c4-eyes"),pupils:document.querySelectorAll("#char4 .char-pupil"),maxDist:3},
-  ];
-  chars.forEach(({eyes,pupils,maxDist})=>{
-    if(!eyes||!pupils.length)return;
-    const rect=eyes.getBoundingClientRect();
-    const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
-    const dx=charMouseX-cx,dy=charMouseY-cy;
-    const dist=Math.sqrt(dx*dx+dy*dy);
-    const angle=Math.atan2(dy,dx);
-    const d=Math.min(dist*.15,maxDist);
-    const px=Math.cos(angle)*d,py=Math.sin(angle)*d;
-    pupils.forEach(p=>{
-      if(pwTyping&&!pwVisible){p.style.transform="translate(0,6px)";return;}
-      if(pwVisible){p.style.transform="translate(0,-3px)";return;}
-      p.style.transform=`translate(${px}px,${py}px)`;
-    });
-  });
+// ── Per-pupil interpolated positions ─────────────────────────
+// Each pupil tracks its OWN smooth position independently
+const pupilState = new Map(); // el → {cx, cy} current rendered offset
+
+function getPupilState(el) {
+  if (!pupilState.has(el)) pupilState.set(el, { cx: 0, cy: 0 });
+  return pupilState.get(el);
 }
-// Blink randomly
-function scheduleBlinking(){
-  const eyes=[
-    document.querySelectorAll("#char1 .char-eye"),
-    document.querySelectorAll("#char2 .char-eye"),
+
+// ── Password / character interaction state ────────────────────
+// React had: isTyping (email focus), password.length>0, showPassword
+// We replicate with plain flags:
+let charState = "tracking"; // "tracking" | "look_down" | "look_away"
+// "tracking"  → pupils follow mouse (normal)
+// "look_down" → pupils look downward (typing password, hidden)
+// "look_away" → pupils look hard to side (password revealed)
+
+// Map char IDs → their config
+const CHAR_CONFIGS = [
+  { charId: "char1", eyeContainerId: "c1-eyes", maxDist: 5.5, eyeH: 22 },
+  { charId: "char2", eyeContainerId: "c2-eyes", maxDist: 3.5, eyeH: 16 },
+  { charId: "char3", eyeContainerId: "c3-eyes", maxDist: 3.5, eyeH: 14 },
+  { charId: "char4", eyeContainerId: "c4-eyes", maxDist: 3.0, eyeH: 14 },
+];
+
+// ── Core RAF animation loop ───────────────────────────────────
+function animationLoop() {
+  // 1. Lerp global smooth mouse toward raw mouse
+  smoothMouseX += (rawMouseX - smoothMouseX) * MOUSE_LERP;
+  smoothMouseY += (rawMouseY - smoothMouseY) * MOUSE_LERP;
+
+  // 2. Update glow-card spotlight effect (FIXED: relative to each card)
+  document.querySelectorAll(".glow-card").forEach(card => {
+    const rect = card.getBoundingClientRect();
+    // Map cursor to position relative to the card (not screen)
+    const relX = rawMouseX - rect.left;
+    const relY = rawMouseY - rect.top;
+    // Clamp so highlight stays inside card bounds
+    const clampedX = Math.max(0, Math.min(rect.width,  relX));
+    const clampedY = Math.max(0, Math.min(rect.height, relY));
+    card.style.setProperty("--x",  clampedX.toFixed(1));
+    card.style.setProperty("--y",  clampedY.toFixed(1));
+    // Normalized 0–1 for gradient spread
+    card.style.setProperty("--xp", (clampedX / rect.width).toFixed(3));
+    card.style.setProperty("--yp", (clampedY / rect.height).toFixed(3));
+  });
+
+  // 3. Animate pupils (only when login screen is visible)
+  const loginScreen = document.getElementById("screen-login");
+  if (loginScreen && loginScreen.classList.contains("active")) {
+    CHAR_CONFIGS.forEach(cfg => {
+      const eyeContainer = document.getElementById(cfg.eyeContainerId);
+      if (!eyeContainer) return;
+      const pupils = document.querySelectorAll(`#${cfg.charId} .char-pupil`);
+      if (!pupils.length) return;
+
+      let targetX = 0, targetY = 0;
+
+      if (charState === "look_down") {
+        // Password typing, hidden — look sharply downward
+        targetX = 0;
+        targetY = cfg.maxDist * 0.9;
+      } else if (charState === "look_away") {
+        // Password revealed — look hard to the right (away from form)
+        targetX = cfg.maxDist * 0.95;
+        targetY = -(cfg.maxDist * 0.4);
+      } else {
+        // Normal mouse tracking — calculate relative to each eye container
+        const rect = eyeContainer.getBoundingClientRect();
+        if (rect.width === 0) return; // not rendered yet
+        const cx = rect.left + rect.width  / 2;
+        const cy = rect.top  + rect.height / 2;
+        const dx = smoothMouseX - cx;
+        const dy = smoothMouseY - cy;
+        const dist  = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        // Scale: closer cursor = more movement, capped at maxDist
+        const d = Math.min(dist * 0.14, cfg.maxDist);
+        targetX = Math.cos(angle) * d;
+        targetY = Math.sin(angle) * d;
+      }
+
+      // Lerp each pupil toward its target for smoothness
+      pupils.forEach(pupil => {
+        const s = getPupilState(pupil);
+        s.cx += (targetX - s.cx) * 0.18;
+        s.cy += (targetY - s.cy) * 0.18;
+        pupil.style.transform = `translate(${s.cx.toFixed(2)}px, ${s.cy.toFixed(2)}px)`;
+      });
+    });
+  }
+
+  requestAnimationFrame(animationLoop);
+}
+
+// Kick off the loop once DOM is ready
+requestAnimationFrame(animationLoop);
+
+// ── Blinking — independent per-character, 3–7s intervals ──────
+function scheduleBlinking() {
+  // Only char1 (pink) and char2 (lavender) have full white eyes → blink them
+  const blinkGroups = [
+    { selector: "#char1 .char-eye", naturalH: "22px" },
+    { selector: "#char2 .char-eye", naturalH: "16px" },
   ];
-  eyes.forEach(group=>{
-    function doBlink(){
-      group.forEach(e=>{const orig=e.style.height||"22px";e.style.height="2px";setTimeout(()=>{e.style.height=orig;},150);});
-      setTimeout(doBlink,3000+Math.random()*4000);
+
+  blinkGroups.forEach(({ selector, naturalH }) => {
+    function doBlink() {
+      const eyes = document.querySelectorAll(selector);
+      // Close
+      eyes.forEach(e => { e.style.transition = "height 0.06s ease"; e.style.height = "2px"; });
+      // Open after 120ms
+      setTimeout(() => {
+        eyes.forEach(e => { e.style.transition = "height 0.08s ease"; e.style.height = naturalH; });
+      }, 120);
+      // Schedule next blink: random 3–7 seconds
+      setTimeout(doBlink, 3000 + Math.random() * 4000);
     }
-    setTimeout(doBlink,Math.random()*3000);
+    // Stagger start so chars don't blink simultaneously
+    setTimeout(doBlink, 500 + Math.random() * 2500);
   });
 }
 
-// ── Register transition ───────────────────────────────────────
-function transitionToRegister(){
-  const left=document.getElementById("login-left");
-  const right=document.getElementById("login-right");
-  left.style.transition="all .6s cubic-bezier(.4,0,.2,1)";
-  right.style.transition="all .6s cubic-bezier(.4,0,.2,1)";
-  left.style.flex="1.4";right.style.width="380px";
-  setTimeout(()=>go("screen-register"),400);
+// ── Password field interaction → charState updates ────────────
+// Called from the password input's events (not the typing handler)
+function onPasswordFocus() {
+  // When user focuses password field, characters look down
+  charState = "look_down";
+}
+function onPasswordBlur() {
+  // When password field loses focus, return to tracking
+  const pwInput = document.getElementById("li-pw");
+  if (pwInput && pwInput.type === "text") {
+    // Still revealed — keep looking away
+    charState = "look_away";
+  } else {
+    charState = "tracking";
+  }
+}
+function onPasswordToggle() {
+  // ONLY on toggle click: if now visible → look_away, if now hidden → look_down
+  const pwInput = document.getElementById("li-pw");
+  if (!pwInput) return;
+  if (pwInput.type === "password") {
+    // About to reveal (we'll toggle it next) → look away
+    pwInput.type = "text";
+    charState = "look_away";
+  } else {
+    pwInput.type = "password";
+    charState = "look_down";
+  }
+}
+
+// Add focus/blur listeners to the login password field after DOM load
+function bindPasswordListeners() {
+  const pwInput = document.getElementById("li-pw");
+  if (!pwInput) return;
+  pwInput.addEventListener("focus",  onPasswordFocus);
+  pwInput.addEventListener("blur",   onPasswordBlur);
+  // Remove the inline onkeydown‐based approach for charState
+}
+
+// ── Glow card highlight: also update on card hover directly ───
+// (belt-and-suspenders: rAF handles it, but mousemove on card fixes
+//  any cards that are not visible during the global rAF sweep)
+function bindGlowCards() {
+  document.addEventListener("mousemove", () => {
+    // rAF loop handles it — nothing extra needed
+  });
+}
+
+// ── Login → Register transition (3-step animated flow) ────────
+// Step 1: characters + left panel animate to CENTER (scale up slightly)
+// Step 2: slide to RIGHT
+// Step 3: register form slides in from LEFT
+function transitionToRegister() {
+  const loginLeft  = document.getElementById("login-left");
+  const loginRight = document.getElementById("login-right");
+  const loginChars = document.getElementById("login-chars");
+
+  if (!loginLeft || !loginRight) { go("screen-register"); return; }
+
+  // --- STEP 1: Expand characters slightly toward center ---
+  loginLeft.style.transition  = "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)";
+  loginRight.style.transition = "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)";
+  loginLeft.style.flex        = "1.3";
+  loginRight.style.opacity    = "0";
+  loginRight.style.transform  = "translateX(30px)";
+
+  if (loginChars) {
+    loginChars.style.transition = "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)";
+    loginChars.style.transform  = "scale(1.04)";
+  }
+
+  // --- STEP 2: After 300ms, slide characters to right edge ---
+  setTimeout(() => {
+    loginLeft.style.transition = "all 0.45s cubic-bezier(0.4, 0, 0.6, 1)";
+    loginLeft.style.transform  = "translateX(60%)";
+    loginLeft.style.opacity    = "0";
+    if (loginChars) {
+      loginChars.style.transition = "all 0.45s cubic-bezier(0.4, 0, 0.6, 1)";
+      loginChars.style.transform  = "scale(1) translateX(40px)";
+    }
+  }, 300);
+
+  // --- STEP 3: Switch screens and animate register form in ---
+  setTimeout(() => {
+    // Reset login screen styles so it's clean if user returns
+    loginLeft.style.transition  = "";
+    loginLeft.style.flex        = "";
+    loginLeft.style.transform   = "";
+    loginLeft.style.opacity     = "";
+    loginRight.style.transition = "";
+    loginRight.style.opacity    = "";
+    loginRight.style.transform  = "";
+    if (loginChars) {
+      loginChars.style.transition = "";
+      loginChars.style.transform  = "";
+    }
+
+    // Switch to register screen
+    go("screen-register");
+
+    // Animate the register card in from the left
+    const regCard = document.querySelector(".reg-card");
+    const regLeft = document.querySelector(".reg-left");
+    if (regCard) {
+      regCard.style.opacity   = "0";
+      regCard.style.transform = "translateX(-40px)";
+      regCard.style.transition = "";
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          regCard.style.transition = "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
+          regCard.style.opacity    = "1";
+          regCard.style.transform  = "translateX(0)";
+        });
+      });
+    }
+    if (regLeft) {
+      regLeft.style.opacity   = "0";
+      regLeft.style.transform = "translateX(-20px)";
+      regLeft.style.transition = "";
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          regLeft.style.transition = "all 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.05s";
+          regLeft.style.opacity    = "1";
+          regLeft.style.transform  = "translateX(0)";
+        });
+      });
+    }
+  }, 720);
 }
 
 // ── Password confirm visual ───────────────────────────────────
@@ -1360,17 +1572,16 @@ function updatePwConfirm(){
   const bg=document.getElementById("pw-confirm-bg");
   if(pw.length<8){wrap.style.display="none";return;}
   wrap.style.display="block";
-  pwTyping=true;updateCharEyes();
-  // Render dots
+  // Render dots — one per password character
   dots.innerHTML=pw.split("").map(()=>`<div class="pw-confirm-dot"></div>`).join("");
-  // Update confirm field visual
+  // Color segments based on confirm field match
   const conf=document.getElementById("rg-pw2").value;
   bg.innerHTML=pw.split("").map((_,i)=>{
     if(!conf[i])return`<div style="width:16px;height:100%;"></div>`;
     const cls=conf[i]===pw[i]?"correct":"wrong";
     return`<div class="pw-confirm-seg ${cls}" style="width:16px;"></div>`;
   }).join("");
-  // Match check
+  // Green border when passwords match fully
   const disp=document.getElementById("pw-confirm-display");
   if(conf===pw&&conf.length>0)disp.classList.add("match");
   else disp.classList.remove("match");
@@ -1383,7 +1594,7 @@ function checkLoginBtn(){
   const btn=document.getElementById("li-btn");
   const ready=email.length>0&&pw.length>0;
   btn.disabled=!ready;btn.classList.toggle("ready",ready);
-  pwTyping=pw.length>0;updateCharEyes();
+  // charState is now managed purely by focus/blur/toggle — do NOT set it here
 }
 function checkRegisterBtn(){
   const name=document.getElementById("rg-name").value.trim();
@@ -1424,6 +1635,8 @@ function setLoading(id,on,label){
 window.onload=async()=>{
   applyDarkMode();
   scheduleBlinking();
+  bindPasswordListeners();
+  bindGlowCards();
   if(new URLSearchParams(window.location.search).get("reset_token")){go("screen-reset");return;}
   if(token){
     const{data,ok}=await api("/profile");
