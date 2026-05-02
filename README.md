@@ -1,15 +1,15 @@
-# 💄 GlamMatch — Personalized Styling & Salon Connector App
+# 💄 GlamMatch — Personalized Styling & Parlour Connector
 
-> *Your personal glam stylist, always on.*
+> *Your personal AI beauty stylist — discover your palette, style your wardrobe, and book verified parlours near you.*
 
-GlamMatch is a web application that provides personalized colour palette recommendations, styling tips, wardrobe outfit suggestions, makeup product recommendations, and face shape analysis — all based on a user's skin undertone, body type, and facial structure. It also connects users with nearby beauty parlours for appointment booking, chat, and reviews.
+GlamMatch is a Flask + JavaScript single-page web application for personalized beauty and styling recommendations. It includes undertone analysis, body type and face shape suggestions, wardrobe outfit generation, product recommendations, and a complete parlour booking workflow with admin verification, CNIC document review, client-parlour chat, booking rules, and role-based notifications.
 
 ---
 
 ## 👩‍💻 Team Members
 
 | Name | Roll Number | Role |
-|------|------------|------|
+|------|-------------|------|
 | Ayza Ahmed | 24L-2577 | Project Lead & Requirements Engineer |
 | Eman Adil | 24L-2589 | Backend & Database Developer |
 | Anoushay Fatima | 24L-2585 | Frontend Developer, UI/UX & QA Tester |
@@ -19,262 +19,244 @@ GlamMatch is a web application that provides personalized colour palette recomme
 ## 🛠️ Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| **Backend** | Python 3.8+, Flask (REST API) |
-| **Frontend** | HTML5, CSS3, JavaScript (Single Page App) |
-| **Database** | SQLite (auto-created on first run) |
-| **Auth** | JWT (JSON Web Tokens, 24-hour expiry) |
-| **AI / Analysis** | face-api.js (TinyFaceDetector + FaceLandmark68Net) |
-| **Version Control** | Git & GitHub |
+|---|---|
+| Backend | Python 3.8+, Flask REST API |
+| Frontend | HTML5, CSS3, JavaScript single-page app |
+| Database | SQLite |
+| Authentication | JWT bearer tokens |
+| AI / Analysis | face-api.js local model files |
+| Storage | SQLite text/BLOB-style base64 document storage for prototype CNIC uploads |
 
 ---
 
 ## 📁 Project Structure
 
-```
-GlamMatch/
+```text
+GLAMMATCH/
 ├── Backend/
-│   ├── app.py                  ← Flask REST API (all routes, all sprints)
-│   ├── glammatch.db            ← SQLite database (auto-created on first run)
-│   ├── requirements.txt        ← Python dependencies
-│   └── env.example             ← Environment variables template
+│   ├── app.py              # Flask backend and API routes
+│   ├── glammatch.db        # SQLite database; generated/updated locally
+│   ├── requirements.txt    # Python dependencies
+│   └── env.example         # Optional environment variables
 ├── Frontend/
-│   └── index.html              ← Full Single Page Application
-│   └── models/                 ← face-api.js model files (served at /models/)
-│       ├── tiny_face_detector_model-shard1
-│       ├── tiny_face_detector_model-weights_manifest.json
-│       ├── face_landmark_68_model-shard1
-│       └── face_landmark_68_model-weights_manifest.json
-│   └── images/                 ← Hairstyle, hijab, earring reference images
+│   ├── index.html          # Complete SPA frontend
+│   └── models/             # face-api.js model files
 ├── database/
-│   ├── schema.sql              ← Database tables DDL (all sprints)
-│   └── seed.sql                ← Sample test data (all sprints)
+│   ├── schema.sql          # Updated database schema reference
+│   └── seed.sql            # Optional sample data notes/seeds
 ├── docs/
-│   ├── api-docs.md             ← Full API documentation
-│   ├── report.docs/
-│   │   ├── Iteration 0.docx    ← Project proposal
-│   │   ├── Iteration 1.docx    ← Sprint 1 report
-│   │   ├── Iteration 2.docx    ← Sprint 2 report
-│   │   └── Iteration 3.docx    ← Sprint 3 report
+│   └── api-docs.md         # Updated API documentation
 ├── .gitignore
 └── README.md
 ```
 
 ---
 
-## ✅ Sprint 1 Features
+## ✅ Main Functional Modules
 
-| User Story | Feature | Status |
-|-----------|---------|--------|
-| US-01 | User Registration & Secure Login | ✅ Complete |
-| US-02 | Undertone Quiz (6 questions with colour swatches) | ✅ Complete |
-| US-03 | Personalized Colour Palette (clothing + makeup) | ✅ Complete |
-| US-04 | Styling Tips + Bookmarks | ✅ Complete |
-| US-05 | Body Type Quiz & Recommendations | ✅ Complete |
+### 1. User Authentication
+
+- User registration and login.
+- JWT token-based protected routes.
+- Forgot/reset password flow.
+- Localhost now opens the welcome/login screen first instead of automatically opening a saved session home page.
+
+### 2. Style Analysis
+
+- Undertone quiz and personalized color palette.
+- Skin tone and face shape result saving from photo analysis.
+- Manual face shape quiz.
+- Body type quiz and style recommendations.
+- Hairstyle, hijab, and earring suggestions based on face shape.
+
+### 3. Wardrobe and Products
+
+- Add wardrobe items.
+- Generate event-based outfit suggestions.
+- Save favorite outfits.
+- View makeup/clothing product recommendations.
+- Add/remove products from wishlist.
+
+### 4. Parlour Portal
+
+The parlour portal now has only two main cards:
+
+1. **Register Your Parlour**
+2. **Find Parlours**
+
+The old top-navbar **My Bookings** entry was removed. Client bookings are accessed from the Find Parlours / booking flow.
 
 ---
 
-## ✅ Sprint 2 Features
+## 🏪 Parlour Registration and Owner Dashboard
 
-| User Story | Feature | Status |
-|-----------|---------|--------|
-| US-06 | Upload selfie and get skin tone / undertone estimate | ✅ Complete |
-| US-07 | Detect face shape from uploaded photo or manual quiz | ✅ Complete |
-| US-08 | Makeup and clothing product recommendations + wishlist | ✅ Complete |
-| US-09 | Upload wardrobe items and get event-based outfit suggestions | ✅ Complete |
-| US-10 | Face shape–based style suggestions (hairstyle, hijab & earrings) | ✅ Complete |
+### Parlour Registration
+
+A parlour owner can register a parlour with:
+
+- Parlour name
+- Owner name
+- Phone and email
+- Address, city, area
+- Services
+- Opening time and closing time
+- Working days
+- Price range
+- Description
+- CNIC number
+- CNIC front upload
+- CNIC back upload
+
+### CNIC Verification Flow
+
+- CNIC must contain exactly 13 digits.
+- CNIC front/back documents are uploaded during registration.
+- New parlours start with `pending` status.
+- Admin reviews CNIC documents and approves/rejects the parlour.
+- Only `approved` parlours are visible in Find Parlours.
+
+### Owner Dashboard
+
+If the user has already registered a parlour, **Register Your Parlour** opens the owner dashboard instead of showing the registration form again.
+
+Owner dashboard includes:
+
+- Parlour details
+- Verification status
+- Edit details option
+- Bookings received for that parlour
+- Owner-side role-based notifications
+- Client-parlour chat for active bookings
 
 ---
 
-## ✅ Sprint 3 Features
+## 🔐 Admin Portal
 
-| User Story | Feature | Status |
-|-----------|---------|--------|
-| US-11 | Find nearby salons with search bar and filters (service, price, category) | ✅ Complete |
-| US-12 | View full salon profile with services catalog and reviews | ✅ Complete |
-| US-13 | Request appointment booking and track status (Pending / Confirmed / Rejected / Alternate / Completed / Cancelled) | ✅ Complete |
-| US-14 | Chat between client and salon (accessible from bookings list and salon profile) | ✅ Complete |
-| US-15 | Rate and review salon after appointment is marked completed | ✅ Complete |
+Admin portal is protected by an admin code.
+
+Default admin code:
+
+```text
+12345678
+```
+
+Optional environment variable:
+
+```bash
+GLAMMATCH_ADMIN_CODE=your_admin_code_here
+```
+
+Admin portal capabilities:
+
+- Password/code required every time admin portal is opened.
+- View pending, approved, rejected parlours.
+- Open CNIC front/back documents in the in-page viewer.
+- Approve, reject, or mark parlour pending.
+- View all bookings.
+
+---
+
+## 📅 Booking Rules
+
+Clients can book only approved parlours.
+
+Validation checks include:
+
+- Past date/time is blocked.
+- Booking more than 90 days in advance is blocked.
+- Closed days are blocked.
+- Times outside parlour opening/closing hours are blocked.
+- Duplicate active booking for the same parlour and exact time slot is blocked.
+- Selected service must be offered by that parlour.
+- Client name and phone are validated.
+- Booking note is limited to 500 characters.
+
+### Cancellation / Rejection Rules
+
+- Client can cancel only pending/confirmed bookings.
+- Client cannot cancel within 2 hours of appointment time.
+- Parlour can reject only pending/confirmed bookings.
+- Parlour cannot reject within 2 hours of appointment time.
+
+### Completion Rule
+
+- Parlour owner cannot manually complete a booking.
+- Booking becomes `completed` automatically only after the appointment time passes.
+- Once completed/cancelled/rejected, chat and actions close.
+
+---
+
+## 💬 Chat System
+
+- Chat is linked to a specific booking.
+- Client and parlour owner can message each other only while the booking is active.
+- Chat hides after booking is cancelled, rejected, completed, or appointment time passes.
+- Chat uses WhatsApp/Instagram-style message distinction:
+  - Current user's messages appear on the right.
+  - Other side's messages appear on the left.
+  - Labels show `You: Client`, `You: Parlour`, `Client: Name`, or `Parlour`.
+
+---
+
+## 🔔 Notifications
+
+In-app notifications are role-based:
+
+- If the **client cancels**, the **parlour owner** receives a notification.
+- If the **parlour rejects**, the **client** receives a notification.
+- Client notifications show in My Bookings.
+- Owner notifications show in Owner Dashboard.
+- Notifications can be marked as read.
 
 ---
 
 ## 🚀 How to Run
 
-### Prerequisites
-- Python 3.8 or higher
-- pip (Python package manager)
-
-### Backend Setup
+### 1. Install requirements
 
 ```bash
 cd Backend
 pip install -r requirements.txt
+```
+
+### 2. Run Flask backend
+
+```bash
 python app.py
 ```
 
-You should see:
+### 3. Open in browser
 
-```
-GlamMatch Sprint 3 — http://localhost:5000
-```
-
-### Frontend
-
-The Flask server serves the frontend automatically. Open your browser and go to:
-
-```
+```text
 http://localhost:5000
 ```
 
-> **Note on face-api.js models:** The four model files are inside `Frontend/models/`. Flask serves them at `/models/`. If the local models are unavailable, the app automatically falls back to the vladmandic CDN, so face detection still works.
-
-> **Note on database:** The SQLite database (`glammatch.db`) is auto-created and seeded with salons, services, and sample data on first run. If you want a fresh database, simply delete `glammatch.db` and restart the app.
+The backend serves the frontend automatically.
 
 ---
 
-## 🌐 Application Screens
+## 🗄️ Database Notes
 
-| Screen | Description | Sprint |
-|--------|-------------|--------|
-| **Login** | Secure login with email & password | 1 |
-| **Register** | Create new account with field validation | 1 |
-| **Forgot / Reset Password** | Email-based password reset with expiring token | 1 |
-| **Home** | Landing page with feature overview | 1 |
-| **Style Analysis — Skin Tone** | Upload photo or take quiz → undertone + colour palette | 1–2 |
-| **Style Analysis — Face Shape** | Upload selfie or take manual quiz → face shape + style suggestions | 2 |
-| **Style Analysis — Body Type** | 5-question quiz → body type with styling tips | 1 |
-| **Wardrobe** | Add clothing items; generate event-based outfit combinations | 2 |
-| **Products** | Makeup & clothing recommendations by undertone; wishlist | 2 |
-| **Salon Finder** | Search + filter salons by service, price, category; distance badges | 3 |
-| **Salon Profile** | Full profile with services catalog, reviews, and chat option | 3 |
-| **Book Appointment** | Select service, date/time, add note, submit booking request | 3 |
-| **My Bookings** | Track all bookings with status tracker; cancel, accept alternate, mark completed | 3 |
-| **Chat** | WhatsApp-style message thread per booking (auto-refreshes every 5s) | 3 |
-| **Leave a Review** | 5-star rating + text review after appointment is completed | 3 |
+- SQLite database is stored as `Backend/glammatch.db`.
+- The backend creates missing tables automatically.
+- Existing databases are migrated with missing columns where needed.
+- Do not commit `glammatch.db` to GitHub because `.gitignore` excludes database files.
+- For a clean test, delete `Backend/glammatch.db` and restart the backend.
 
 ---
 
-## 🔌 API Endpoints
+## 🔌 API Documentation
 
-Full documentation is in `docs/api-docs.md`. Summary below:
+Full updated API documentation is available in:
 
-### Auth
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/register` | ❌ | Register new user |
-| POST | `/api/login` | ❌ | Login, returns JWT token |
-| GET | `/api/profile` | ✅ | Get user profile |
-| POST | `/api/forgot-password` | ❌ | Request password reset email |
-| POST | `/api/reset-password` | ❌ | Reset password with token |
-
-### Undertone Quiz & Palette
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/quiz/undertone/questions` | ✅ | Get undertone quiz questions |
-| POST | `/api/quiz/undertone/submit` | ✅ | Submit answers, get undertone result |
-| GET | `/api/palette` | ✅ | Get personalized colour palette |
-| GET | `/api/tips` | ✅ | Get styling tips for undertone |
-| POST | `/api/bookmarks` | ✅ | Toggle tip bookmark |
-
-### Body Type Quiz
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/quiz/bodytype/questions` | ✅ | Get body type quiz questions |
-| POST | `/api/quiz/bodytype/submit` | ✅ | Submit answers, get body type result |
-
-### Photo Analysis & Face Shape
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/photo/save-result` | ✅ | Save skin tone + face shape from photo analysis |
-| GET | `/api/face-shape` | ✅ | Get saved face shape |
-| GET | `/api/face-shape/quiz/questions` | ✅ | Get manual face shape quiz questions |
-| POST | `/api/face-shape/quiz/submit` | ✅ | Submit manual quiz, get face shape |
-
-### Style Suggestions
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/style-suggestions` | ✅ | Get hairstyle/hijab/earring suggestions |
-| POST | `/api/bookmarks/style` | ✅ | Toggle style suggestion bookmark |
-
-### Wardrobe & Outfits
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/wardrobe` | ✅ | Get all wardrobe items |
-| POST | `/api/wardrobe` | ✅ | Add wardrobe item |
-| DELETE | `/api/wardrobe/<id>` | ✅ | Delete wardrobe item |
-| POST | `/api/wardrobe/outfit` | ✅ | Generate event-based outfit combinations |
-| POST | `/api/wardrobe/favourite` | ✅ | Save a favourite outfit |
-
-### Products & Wishlist
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/products` | ✅ | Get makeup/clothing recommendations by undertone |
-| GET | `/api/wishlist` | ✅ | Get user's saved wishlist |
-| POST | `/api/wishlist` | ✅ | Toggle product in wishlist |
-
-### Parlour Portal — Sprint 3
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/parlour/register` | ✅ | Register a new parlour (submitted for admin review) |
-| GET | `/api/parlour/list` | ✅ | List all approved parlours; optional `?city=Lahore` filter |
-| GET | `/api/parlour/<id>` | ✅ | Full detail for a single parlour including phone |
-| POST | `/api/parlour/booking` | ✅ | Create an appointment booking |
-| GET | `/api/parlour/my-bookings` | ✅ | Get all bookings for the logged-in user (persists after re-login) |
-| POST | `/api/parlour/chat` | ✅ | Automated bot reply; pass `parlour_id` to get parlour phone from DB |
-| GET | `/api/parlour/booking-chat/<id>` | ✅ | Get chat messages for a specific booking thread |
-| POST | `/api/parlour/booking-chat/<id>` | ✅ | Send a message in a booking-specific chat thread |
-| GET | `/api/parlour/stats` | ❌ | Public stats for landing page (no auth needed) |
+```text
+docs/api-docs.md
+```
 
 ---
 
-## 🗄️ Database Tables
+## Suggested Commit Message
 
-| Table | Description | Sprint |
-|-------|-------------|--------|
-| `users` | User accounts — name, email, password hash, undertone, body type, face shape | 1 |
-| `quiz_log` | All quiz submissions with answers and results | 1 |
-| `wardrobe` | Clothing items per user — category, style tag, colour | 1 |
-| `bookmarks` | Saved styling tip IDs per user | 1 |
-| `password_reset_tokens` | Active password reset tokens with 1-hour expiry | 1 |
-| `photo_analysis` | Skin tone and face shape results from photo uploads | 2 |
-| `product_recommendations` | Makeup and clothing products seeded by undertone | 2 |
-| `wishlist` | User-saved products from recommendations | 2 |
-| `style_suggestions` | Hairstyle, hijab, earring suggestions per face shape | 2 |
-| `style_bookmarks` | User-saved style suggestions | 2 |
-| `parlours` | Parlour profiles — name, owner, **phone**, address, services, status | 3 |
-| `parlour_bookings` | Appointment requests linked to `user_id` for cross-session persistence | 3 |
-| `parlour_chat_log` | Automated chat replies per booking; reply includes parlour phone from DB | 3 |
-
----
-
-## 🔒 Security Notes
-
-- Passwords are hashed using SHA-256 before storing
-- Authentication uses JWT tokens with a 24-hour expiry
-- Never commit the `.env` file — use `env.example` as a template
-- Privacy option available when uploading photos (keep or delete after analysis)
-- Existing databases automatically migrate to add new columns without data loss
-
----
-
-## 📋 Submission Checklist
-
-- [x] Repository set to Public
-- [x] All team members have commits
-- [x] README.md complete and up to date
-- [x] Backend with `requirements.txt`
-- [x] Frontend source code (`index.html`)
-- [x] Database `schema.sql` and `seed.sql`
-- [x] API documentation (`docs/api-docs.md`)
-- [x] `.gitignore` configured
-- [x] `env.example` (no real secrets committed)
-- [x] `docs/` folder with all iteration documents (Iteration 0–3)
-- [x] `Frontend/models/` folder with face-api.js model files
+```text
+Update GlamMatch parlour workflow docs and implement verified booking system
+```

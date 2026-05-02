@@ -145,6 +145,7 @@ INSERT OR IGNORE INTO style_suggestions (face_shape, category, suggestion_name, 
 -- SPRINT 3 SEED DATA
 -- ============================================================
 
+
 -- SALONS
 INSERT OR IGNORE INTO salons (name, address, category, price_range, rating, review_count, working_hours, phone, description) VALUES
 ('Glamour Studio',    '12 Mall Road, Lahore',       'women',  'mid',     4.7, 38, '10:00 AM – 9:00 PM',  '+92-300-1234567', 'Premium beauty studio specializing in bridal and editorial makeup.'),
