@@ -684,10 +684,10 @@ body.dark-mode .pp-choice-card.glow-card:hover{background-color:rgba(40,20,48,.9
     <div class="login-card glow-card fade" id="login-card">
       <h2>Welcome Back</h2>
       <p class="sub">No account? <a onclick="transitionToRegister()">Create one</a></p>
-      <input class="field" type="email" id="li-email" placeholder="Email" oninput="checkLoginBtn()"/>
+      <input class="field" type="email" id="li-email" placeholder="Email" oninput="checkLoginBtn()" autocomplete="off"/>
       <div class="pw-field-wrap">
         <input class="field" type="password" id="li-pw" placeholder="Password"
-          oninput="checkLoginBtn()" onkeydown="if(event.key==='Enter')doLogin()"/>
+          oninput="checkLoginBtn()" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off"/>
         <button class="pw-show-btn" type="button" id="li-pw-toggle"
           onclick="togglePwVisibility('li-pw','li-pw-toggle')" title="Show/hide password">👁</button>
       </div>
@@ -767,10 +767,10 @@ body.dark-mode .pp-choice-card.glow-card:hover{background-color:rgba(40,20,48,.9
       <h2>Create Account</h2>
       <p class="sub">Have an account? <a onclick="go('screen-login')" style="color:var(--rose);font-weight:700;cursor:pointer;">Sign in</a></p>
       <input class="field" type="text" id="rg-name" placeholder="Full Name" oninput="checkRegisterBtn()"/>
-      <input class="field" type="email" id="rg-email" placeholder="Email" oninput="checkRegisterBtn()"/>
+      <input class="field" type="email" id="rg-email" placeholder="Email" oninput="checkRegisterBtn()" autocomplete="off"/>
       <div class="pw-field-wrap">
         <input class="field" type="password" id="rg-pw" placeholder="Password (8+ chars, 1 number)"
-          oninput="checkRegisterBtn();updatePwConfirm()"/>
+          oninput="checkRegisterBtn();updatePwConfirm()" autocomplete="new-password"/>
         <button class="pw-show-btn" type="button" id="rg-pw-toggle"
           onclick="togglePwVisibility('rg-pw','rg-pw-toggle')" title="Show/hide password">👁</button>
       </div>
@@ -781,7 +781,7 @@ body.dark-mode .pp-choice-card.glow-card:hover{background-color:rgba(40,20,48,.9
           <div class="pw-confirm-bg" id="pw-confirm-bg"></div>
           <div class="pw-confirm-dots" id="pw-confirm-dots"></div>
         </div>
-        <input class="field" type="password" id="rg-pw2" placeholder="Re-enter password" oninput="checkRegisterBtn()" style="margin-bottom:.3rem;"/>
+        <input class="field" type="password" id="rg-pw2" placeholder="Re-enter password" oninput="checkRegisterBtn()" style="margin-bottom:.3rem;" autocomplete="new-password"/>
       </div>
       <div id="rg-err" class="err-msg" style="display:none"></div>
       <button class="btn-submit" id="rg-btn" onclick="doRegister()" disabled>Create Account</button>
@@ -1744,8 +1744,20 @@ window.onload=async()=>{
 function setNavNames(){
   document.querySelectorAll("[id^='nav-name']").forEach(e=>{if(e)e.textContent=userName;});
 }
-function clearSession(){token=null;localStorage.removeItem("gm_tok");userUndertone=null;userBodyType=null;faceShape=null;}
-
+function clearSession(){
+    token=null;
+    localStorage.removeItem("gm_tok");
+    userUndertone=null;
+    userBodyType=null;
+    faceShape=null;
+    
+    document.getElementById('li-email').value='';
+    document.getElementById('li-pw').value='';
+    document.getElementById('rg-name').value='';
+    document.getElementById('rg-email').value='';
+    document.getElementById('rg-pw').value='';
+    document.getElementById('rg-pw2').value='';
+}
 // ── Auth ──────────────────────────────────────────────────────
 async function doLogin(){
   const email=document.getElementById("li-email").value.trim();
