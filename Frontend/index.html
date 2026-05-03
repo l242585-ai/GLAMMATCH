@@ -537,12 +537,64 @@ body.dark-mode .suggestion-card{background:#1A1020;border-color:#3A2035;}
 
 /* Reset screen */
 #screen-reset{background:linear-gradient(170deg,#C85070 0%,#D97A90 35%,#EBB0BC 65%,#F5D0D8 100%);}
+
+/* ── FLOATING BUBBLES (day mode only) ────────────────────────── */
+.bubbles-bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+body.dark-mode .bubbles-bg{display:none;}
+.bubble{position:absolute;border-radius:50%;pointer-events:none;will-change:transform,opacity;}
+@keyframes bubbleFloat{
+  0%{transform:translateY(0) scale(1);opacity:0;}
+  10%{opacity:1;}
+  85%{opacity:.7;}
+  100%{transform:translateY(-110vh) scale(1.1);opacity:0;}
+}
+
+/* ── ENHANCED CHARACTER SYSTEM ────────────────────────────────── */
+.char{transform-origin:bottom center;will-change:transform;}
+.char-pupil{will-change:transform;}
+
+/* Login transition states */
+.login-left{transition:flex .7s cubic-bezier(.4,0,.2,1);}
+.login-right{transition:width .7s cubic-bezier(.4,0,.2,1),opacity .5s ease;}
+#screen-login.expanding .login-left{flex:100 !important;}
+#screen-login.expanding .login-right{width:0 !important;overflow:hidden;opacity:0;}
+#screen-login.expanding .login-characters{transform:translateX(0) scale(1.1);transition:transform .6s cubic-bezier(.4,0,.2,1) .15s;}
+#screen-login.sliding .login-characters{transform:translateX(40px) scale(1.05);transition:transform .4s cubic-bezier(.4,0,.2,1);}
+
+/* Password toggle */
+.pw-toggle-wrap{position:relative;width:100%;}
+.pw-toggle-wrap .field{width:100%;padding-right:2.8rem !important;}
+.pw-toggle-btn{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-light);font-size:.9rem;padding:.2rem;line-height:1;transition:color var(--trans);}
+.pw-toggle-btn:hover{color:var(--rose);}
+
+/* Register page character strip */
+.reg-chars-strip{display:flex;align-items:flex-end;justify-content:center;gap:6px;height:140px;width:100%;margin-bottom:.5rem;overflow:visible;}
+
+/* Parlour portal cards - slightly darker pink */
+#screen-parlour-portal .pp-choice-card.glow-card{
+  --backdrop:rgba(192,84,106,.12);
+  --backup-border:rgba(192,84,106,.3);
+  box-shadow:0 4px 24px rgba(192,84,106,.2);
+}
+#screen-parlour-portal .pp-choice-card.glow-card:hover{
+  box-shadow:0 8px 40px rgba(192,84,106,.35);
+}
+
+/* Admin tab highlight fix */
+.pp-admin-tabs{display:flex;gap:.45rem;flex-wrap:wrap;}
+.pp-admin-tabs .btn-admin-tab{padding:.45rem 1rem;border-radius:var(--r-pill);font-size:.78rem;font-weight:700;cursor:pointer;transition:all var(--trans);border:1.5px solid transparent;}
+.pp-admin-tabs .btn-admin-tab.tab-outline{border-color:var(--rose);background:transparent;color:var(--rose);}
+.pp-admin-tabs .btn-admin-tab.tab-fill{background:linear-gradient(135deg,#C0546A,#A03050);color:#fff;border-color:transparent;}
+.pp-admin-tabs .btn-admin-tab:hover{opacity:.85;}
+
 </style>
 </head>
 <body>
 
 <!-- Stars background for dark mode -->
 <div class="stars-bg" id="stars-bg"></div>
+<!-- Floating bubbles for day mode -->
+<div class="bubbles-bg" id="bubbles-bg"></div>
 
 <div class="toast" id="toast"></div>
 
@@ -625,7 +677,10 @@ body.dark-mode .suggestion-card{background:#1A1020;border-color:#3A2035;}
       <h2>Welcome Back</h2>
       <p class="sub">No account? <a onclick="transitionToRegister()">Create one</a></p>
       <input class="field" type="email" id="li-email" placeholder="Email" oninput="checkLoginBtn()"/>
-      <input class="field" type="password" id="li-pw" placeholder="Password" oninput="checkLoginBtn()" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <div class="pw-toggle-wrap">
+        <input class="field" type="password" id="li-pw" placeholder="Password" oninput="checkLoginBtn()" onkeydown="if(event.key==='Enter')doLogin()"/>
+        <button class="pw-toggle-btn" type="button" id="li-pw-toggle" onclick="toggleLoginPw()" title="Show/hide password">👁</button>
+      </div>
       <div id="li-err" class="err-msg" style="display:none"></div>
       <button class="btn-submit" id="li-btn" onclick="doLogin()" disabled>Sign In</button>
       <div style="text-align:center;margin-top:.7rem;">
@@ -647,11 +702,36 @@ body.dark-mode .suggestion-card{background:#1A1020;border-color:#3A2035;}
   </div>
   <div class="reg-right">
     <div class="reg-card glow-card fade">
+      <!-- Register page characters -->
+      <div class="reg-chars-strip" id="reg-chars">
+        <div class="char" id="rc1" style="width:70px;height:110px;background:linear-gradient(160deg,#F4A0B8,#E8709A);z-index:2;border-radius:35px 35px 0 0;">
+          <div class="char-eyes" id="rc1-eyes" style="top:22px;left:16px;">
+            <div class="char-eye" id="rc1-eye1" style="width:16px;height:16px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:height .15s ease;"><div class="char-pupil" style="width:8px;height:8px;background:#2D2D2D;border-radius:50%;"></div></div>
+            <div class="char-eye" id="rc1-eye2" style="width:16px;height:16px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:height .15s ease;"><div class="char-pupil" style="width:8px;height:8px;background:#2D2D2D;border-radius:50%;"></div></div>
+          </div>
+          <div class="char-mouth" style="width:18px;height:5px;bottom:32px;left:26px;border-radius:0 0 8px 8px;background:#C04070;"></div>
+        </div>
+        <div class="char" id="rc2" style="width:55px;height:85px;background:linear-gradient(160deg,#C8B4E8,#A890D0);z-index:1;border-radius:28px 28px 0 0;">
+          <div class="char-eyes" id="rc2-eyes" style="top:16px;left:12px;">
+            <div class="char-eye" style="width:13px;height:13px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:height .15s ease;"><div class="char-pupil" style="width:6px;height:6px;background:#2D2D2D;border-radius:50%;"></div></div>
+            <div class="char-eye" style="width:13px;height:13px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:height .15s ease;"><div class="char-pupil" style="width:6px;height:6px;background:#2D2D2D;border-radius:50%;"></div></div>
+          </div>
+        </div>
+        <div class="char" id="rc3" style="width:80px;height:100px;background:linear-gradient(160deg,#F4C4A8,#ECA888);z-index:3;border-radius:40px 40px 0 0;">
+          <div class="char-eyes" id="rc3-eyes" style="top:20px;left:18px;">
+            <div class="char-eye" style="width:14px;height:14px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:height .15s ease;"><div class="char-pupil" style="width:7px;height:7px;background:#2D2D2D;border-radius:50%;"></div></div>
+            <div class="char-eye" style="width:14px;height:14px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:height .15s ease;"><div class="char-pupil" style="width:7px;height:7px;background:#2D2D2D;border-radius:50%;"></div></div>
+          </div>
+        </div>
+      </div>
       <h2>Create Account</h2>
       <p class="sub">Have an account? <a onclick="go('screen-login')" style="color:var(--rose);font-weight:700;cursor:pointer;">Sign in</a></p>
       <input class="field" type="text" id="rg-name" placeholder="Full Name" oninput="checkRegisterBtn()"/>
       <input class="field" type="email" id="rg-email" placeholder="Email" oninput="checkRegisterBtn()"/>
-      <input class="field" type="password" id="rg-pw" placeholder="Password (8+ chars, 1 number)" oninput="checkRegisterBtn();updatePwConfirm()"/>
+      <div class="pw-toggle-wrap">
+        <input class="field" type="password" id="rg-pw" placeholder="Password (8+ chars, 1 number)" oninput="checkRegisterBtn();updatePwConfirm()"/>
+        <button class="pw-toggle-btn" type="button" id="rg-pw-toggle" onclick="toggleRegPw()" title="Show/hide password">👁</button>
+      </div>
       <!-- Password confirmation -->
       <div class="pw-confirm-wrap" id="pw-confirm-wrap" style="display:none;">
         <div style="font-size:.72rem;font-weight:700;color:var(--text-med);margin-bottom:.3rem;">Confirm Password</div>
@@ -1311,11 +1391,11 @@ body.dark-mode .suggestion-card{background:#1A1020;border-color:#3A2035;}
         <span id="pp-admin-msg" style="font-size:.78rem;color:var(--text-light);"></span>
       </div>
       <div id="pp-admin-panel" style="display:none;flex-direction:column;gap:1rem;">
-        <div style="display:flex;gap:.45rem;flex-wrap:wrap;">
-          <button class="btn-nav-fill" onclick="ppAdminLoadParlours('pending')">Pending Parlours</button>
-          <button class="btn-nav-outline" onclick="ppAdminLoadParlours('approved')">Approved</button>
-          <button class="btn-nav-outline" onclick="ppAdminLoadParlours('rejected')">Rejected</button>
-          <button class="btn-nav-outline" onclick="ppAdminLoadBookings()">All Bookings</button>
+        <div class="pp-admin-tabs" id="pp-admin-tabs">
+          <button class="btn-admin-tab tab-fill" data-tab="pending" onclick="ppAdminSwitchTab(this,'pending')">Pending Parlours</button>
+          <button class="btn-admin-tab tab-outline" data-tab="approved" onclick="ppAdminSwitchTab(this,'approved')">Approved</button>
+          <button class="btn-admin-tab tab-outline" data-tab="rejected" onclick="ppAdminSwitchTab(this,'rejected')">Rejected</button>
+          <button class="btn-admin-tab tab-outline" data-tab="bookings" onclick="ppAdminSwitchTab(this,'bookings')">All Bookings</button>
         </div>
         <div id="pp-admin-content" style="display:flex;flex-direction:column;gap:.9rem;"></div>
       </div>
@@ -1335,6 +1415,242 @@ let analysisTab="skin";
 let wardrobeItems=[];
 let isDarkMode=localStorage.getItem("gm_dark")==="1";
 
+// ══════════════════════════════════════════════════════════════
+// A) FLOATING BUBBLES
+// ══════════════════════════════════════════════════════════════
+(function initBubbles(){
+  const container=document.getElementById('bubbles-bg');
+  if(!container)return;
+  const BUBBLE_COLORS=[
+    'rgba(255,182,193,0.55)','rgba(255,192,203,0.5)','rgba(255,160,180,0.45)',
+    'rgba(173,216,230,0.5)','rgba(135,206,250,0.45)','rgba(180,190,254,0.5)',
+    'rgba(216,180,254,0.45)','rgba(244,164,196,0.5)','rgba(255,200,221,0.55)'
+  ];
+  const bubbles=[];
+  function createBubble(){
+    const el=document.createElement('div');
+    el.className='bubble';
+    const size=30+Math.random()*90;
+    const color=BUBBLE_COLORS[Math.floor(Math.random()*BUBBLE_COLORS.length)];
+    const left=Math.random()*100;
+    const duration=12+Math.random()*16;
+    const delay=Math.random()*8;
+    el.style.cssText=`
+      width:${size}px;height:${size}px;
+      background:${color};
+      left:${left}%;
+      bottom:-120px;
+      animation:bubbleFloat ${duration}s ${delay}s ease-in forwards;
+      filter:blur(${0.5+Math.random()*1.5}px);
+    `;
+    container.appendChild(el);
+    const b={el,born:Date.now(),lifeMs:(duration+delay)*1000};
+    bubbles.push(b);
+    setTimeout(()=>{
+      el.remove();
+      const idx=bubbles.indexOf(b);
+      if(idx>-1)bubbles.splice(idx,1);
+    },(duration+delay+1)*1000);
+  }
+  function spawnLoop(){
+    if(!document.body.classList.contains('dark-mode')){
+      createBubble();
+    }
+    setTimeout(spawnLoop,600+Math.random()*800);
+  }
+  // Initial burst
+  for(let i=0;i<18;i++){
+    setTimeout(()=>{
+      if(!document.body.classList.contains('dark-mode'))createBubble();
+    },i*180);
+  }
+  spawnLoop();
+})();
+
+// ══════════════════════════════════════════════════════════════
+// B) CHARACTER SYSTEM (requestAnimationFrame based)
+// ══════════════════════════════════════════════════════════════
+let charMouseX=0,charMouseY=0;
+let pwTyping=false,pwVisible=false;
+let regPwVisible=false;
+let charRafRunning=false;
+// Smooth mouse tracking
+let _mx=0,_my=0;
+document.addEventListener('mousemove',e=>{_mx=e.clientX;_my=e.clientY;});
+
+// RAF-based eye update
+function startCharRaf(){
+  if(charRafRunning)return;
+  charRafRunning=true;
+  (function rafLoop(){
+    charMouseX+=((_mx-charMouseX)*0.12);
+    charMouseY+=((_my-charMouseY)*0.12);
+    updateCharEyes();
+    requestAnimationFrame(rafLoop);
+  })();
+}
+
+// All character configs (login + register)
+function getCharConfigs(){
+  return[
+    // Login chars
+    {eyesEl:document.getElementById("c1-eyes"),pupils:Array.from(document.querySelectorAll("#char1 .char-pupil")),maxDist:6,body:document.getElementById("char1")},
+    {eyesEl:document.getElementById("c2-eyes"),pupils:Array.from(document.querySelectorAll("#char2 .char-pupil")),maxDist:4,body:document.getElementById("char2")},
+    {eyesEl:document.getElementById("c3-eyes"),pupils:Array.from(document.querySelectorAll("#char3 .char-pupil")),maxDist:4,body:document.getElementById("char3")},
+    {eyesEl:document.getElementById("c4-eyes"),pupils:Array.from(document.querySelectorAll("#char4 .char-pupil")),maxDist:3,body:document.getElementById("char4")},
+    // Register chars
+    {eyesEl:document.getElementById("rc1-eyes"),pupils:Array.from(document.querySelectorAll("#rc1 .char-pupil")),maxDist:5,body:document.getElementById("rc1")},
+    {eyesEl:document.getElementById("rc2-eyes"),pupils:Array.from(document.querySelectorAll("#rc2 .char-pupil")),maxDist:3,body:document.getElementById("rc2")},
+    {eyesEl:document.getElementById("rc3-eyes"),pupils:Array.from(document.querySelectorAll("#rc3 .char-pupil")),maxDist:4,body:document.getElementById("rc3")},
+  ];
+}
+
+function updateCharEyes(){
+  getCharConfigs().forEach(({eyesEl,pupils,maxDist,body})=>{
+    if(!eyesEl||!pupils.length)return;
+    // Per-eye tracking using each eye's own bounding rect
+    const eyes=eyesEl.querySelectorAll('.char-eye');
+    eyes.forEach((eye,i)=>{
+      const pupil=eye.querySelector('.char-pupil');
+      if(!pupil)return;
+      if(pwVisible||regPwVisible){
+        // Looking down (covering eyes)
+        pupil.style.transform='translate(0,'+Math.round(maxDist*.8)+'px)';
+        return;
+      }
+      if(pwTyping&&!pwVisible&&!regPwVisible){
+        pupil.style.transform='translate(0,'+Math.round(maxDist)+'px)';
+        return;
+      }
+      const rect=eye.getBoundingClientRect();
+      if(rect.width===0)return;
+      const cx=rect.left+rect.width/2;
+      const cy=rect.top+rect.height/2;
+      const dx=charMouseX-cx;
+      const dy=charMouseY-cy;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      const angle=Math.atan2(dy,dx);
+      const d=Math.min(dist*.18,maxDist);
+      pupil.style.transform=`translate(${(Math.cos(angle)*d).toFixed(2)}px,${(Math.sin(angle)*d).toFixed(2)}px)`;
+    });
+    // Subtle body lean toward mouse
+    if(body){
+      const brect=body.getBoundingClientRect();
+      if(brect.width===0)return;
+      const bcx=brect.left+brect.width/2;
+      const bcy=brect.top+brect.height/2;
+      const leanX=Math.max(-3,Math.min(3,(charMouseX-bcx)*0.01));
+      body.style.transform=`rotate(${leanX.toFixed(2)}deg)`;
+    }
+  });
+}
+
+// Blink randomly
+function scheduleBlinking(){
+  const eyeGroups=[
+    Array.from(document.querySelectorAll("#char1 .char-eye")),
+    Array.from(document.querySelectorAll("#char2 .char-eye")),
+    Array.from(document.querySelectorAll("#rc1 .char-eye")),
+    Array.from(document.querySelectorAll("#rc2 .char-eye")),
+  ];
+  eyeGroups.forEach(group=>{
+    if(!group.length)return;
+    function doBlink(){
+      group.forEach(e=>{
+        const orig=e.style.height||getComputedStyle(e).height||'16px';
+        e.style.height='2px';
+        setTimeout(()=>{e.style.height=orig;},140);
+      });
+      setTimeout(doBlink,3000+Math.random()*4000);
+    }
+    setTimeout(doBlink,Math.random()*3000);
+  });
+}
+
+// ── Password visibility toggles ────────────────────────────────
+function toggleLoginPw(){
+  const inp=document.getElementById('li-pw');
+  const btn=document.getElementById('li-pw-toggle');
+  if(!inp)return;
+  pwVisible=inp.type==='password';
+  inp.type=pwVisible?'text':'password';
+  if(btn)btn.textContent=pwVisible?'🙈':'👁';
+  updateCharEyes();
+}
+function toggleRegPw(){
+  const inp=document.getElementById('rg-pw');
+  const btn=document.getElementById('rg-pw-toggle');
+  if(!inp)return;
+  regPwVisible=inp.type==='password';
+  inp.type=regPwVisible?'text':'password';
+  if(btn)btn.textContent=regPwVisible?'🙈':'👁';
+  updateCharEyes();
+}
+
+// ══════════════════════════════════════════════════════════════
+// C) LOGIN → REGISTER TRANSITION
+// ══════════════════════════════════════════════════════════════
+function transitionToRegister(){
+  const loginScreen=document.getElementById('screen-login');
+  const left=document.getElementById('login-left');
+  const right=document.getElementById('login-right');
+  // Phase 1: expand left full width, characters scale up and center
+  loginScreen.classList.add('expanding');
+  left.style.flex='1';
+  right.style.width='0';
+  right.style.opacity='0';
+  right.style.overflow='hidden';
+  right.style.padding='0';
+  // Phase 2: characters slide slightly right
+  setTimeout(()=>{
+    loginScreen.classList.remove('expanding');
+    loginScreen.classList.add('sliding');
+  },300);
+  // Phase 3: go to register
+  setTimeout(()=>{
+    loginScreen.classList.remove('sliding');
+    // Reset login panel styles
+    left.style.flex='';
+    right.style.width='';
+    right.style.opacity='';
+    right.style.overflow='';
+    right.style.padding='';
+    go('screen-register');
+  },700);
+}
+
+// ══════════════════════════════════════════════════════════════
+// E) ADMIN PANEL - tab highlight system
+// ══════════════════════════════════════════════════════════════
+function ppAdminSwitchTab(el,tab){
+  document.querySelectorAll('.pp-admin-tabs .btn-admin-tab').forEach(b=>{
+    b.classList.remove('tab-fill');
+    b.classList.add('tab-outline');
+  });
+  el.classList.remove('tab-outline');
+  el.classList.add('tab-fill');
+  if(tab==='bookings')ppAdminLoadBookings();
+  else ppAdminLoadParlours(tab);
+}
+
+// ══════════════════════════════════════════════════════════════
+// G) GLOW CARD CURSOR CLAMPING
+// ══════════════════════════════════════════════════════════════
+document.addEventListener("pointermove",e=>{
+  document.querySelectorAll(".glow-card").forEach(card=>{
+    const rect=card.getBoundingClientRect();
+    // Clamp cursor position inside card bounds for proper glow alignment
+    const clampedX=Math.max(rect.left,Math.min(rect.right,e.clientX));
+    const clampedY=Math.max(rect.top,Math.min(rect.bottom,e.clientY));
+    const relX=clampedX-rect.left;
+    const relY=clampedY-rect.top;
+    card.style.setProperty("--x",relX.toFixed(2));
+    card.style.setProperty("--xp",(relX/rect.width).toFixed(2));
+    card.style.setProperty("--y",relY.toFixed(2));
+    card.style.setProperty("--yp",(relY/rect.height).toFixed(2));
+  });
+});
+
 // ── Dark Mode ─────────────────────────────────────────────────
 function toggleDarkMode(){
   isDarkMode=!isDarkMode;
@@ -1346,9 +1662,11 @@ function applyDarkMode(){
     document.body.classList.add("dark-mode");
     document.querySelectorAll(".dark-toggle").forEach(b=>b.textContent="☀️");
     initStars();
+    const bb=document.getElementById('bubbles-bg');if(bb)bb.style.display='none';
   } else {
     document.body.classList.remove("dark-mode");
     document.querySelectorAll(".dark-toggle").forEach(b=>b.textContent="🌙");
+    const bb=document.getElementById('bubbles-bg');if(bb)bb.style.display='';
   }
 }
 function initStars(){
@@ -1365,67 +1683,6 @@ function initStars(){
   bg.appendChild(layer);
 }
 
-// ── Glow card spotlight effect ────────────────────────────────
-document.addEventListener("pointermove",e=>{
-  document.querySelectorAll(".glow-card").forEach(card=>{
-    card.style.setProperty("--x",e.clientX.toFixed(2));
-    card.style.setProperty("--xp",(e.clientX/window.innerWidth).toFixed(2));
-    card.style.setProperty("--y",e.clientY.toFixed(2));
-    card.style.setProperty("--yp",(e.clientY/window.innerHeight).toFixed(2));
-  });
-});
-
-// ── Login character eye tracking ──────────────────────────────
-let charMouseX=0,charMouseY=0;
-document.addEventListener("mousemove",e=>{charMouseX=e.clientX;charMouseY=e.clientY;updateCharEyes();});
-let pwTyping=false,pwVisible=false;
-function updateCharEyes(){
-  const chars=[
-    {eyes:document.getElementById("c1-eyes"),pupils:document.querySelectorAll("#char1 .char-pupil"),maxDist:6},
-    {eyes:document.getElementById("c2-eyes"),pupils:document.querySelectorAll("#char2 .char-pupil"),maxDist:4},
-    {eyes:document.getElementById("c3-eyes"),pupils:document.querySelectorAll("#char3 .char-pupil"),maxDist:4},
-    {eyes:document.getElementById("c4-eyes"),pupils:document.querySelectorAll("#char4 .char-pupil"),maxDist:3},
-  ];
-  chars.forEach(({eyes,pupils,maxDist})=>{
-    if(!eyes||!pupils.length)return;
-    const rect=eyes.getBoundingClientRect();
-    const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
-    const dx=charMouseX-cx,dy=charMouseY-cy;
-    const dist=Math.sqrt(dx*dx+dy*dy);
-    const angle=Math.atan2(dy,dx);
-    const d=Math.min(dist*.15,maxDist);
-    const px=Math.cos(angle)*d,py=Math.sin(angle)*d;
-    pupils.forEach(p=>{
-      if(pwTyping&&!pwVisible){p.style.transform="translate(0,6px)";return;}
-      if(pwVisible){p.style.transform="translate(0,-3px)";return;}
-      p.style.transform=`translate(${px}px,${py}px)`;
-    });
-  });
-}
-// Blink randomly
-function scheduleBlinking(){
-  const eyes=[
-    document.querySelectorAll("#char1 .char-eye"),
-    document.querySelectorAll("#char2 .char-eye"),
-  ];
-  eyes.forEach(group=>{
-    function doBlink(){
-      group.forEach(e=>{const orig=e.style.height||"22px";e.style.height="2px";setTimeout(()=>{e.style.height=orig;},150);});
-      setTimeout(doBlink,3000+Math.random()*4000);
-    }
-    setTimeout(doBlink,Math.random()*3000);
-  });
-}
-
-// ── Register transition ───────────────────────────────────────
-function transitionToRegister(){
-  const left=document.getElementById("login-left");
-  const right=document.getElementById("login-right");
-  left.style.transition="all .6s cubic-bezier(.4,0,.2,1)";
-  right.style.transition="all .6s cubic-bezier(.4,0,.2,1)";
-  left.style.flex="1.4";right.style.width="380px";
-  setTimeout(()=>go("screen-register"),400);
-}
 
 // ── Password confirm visual ───────────────────────────────────
 function updatePwConfirm(){
@@ -1499,6 +1756,7 @@ function setLoading(id,on,label){
 window.onload=async()=>{
   applyDarkMode();
   scheduleBlinking();
+  startCharRaf();
   if(new URLSearchParams(window.location.search).get("reset_token")){go("screen-reset");return;}
   // Always start from the login/welcome screen when localhost is opened.
   // This prevents an old saved session from jumping directly to Home.
@@ -2452,7 +2710,23 @@ function ppAdminOpenDoc(key){
     if(isData)setTimeout(()=>{if(!document.getElementById('pp-admin-doc-modal'))URL.revokeObjectURL(url);},60000);
   }catch(e){toast('Unable to open document. Please upload the CNIC file again.','err');}
 }
-function ppAdminParlourCard(p){return `<div class="glow-card" style="padding:1.1rem;border-radius:var(--r);"><div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;"><div><h3 style="font-family:var(--font-s);font-size:1.1rem;color:var(--text-main);">${p.name}</h3><div style="font-size:.8rem;color:var(--text-med);line-height:1.7;"><strong>Owner:</strong> ${p.owner} · <strong>Phone:</strong> ${p.phone}<br><strong>CNIC:</strong> ${p.masked_cnic||p.cnic||'—'} · <strong>City:</strong> ${p.city}${p.area?' / '+p.area:''}<br><strong>Services:</strong> ${(p.services||[]).join(', ')||'—'}<br><strong>Documents:</strong> ${ppAdminDocLink(p.cnic_front_file,'Open CNIC Front',`front_${p.id}`)} · ${ppAdminDocLink(p.cnic_back_file,'Open CNIC Back',`back_${p.id}`)}</div></div><div>${ppStatusBadge(p.status)}</div></div><div style="display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.85rem;"><button class="btn-nav-fill" onclick="ppAdminSetParlourStatus(${p.id},'approved')">Approve</button><button style="padding:.45rem 1rem;border:1.5px solid #F44336;border-radius:var(--r-pill);background:transparent;color:#F44336;font-size:.78rem;font-weight:800;cursor:pointer;" onclick="ppAdminSetParlourStatus(${p.id},'rejected')">Reject</button><button class="btn-nav-outline" onclick="ppAdminSetParlourStatus(${p.id},'pending')">Mark Pending</button></div></div>`;}
+function ppAdminParlourCard(p){
+  const isPending=!p.status||p.status==='pending';
+  const isApproved=p.status==='approved';
+  const isRejected=p.status==='rejected';
+  let actions='';
+  if(isPending){
+    actions=`<button class="btn-nav-fill" onclick="ppAdminSetParlourStatus(${p.id},'approved')">Approve</button>
+      <button style="padding:.45rem 1rem;border:1.5px solid #F44336;border-radius:var(--r-pill);background:transparent;color:#F44336;font-size:.78rem;font-weight:800;cursor:pointer;" onclick="ppAdminSetParlourStatus(${p.id},'rejected')">Reject</button>`;
+  } else if(isApproved){
+    actions=`<button class="btn-nav-outline" style="opacity:.6;cursor:default;" disabled>Approved</button>
+      <button class="btn-nav-outline" style="padding:.45rem 1rem;font-size:.78rem;" onclick="ppAdminSetParlourStatus(${p.id},'pending')">Mark Pending</button>`;
+  } else if(isRejected){
+    actions=`<button class="btn-nav-outline" style="opacity:.6;cursor:default;" disabled>Rejected</button>
+      <button class="btn-nav-outline" style="padding:.45rem 1rem;font-size:.78rem;" onclick="ppAdminSetParlourStatus(${p.id},'pending')">Mark Pending</button>`;
+  }
+  return `<div class="glow-card" style="padding:1.1rem;border-radius:var(--r);"><div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;"><div><h3 style="font-family:var(--font-s);font-size:1.1rem;color:var(--text-main);">${p.name}</h3><div style="font-size:.8rem;color:var(--text-med);line-height:1.7;"><strong>Owner:</strong> ${p.owner} · <strong>Phone:</strong> ${p.phone}<br><strong>CNIC:</strong> ${p.masked_cnic||p.cnic||'—'} · <strong>City:</strong> ${p.city}${p.area?' / '+p.area:''}<br><strong>Services:</strong> ${(p.services||[]).join(', ')||'—'}<br><strong>Documents:</strong> ${ppAdminDocLink(p.cnic_front_file,'Open CNIC Front',`front_${p.id}`)} · ${ppAdminDocLink(p.cnic_back_file,'Open CNIC Back',`back_${p.id}`)}</div></div><div>${ppStatusBadge(p.status)}</div></div><div style="display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.85rem;">${actions}</div></div>`;
+}
 async function ppAdminSetParlourStatus(id,status){const note=status==='approved'?'CNIC documents checked and approved.':'Admin updated verification status.';const{data,ok}=await ppAdminApi(`/admin/parlours/${id}/status`,'PUT',{status,note});if(ok){toast('Admin status updated.','ok');ppAdminLoadParlours(status==='approved'?'pending':'all');ppLoadApprovedParlours();}else toast(data.error||'Status update failed','err');}
 async function ppAdminLoadBookings(){const box=document.getElementById('pp-admin-content');box.innerHTML='<div class="glow-card" style="padding:1rem;border-radius:var(--r);color:var(--text-light);">Loading bookings…</div>';const{data,ok}=await ppAdminApi('/admin/bookings');if(!ok){box.innerHTML=`<div style="color:#F44336;">${data.error||'Unable to load bookings'}</div>`;return;}const rows=data.bookings||[];box.innerHTML=rows.length?rows.map(b=>`<div class="glow-card" style="padding:1rem;border-radius:var(--r);"><strong style="color:var(--text-main);">${b.client_name}</strong> booked <strong>${b.service}</strong> at <strong>${b.parlour_name}</strong><div style="font-size:.78rem;color:var(--text-light);margin-top:.25rem;">${b.datetime} · ${b.client_phone} · Status: ${b.status}</div></div>`).join(''):`<div class="glow-card" style="padding:1.4rem;border-radius:var(--r);text-align:center;color:var(--text-light);">No bookings found.</div>`;}
 
@@ -2626,13 +2900,19 @@ async function ppCancelBooking(id){
   const b=ppMyBookings.find(x=>x.id===id);if(!b)return;
   if(!ppBookingCanCancel(b)){toast('This booking cannot be cancelled now.','err');return;}
   if(!confirm('Cancel this booking request?'))return;
+  // Optimistic UI removal
+  b.status='cancelled';b.can_chat=false;b.can_cancel=false;
+  ppLoadMyBookings(); // instant UI update
   try{
     const{data,ok}=await api(`/parlour/booking/${id}/cancel`,'PUT',{});
     if(!ok)throw new Error(data.error||'Cancel failed');
-    b.status='cancelled';b.can_chat=false;b.can_cancel=false;
     toast('Booking cancelled. Notification sent.','ok');
+  }catch(e){
+    // Revert on failure
+    b.status='pending';b.can_cancel=true;
     ppLoadMyBookings();
-  }catch(e){toast(e.message,'err');}
+    toast(e.message,'err');
+  }
 }
 function ppBackFromBookingChat(){go(ppChatBackScreen||'screen-parlour-mybookings');}
 function ppPrepareChatHeader(b,mode){
