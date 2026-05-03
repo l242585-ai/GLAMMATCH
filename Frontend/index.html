@@ -66,6 +66,17 @@ body.dark-mode .stars-bg{display:block;}
 @keyframes starsMove{from{transform:translateY(0);}to{transform:translateY(-50%);}}
 .star{position:absolute;background:#fff;border-radius:50%;animation:twinkle ease-in-out infinite;}
 
+/* ── FLOATING BUBBLES (light mode only) ─────────────────────── */
+.bubbles-bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+body.dark-mode .bubbles-bg{display:none;}
+.bubble{position:absolute;border-radius:50%;pointer-events:none;will-change:transform,opacity;}
+@keyframes bubbleFloat{
+  0%  {transform:translateY(0) scale(1);  opacity:0;}
+  8%  {opacity:1;}
+  88% {opacity:.65;}
+  100%{transform:translateY(-115vh) scale(1.08);opacity:0;}
+}
+
 /* ── TOP NAV — PILL STYLE ────────────────────────────────────── */
 .topnav{display:flex;align-items:center;gap:0;background:var(--bg-nav);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
@@ -159,9 +170,10 @@ body.dark-mode .stars-bg{display:block;}
 .login-left{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;
   background:linear-gradient(150deg,#9A2840 0%,#C0546A 40%,#D9849A 70%,#EEC0C8 100%);
   position:relative;overflow:hidden;padding:2rem;}
-.login-characters{display:flex;align-items:flex-end;justify-content:center;gap:8px;height:220px;width:100%;max-width:400px;}
-.char{border-radius:60px 60px 0 0;position:relative;transition:all .6s cubic-bezier(.4,0,.2,1);}
-.char-eyes{position:absolute;display:flex;gap:8px;transition:all .5s ease;}
+/* Characters container — relative so absolutes inside are grounded */
+.login-characters{position:relative;height:230px;width:100%;max-width:420px;}
+.char{position:absolute;bottom:0;transition:height .6s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1);transform-origin:bottom center;}
+.char-eyes{position:absolute;display:flex;gap:8px;}
 .char-eye{border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:height .15s ease;}
 .char-pupil{border-radius:50%;transition:transform .1s ease-out;}
 .char-mouth{position:absolute;border-radius:50px;background:#2D2D2D;transition:all .2s ease;}
@@ -183,15 +195,18 @@ body.dark-mode .stars-bg{display:block;}
 /* ── REGISTER SCREEN ─────────────────────────────────────────── */
 #screen-register{flex-direction:row;}
 #screen-register.active{display:flex;}
-.reg-left{flex:1;display:flex;flex-direction:column;justify-content:center;padding:3rem 3rem;gap:1.4rem;
+.reg-left{width:340px;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;
+  padding:2.5rem 2rem 2.5rem 2.5rem;gap:1.2rem;
   background:linear-gradient(150deg,#9A2840 0%,#C0546A 40%,#D9849A 70%,#EEC0C8 100%);}
+/* Characters on right side of register — inside reg-right */
+.reg-chars-wrap{position:relative;height:200px;width:100%;max-width:380px;margin-bottom:.5rem;}
 .reg-title{font-family:var(--font-s);font-size:2.4rem;color:#fff;font-weight:700;line-height:1.1;}
 .reg-title em{color:rgba(255,255,255,.8);font-style:italic;}
 .feature-row{display:flex;align-items:center;gap:1rem;}
 .feature-icon-box{width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.15);
   display:flex;align-items:center;justify-content:center;font-size:1.1rem;border:1px solid rgba(255,255,255,.2);flex-shrink:0;}
 .feature-row span{font-size:.85rem;color:rgba(255,255,255,.92);}
-.reg-right{width:420px;display:flex;align-items:center;justify-content:center;padding:2rem;
+.reg-right{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;
   background:var(--bg-main);transition:background .3s;}
 .reg-card{background:var(--bg-card);border-radius:20px;padding:2.2rem 2rem 2.4rem;width:100%;
   box-shadow:var(--shadow-lg);border:1.5px solid var(--border-main);}
@@ -538,62 +553,35 @@ body.dark-mode .suggestion-card{background:#1A1020;border-color:#3A2035;}
 /* Reset screen */
 #screen-reset{background:linear-gradient(170deg,#C85070 0%,#D97A90 35%,#EBB0BC 65%,#F5D0D8 100%);}
 
-/* ── FLOATING BUBBLES (day mode only) ────────────────────────── */
-.bubbles-bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
-body.dark-mode .bubbles-bg{display:none;}
-.bubble{position:absolute;border-radius:50%;pointer-events:none;will-change:transform,opacity;}
-@keyframes bubbleFloat{
-  0%{transform:translateY(0) scale(1);opacity:0;}
-  10%{opacity:1;}
-  85%{opacity:.7;}
-  100%{transform:translateY(-110vh) scale(1.1);opacity:0;}
+/* ── PARLOUR PORTAL CARD GLOW OVERRIDES ──────────────────────── */
+.pp-choice-card{position:relative;overflow:hidden;}
+/* Use the glow-card CSS vars but scoped to card bounds */
+.pp-choice-card.glow-card{
+  background-color:#FDE8ED;
+  border:2px solid rgba(192,84,106,.35);
+  box-shadow:0 4px 24px rgba(192,84,106,.18);
 }
-
-/* ── ENHANCED CHARACTER SYSTEM ────────────────────────────────── */
-.char{transform-origin:bottom center;will-change:transform;}
-.char-pupil{will-change:transform;}
-
-/* Login transition states */
-.login-left{transition:flex .7s cubic-bezier(.4,0,.2,1);}
-.login-right{transition:width .7s cubic-bezier(.4,0,.2,1),opacity .5s ease;}
-#screen-login.expanding .login-left{flex:100 !important;}
-#screen-login.expanding .login-right{width:0 !important;overflow:hidden;opacity:0;}
-#screen-login.expanding .login-characters{transform:translateX(0) scale(1.1);transition:transform .6s cubic-bezier(.4,0,.2,1) .15s;}
-#screen-login.sliding .login-characters{transform:translateX(40px) scale(1.05);transition:transform .4s cubic-bezier(.4,0,.2,1);}
-
-/* Password toggle */
-.pw-toggle-wrap{position:relative;width:100%;}
-.pw-toggle-wrap .field{width:100%;padding-right:2.8rem !important;}
-.pw-toggle-btn{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-light);font-size:.9rem;padding:.2rem;line-height:1;transition:color var(--trans);}
-.pw-toggle-btn:hover{color:var(--rose);}
-
-/* Register page character strip */
-.reg-chars-strip{display:flex;align-items:flex-end;justify-content:center;gap:6px;height:140px;width:100%;margin-bottom:.5rem;overflow:visible;}
-
-/* Parlour portal cards - slightly darker pink */
-#screen-parlour-portal .pp-choice-card.glow-card{
-  --backdrop:rgba(192,84,106,.12);
-  --backup-border:rgba(192,84,106,.3);
-  box-shadow:0 4px 24px rgba(192,84,106,.2);
+.pp-choice-card.glow-card:hover{
+  background-color:#FDD0DA;
+  box-shadow:0 12px 40px rgba(192,84,106,.32);
+  border-color:rgba(192,84,106,.55);
 }
-#screen-parlour-portal .pp-choice-card.glow-card:hover{
-  box-shadow:0 8px 40px rgba(192,84,106,.35);
-}
+body.dark-mode .pp-choice-card.glow-card{background-color:rgba(26,16,32,.96);}
+body.dark-mode .pp-choice-card.glow-card:hover{background-color:rgba(40,20,48,.96);}
 
-/* Admin tab highlight fix */
-.pp-admin-tabs{display:flex;gap:.45rem;flex-wrap:wrap;}
-.pp-admin-tabs .btn-admin-tab{padding:.45rem 1rem;border-radius:var(--r-pill);font-size:.78rem;font-weight:700;cursor:pointer;transition:all var(--trans);border:1.5px solid transparent;}
-.pp-admin-tabs .btn-admin-tab.tab-outline{border-color:var(--rose);background:transparent;color:var(--rose);}
-.pp-admin-tabs .btn-admin-tab.tab-fill{background:linear-gradient(135deg,#C0546A,#A03050);color:#fff;border-color:transparent;}
-.pp-admin-tabs .btn-admin-tab:hover{opacity:.85;}
-
-</style>
+/* ── PASSWORD TOGGLE WRAP ─────────────────────────────────────── */
+.pw-field-wrap{position:relative;width:100%;margin-bottom:.75rem;}
+.pw-field-wrap .field{width:100%;margin-bottom:0;padding-right:2.6rem;box-sizing:border-box;}
+.pw-show-btn{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;font-size:.95rem;color:var(--text-light);
+  padding:0;line-height:1;transition:color .2s;}
+.pw-show-btn:hover{color:var(--rose);}</style>
 </head>
 <body>
 
 <!-- Stars background for dark mode -->
 <div class="stars-bg" id="stars-bg"></div>
-<!-- Floating bubbles for day mode -->
+<!-- Floating bubbles for light mode — fixed overlay, all screens -->
 <div class="bubbles-bg" id="bubbles-bg"></div>
 
 <div class="toast" id="toast"></div>
@@ -636,35 +624,55 @@ body.dark-mode .bubbles-bg{display:none;}
 <div class="screen" id="screen-login">
   <div class="login-left fade" id="login-left">
     <div class="login-logo-badge">Glam<em>Match</em></div>
-    <!-- Characters -->
+    <!-- Characters: absolute-positioned, grounded at bottom, layered front→back -->
     <div class="login-characters" id="login-chars">
-      <!-- char 1: pink (main) -->
-      <div class="char" id="char1" style="width:130px;height:190px;background:linear-gradient(160deg,#F4A0B8,#E8709A);z-index:2;">
-        <div class="char-eyes" id="c1-eyes" style="top:38px;left:30px;">
-          <div class="char-eye" id="c1-eye1" style="width:22px;height:22px;background:#fff;"><div class="char-pupil" style="width:10px;height:10px;background:#2D2D2D;border-radius:50%;"></div></div>
-          <div class="char-eye" id="c1-eye2" style="width:22px;height:22px;background:#fff;"><div class="char-pupil" style="width:10px;height:10px;background:#2D2D2D;border-radius:50%;"></div></div>
-        </div>
-        <div class="char-mouth" style="width:28px;height:5px;bottom:60px;left:51px;border-radius:0 0 10px 10px;background:#C04070;height:8px;"></div>
-      </div>
-      <!-- char 2: lavender -->
-      <div class="char" id="char2" style="width:80px;height:140px;background:linear-gradient(160deg,#C8B4E8,#A890D0);z-index:1;border-radius:40px 40px 0 0;">
-        <div class="char-eyes" id="c2-eyes" style="top:24px;left:18px;">
-          <div class="char-eye" style="width:16px;height:16px;background:#fff;"><div class="char-pupil" style="width:7px;height:7px;background:#2D2D2D;border-radius:50%;"></div></div>
-          <div class="char-eye" style="width:16px;height:16px;background:#fff;"><div class="char-pupil" style="width:7px;height:7px;background:#2D2D2D;border-radius:50%;"></div></div>
+      <!-- char2: lavender tall rounded — back layer (z:1) -->
+      <div class="char" id="char2" style="
+        left:calc(50% - 158px);width:72px;height:152px;
+        background:linear-gradient(160deg,#C8B4E8,#A890D0);
+        border-radius:36px 36px 0 0;z-index:1;">
+        <div class="char-eyes" id="c2-eyes" style="top:22px;left:14px;gap:7px;">
+          <div class="char-eye" style="width:14px;height:14px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div class="char-pupil" style="width:6px;height:6px;background:#2D2D2D;border-radius:50%;"></div></div>
+          <div class="char-eye" style="width:14px;height:14px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div class="char-pupil" style="width:6px;height:6px;background:#2D2D2D;border-radius:50%;"></div></div>
         </div>
       </div>
-      <!-- char 3: peach -->
-      <div class="char" id="char3" style="width:100px;height:110px;background:linear-gradient(160deg,#F4C4A8,#ECA888);z-index:3;border-radius:50px 50px 0 0;">
-        <div class="char-eyes" id="c3-eyes" style="top:24px;left:22px;">
-          <div class="char-eye" style="width:14px;height:14px;"><div class="char-pupil" style="width:8px;height:8px;background:#2D2D2D;border-radius:50%;"></div></div>
-          <div class="char-eye" style="width:14px;height:14px;"><div class="char-pupil" style="width:8px;height:8px;background:#2D2D2D;border-radius:50%;"></div></div>
+      <!-- char1: pink MAIN tall rectangle — mid layer (z:2), grows right toward form -->
+      <div class="char" id="char1" style="
+        left:calc(50% - 95px);width:118px;height:190px;
+        background:linear-gradient(160deg,#F4A0B8,#E8709A);
+        border-radius:14px 14px 0 0;z-index:2;">
+        <div class="char-eyes" id="c1-eyes" style="top:36px;left:23px;gap:9px;">
+          <div class="char-eye" id="c1-eye1" style="width:20px;height:20px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div class="char-pupil" style="width:9px;height:9px;background:#2D2D2D;border-radius:50%;"></div></div>
+          <div class="char-eye" id="c1-eye2" style="width:20px;height:20px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div class="char-pupil" style="width:9px;height:9px;background:#2D2D2D;border-radius:50%;"></div></div>
+        </div>
+        <div class="char-mouth" style="width:26px;height:7px;position:absolute;bottom:50px;left:46px;border-radius:0 0 10px 10px;background:#C04070;"></div>
+      </div>
+      <!-- char3: peach wide semicircle — front-left (z:3) -->
+      <div class="char" id="char3" style="
+        left:calc(50% - 220px);width:142px;height:95px;
+        background:linear-gradient(160deg,#F4C4A8,#ECA888);
+        border-radius:71px 71px 0 0;z-index:3;">
+        <div class="char-eyes" id="c3-eyes" style="top:26px;left:30px;gap:20px;">
+          <div class="char-eye" style="width:13px;height:13px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div class="char-pupil" style="width:7px;height:7px;background:#2D2D2D;border-radius:50%;"></div></div>
+          <div class="char-eye" style="width:13px;height:13px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div class="char-pupil" style="width:7px;height:7px;background:#2D2D2D;border-radius:50%;"></div></div>
         </div>
       </div>
-      <!-- char 4: mint -->
-      <div class="char" id="char4" style="width:70px;height:120px;background:linear-gradient(160deg,#B4E4CC,#90CCA8);z-index:1;border-radius:35px 35px 0 0;">
-        <div class="char-eyes" id="c4-eyes" style="top:20px;left:14px;">
-          <div class="char-eye" style="width:14px;height:14px;background:#fff;"><div class="char-pupil" style="width:6px;height:6px;background:#2D2D2D;border-radius:50%;"></div></div>
-          <div class="char-eye" style="width:14px;height:14px;background:#fff;"><div class="char-pupil" style="width:6px;height:6px;background:#2D2D2D;border-radius:50%;"></div></div>
+      <!-- char4: mint tall capsule — front-right (z:4) -->
+      <div class="char" id="char4" style="
+        left:calc(50% + 42px);width:86px;height:148px;
+        background:linear-gradient(160deg,#B4E4CC,#90CCA8);
+        border-radius:43px 43px 0 0;z-index:4;">
+        <div class="char-eyes" id="c4-eyes" style="top:24px;left:17px;gap:11px;">
+          <div class="char-eye" style="width:13px;height:13px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div class="char-pupil" style="width:6px;height:6px;background:#2D2D2D;border-radius:50%;"></div></div>
+          <div class="char-eye" style="width:13px;height:13px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div class="char-pupil" style="width:6px;height:6px;background:#2D2D2D;border-radius:50%;"></div></div>
         </div>
       </div>
     </div>
@@ -677,9 +685,11 @@ body.dark-mode .bubbles-bg{display:none;}
       <h2>Welcome Back</h2>
       <p class="sub">No account? <a onclick="transitionToRegister()">Create one</a></p>
       <input class="field" type="email" id="li-email" placeholder="Email" oninput="checkLoginBtn()"/>
-      <div class="pw-toggle-wrap">
-        <input class="field" type="password" id="li-pw" placeholder="Password" oninput="checkLoginBtn()" onkeydown="if(event.key==='Enter')doLogin()"/>
-        <button class="pw-toggle-btn" type="button" id="li-pw-toggle" onclick="toggleLoginPw()" title="Show/hide password">👁</button>
+      <div class="pw-field-wrap">
+        <input class="field" type="password" id="li-pw" placeholder="Password"
+          oninput="checkLoginBtn()" onkeydown="if(event.key==='Enter')doLogin()"/>
+        <button class="pw-show-btn" type="button" id="li-pw-toggle"
+          onclick="togglePwVisibility('li-pw','li-pw-toggle')" title="Show/hide password">👁</button>
       </div>
       <div id="li-err" class="err-msg" style="display:none"></div>
       <button class="btn-submit" id="li-btn" onclick="doLogin()" disabled>Sign In</button>
@@ -701,36 +711,68 @@ body.dark-mode .bubbles-bg{display:none;}
     <div class="feature-row"><div class="feature-icon-box">🔒</div><span>Privacy-first — your photos stay yours</span></div>
   </div>
   <div class="reg-right">
-    <div class="reg-card glow-card fade">
-      <!-- Register page characters -->
-      <div class="reg-chars-strip" id="reg-chars">
-        <div class="char" id="rc1" style="width:70px;height:110px;background:linear-gradient(160deg,#F4A0B8,#E8709A);z-index:2;border-radius:35px 35px 0 0;">
-          <div class="char-eyes" id="rc1-eyes" style="top:22px;left:16px;">
-            <div class="char-eye" id="rc1-eye1" style="width:16px;height:16px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:height .15s ease;"><div class="char-pupil" style="width:8px;height:8px;background:#2D2D2D;border-radius:50%;"></div></div>
-            <div class="char-eye" id="rc1-eye2" style="width:16px;height:16px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:height .15s ease;"><div class="char-pupil" style="width:8px;height:8px;background:#2D2D2D;border-radius:50%;"></div></div>
-          </div>
-          <div class="char-mouth" style="width:18px;height:5px;bottom:32px;left:26px;border-radius:0 0 8px 8px;background:#C04070;"></div>
-        </div>
-        <div class="char" id="rc2" style="width:55px;height:85px;background:linear-gradient(160deg,#C8B4E8,#A890D0);z-index:1;border-radius:28px 28px 0 0;">
-          <div class="char-eyes" id="rc2-eyes" style="top:16px;left:12px;">
-            <div class="char-eye" style="width:13px;height:13px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:height .15s ease;"><div class="char-pupil" style="width:6px;height:6px;background:#2D2D2D;border-radius:50%;"></div></div>
-            <div class="char-eye" style="width:13px;height:13px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:height .15s ease;"><div class="char-pupil" style="width:6px;height:6px;background:#2D2D2D;border-radius:50%;"></div></div>
-          </div>
-        </div>
-        <div class="char" id="rc3" style="width:80px;height:100px;background:linear-gradient(160deg,#F4C4A8,#ECA888);z-index:3;border-radius:40px 40px 0 0;">
-          <div class="char-eyes" id="rc3-eyes" style="top:20px;left:18px;">
-            <div class="char-eye" style="width:14px;height:14px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:height .15s ease;"><div class="char-pupil" style="width:7px;height:7px;background:#2D2D2D;border-radius:50%;"></div></div>
-            <div class="char-eye" style="width:14px;height:14px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:height .15s ease;"><div class="char-pupil" style="width:7px;height:7px;background:#2D2D2D;border-radius:50%;"></div></div>
-          </div>
+    <!-- Register page characters — same system as login, hover toward right (form direction) -->
+    <div class="reg-chars-wrap" id="reg-chars">
+      <!-- rc2: lavender back (z:1) -->
+      <div class="char" id="rc2" style="
+        left:calc(50% - 148px);width:65px;height:130px;
+        background:linear-gradient(160deg,#C8B4E8,#A890D0);
+        border-radius:33px 33px 0 0;z-index:1;">
+        <div class="char-eyes" id="rc2-eyes" style="top:18px;left:12px;gap:6px;">
+          <div class="char-eye" style="width:13px;height:13px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div class="char-pupil" style="width:6px;height:6px;background:#2D2D2D;border-radius:50%;"></div></div>
+          <div class="char-eye" style="width:13px;height:13px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div class="char-pupil" style="width:6px;height:6px;background:#2D2D2D;border-radius:50%;"></div></div>
         </div>
       </div>
+      <!-- rc1: pink MAIN tall rect (z:2), grows toward right -->
+      <div class="char" id="rc1" style="
+        left:calc(50% - 90px);width:105px;height:168px;
+        background:linear-gradient(160deg,#F4A0B8,#E8709A);
+        border-radius:12px 12px 0 0;z-index:2;">
+        <div class="char-eyes" id="rc1-eyes" style="top:30px;left:20px;gap:8px;">
+          <div class="char-eye" style="width:18px;height:18px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div class="char-pupil" style="width:8px;height:8px;background:#2D2D2D;border-radius:50%;"></div></div>
+          <div class="char-eye" style="width:18px;height:18px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div class="char-pupil" style="width:8px;height:8px;background:#2D2D2D;border-radius:50%;"></div></div>
+        </div>
+        <div class="char-mouth" style="width:22px;height:6px;position:absolute;bottom:42px;left:41px;border-radius:0 0 8px 8px;background:#C04070;"></div>
+      </div>
+      <!-- rc3: peach semicircle front-left (z:3) -->
+      <div class="char" id="rc3" style="
+        left:calc(50% - 205px);width:125px;height:84px;
+        background:linear-gradient(160deg,#F4C4A8,#ECA888);
+        border-radius:63px 63px 0 0;z-index:3;">
+        <div class="char-eyes" id="rc3-eyes" style="top:22px;left:26px;gap:16px;">
+          <div class="char-eye" style="width:12px;height:12px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div class="char-pupil" style="width:6px;height:6px;background:#2D2D2D;border-radius:50%;"></div></div>
+          <div class="char-eye" style="width:12px;height:12px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div class="char-pupil" style="width:6px;height:6px;background:#2D2D2D;border-radius:50%;"></div></div>
+        </div>
+      </div>
+      <!-- rc4: mint capsule front-right (z:4) -->
+      <div class="char" id="rc4" style="
+        left:calc(50% + 30px);width:78px;height:130px;
+        background:linear-gradient(160deg,#B4E4CC,#90CCA8);
+        border-radius:39px 39px 0 0;z-index:4;">
+        <div class="char-eyes" id="rc4-eyes" style="top:20px;left:14px;gap:9px;">
+          <div class="char-eye" style="width:12px;height:12px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div class="char-pupil" style="width:5px;height:5px;background:#2D2D2D;border-radius:50%;"></div></div>
+          <div class="char-eye" style="width:12px;height:12px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div class="char-pupil" style="width:5px;height:5px;background:#2D2D2D;border-radius:50%;"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="reg-card glow-card fade">
       <h2>Create Account</h2>
       <p class="sub">Have an account? <a onclick="go('screen-login')" style="color:var(--rose);font-weight:700;cursor:pointer;">Sign in</a></p>
       <input class="field" type="text" id="rg-name" placeholder="Full Name" oninput="checkRegisterBtn()"/>
       <input class="field" type="email" id="rg-email" placeholder="Email" oninput="checkRegisterBtn()"/>
-      <div class="pw-toggle-wrap">
-        <input class="field" type="password" id="rg-pw" placeholder="Password (8+ chars, 1 number)" oninput="checkRegisterBtn();updatePwConfirm()"/>
-        <button class="pw-toggle-btn" type="button" id="rg-pw-toggle" onclick="toggleRegPw()" title="Show/hide password">👁</button>
+      <div class="pw-field-wrap">
+        <input class="field" type="password" id="rg-pw" placeholder="Password (8+ chars, 1 number)"
+          oninput="checkRegisterBtn();updatePwConfirm()"/>
+        <button class="pw-show-btn" type="button" id="rg-pw-toggle"
+          onclick="togglePwVisibility('rg-pw','rg-pw-toggle')" title="Show/hide password">👁</button>
       </div>
       <!-- Password confirmation -->
       <div class="pw-confirm-wrap" id="pw-confirm-wrap" style="display:none;">
@@ -990,14 +1032,13 @@ body.dark-mode .bubbles-bg{display:none;}
       <button class="btn-nav-outline" onclick="go('screen-admin-portal')">Admin Portal</button>
     </div>
   </nav>
-  <div style="flex:1;background:linear-gradient(145deg,#9A2840 0%,#C0546A 30%,#D9849A 60%,#F0C8D0 85%,#F8E4E8 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
-    <canvas id="pp-particle-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"></canvas>
+  <div style="flex:1;background:var(--bg-main);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
     <div style="width:100%;max-width:900px;padding:3rem 1.5rem;display:flex;flex-direction:column;align-items:center;gap:2.5rem;animation:fadeUp .5s ease both;position:relative;z-index:1;">
-      <div class="pp-landing-badge">Parlour Partnership Hub</div>
-      <h1 style="font-family:var(--font-s);font-size:2.8rem;color:#fff;text-align:center;line-height:1.15;">
-        Your <em style="color:rgba(255,220,228,.9);font-style:italic;">beauty business</em>,<br>beautifully connected.
+      <div class="pp-landing-badge" style="background:rgba(192,84,106,.12);border:1px solid rgba(192,84,106,.3);color:var(--rose);">Parlour Partnership Hub</div>
+      <h1 style="font-family:var(--font-s);font-size:2.8rem;color:var(--text-main);text-align:center;line-height:1.15;">
+        Your <em style="color:var(--rose);font-style:italic;">beauty business</em>,<br>beautifully connected.
       </h1>
-      <p style="font-size:.88rem;color:rgba(255,255,255,.82);text-align:center;max-width:460px;line-height:1.7;">
+      <p style="font-size:.88rem;color:var(--text-light);text-align:center;max-width:460px;line-height:1.7;">
         Join Pakistan's fastest-growing beauty network — register your parlour or discover top-rated salons near you.
       </p>
       <div class="pp-choice-row" id="pp-choice-row">
@@ -1022,12 +1063,6 @@ body.dark-mode .bubbles-bg{display:none;}
             <button class="pp-choice-btn find">Find Parlours</button>
           </div>
         </div>
-      </div>
-      <div style="display:flex;gap:3rem;flex-wrap:wrap;justify-content:center;margin-top:.5rem;">
-        <div style="text-align:center;"><div style="font-family:var(--font-s);font-size:1.8rem;color:#fff;font-weight:700;" id="pp-stat-count">0</div><div style="font-size:.7rem;color:rgba(255,255,255,.7);letter-spacing:.05em;">REGISTERED PARLOURS</div></div>
-        <div style="text-align:center;"><div style="font-family:var(--font-s);font-size:1.8rem;color:#fff;font-weight:700;">12K+</div><div style="font-size:.7rem;color:rgba(255,255,255,.7);letter-spacing:.05em;">HAPPY CLIENTS</div></div>
-        <div style="text-align:center;"><div style="font-family:var(--font-s);font-size:1.8rem;color:#fff;font-weight:700;">8</div><div style="font-size:.7rem;color:rgba(255,255,255,.7);letter-spacing:.05em;">CITIES COVERED</div></div>
-        <div style="text-align:center;"><div style="font-family:var(--font-s);font-size:1.8rem;color:#fff;font-weight:700;">4.8★</div><div style="font-size:.7rem;color:rgba(255,255,255,.7);letter-spacing:.05em;">AVERAGE RATING</div></div>
       </div>
     </div>
   </div>
@@ -1391,11 +1426,11 @@ body.dark-mode .bubbles-bg{display:none;}
         <span id="pp-admin-msg" style="font-size:.78rem;color:var(--text-light);"></span>
       </div>
       <div id="pp-admin-panel" style="display:none;flex-direction:column;gap:1rem;">
-        <div class="pp-admin-tabs" id="pp-admin-tabs">
-          <button class="btn-admin-tab tab-fill" data-tab="pending" onclick="ppAdminSwitchTab(this,'pending')">Pending Parlours</button>
-          <button class="btn-admin-tab tab-outline" data-tab="approved" onclick="ppAdminSwitchTab(this,'approved')">Approved</button>
-          <button class="btn-admin-tab tab-outline" data-tab="rejected" onclick="ppAdminSwitchTab(this,'rejected')">Rejected</button>
-          <button class="btn-admin-tab tab-outline" data-tab="bookings" onclick="ppAdminSwitchTab(this,'bookings')">All Bookings</button>
+        <div style="display:flex;gap:.45rem;flex-wrap:wrap;" id="pp-admin-tabs">
+          <button class="btn-nav-fill" id="pp-atab-pending" onclick="ppAdminSwitchTab('pending')">Pending Parlours</button>
+          <button class="btn-nav-outline" id="pp-atab-approved" onclick="ppAdminSwitchTab('approved')">Approved</button>
+          <button class="btn-nav-outline" id="pp-atab-rejected" onclick="ppAdminSwitchTab('rejected')">Rejected</button>
+          <button class="btn-nav-outline" id="pp-atab-bookings" onclick="ppAdminSwitchTab('bookings')">All Bookings</button>
         </div>
         <div id="pp-admin-content" style="display:flex;flex-direction:column;gap:.9rem;"></div>
       </div>
@@ -1415,242 +1450,6 @@ let analysisTab="skin";
 let wardrobeItems=[];
 let isDarkMode=localStorage.getItem("gm_dark")==="1";
 
-// ══════════════════════════════════════════════════════════════
-// A) FLOATING BUBBLES
-// ══════════════════════════════════════════════════════════════
-(function initBubbles(){
-  const container=document.getElementById('bubbles-bg');
-  if(!container)return;
-  const BUBBLE_COLORS=[
-    'rgba(255,182,193,0.55)','rgba(255,192,203,0.5)','rgba(255,160,180,0.45)',
-    'rgba(173,216,230,0.5)','rgba(135,206,250,0.45)','rgba(180,190,254,0.5)',
-    'rgba(216,180,254,0.45)','rgba(244,164,196,0.5)','rgba(255,200,221,0.55)'
-  ];
-  const bubbles=[];
-  function createBubble(){
-    const el=document.createElement('div');
-    el.className='bubble';
-    const size=30+Math.random()*90;
-    const color=BUBBLE_COLORS[Math.floor(Math.random()*BUBBLE_COLORS.length)];
-    const left=Math.random()*100;
-    const duration=12+Math.random()*16;
-    const delay=Math.random()*8;
-    el.style.cssText=`
-      width:${size}px;height:${size}px;
-      background:${color};
-      left:${left}%;
-      bottom:-120px;
-      animation:bubbleFloat ${duration}s ${delay}s ease-in forwards;
-      filter:blur(${0.5+Math.random()*1.5}px);
-    `;
-    container.appendChild(el);
-    const b={el,born:Date.now(),lifeMs:(duration+delay)*1000};
-    bubbles.push(b);
-    setTimeout(()=>{
-      el.remove();
-      const idx=bubbles.indexOf(b);
-      if(idx>-1)bubbles.splice(idx,1);
-    },(duration+delay+1)*1000);
-  }
-  function spawnLoop(){
-    if(!document.body.classList.contains('dark-mode')){
-      createBubble();
-    }
-    setTimeout(spawnLoop,600+Math.random()*800);
-  }
-  // Initial burst
-  for(let i=0;i<18;i++){
-    setTimeout(()=>{
-      if(!document.body.classList.contains('dark-mode'))createBubble();
-    },i*180);
-  }
-  spawnLoop();
-})();
-
-// ══════════════════════════════════════════════════════════════
-// B) CHARACTER SYSTEM (requestAnimationFrame based)
-// ══════════════════════════════════════════════════════════════
-let charMouseX=0,charMouseY=0;
-let pwTyping=false,pwVisible=false;
-let regPwVisible=false;
-let charRafRunning=false;
-// Smooth mouse tracking
-let _mx=0,_my=0;
-document.addEventListener('mousemove',e=>{_mx=e.clientX;_my=e.clientY;});
-
-// RAF-based eye update
-function startCharRaf(){
-  if(charRafRunning)return;
-  charRafRunning=true;
-  (function rafLoop(){
-    charMouseX+=((_mx-charMouseX)*0.12);
-    charMouseY+=((_my-charMouseY)*0.12);
-    updateCharEyes();
-    requestAnimationFrame(rafLoop);
-  })();
-}
-
-// All character configs (login + register)
-function getCharConfigs(){
-  return[
-    // Login chars
-    {eyesEl:document.getElementById("c1-eyes"),pupils:Array.from(document.querySelectorAll("#char1 .char-pupil")),maxDist:6,body:document.getElementById("char1")},
-    {eyesEl:document.getElementById("c2-eyes"),pupils:Array.from(document.querySelectorAll("#char2 .char-pupil")),maxDist:4,body:document.getElementById("char2")},
-    {eyesEl:document.getElementById("c3-eyes"),pupils:Array.from(document.querySelectorAll("#char3 .char-pupil")),maxDist:4,body:document.getElementById("char3")},
-    {eyesEl:document.getElementById("c4-eyes"),pupils:Array.from(document.querySelectorAll("#char4 .char-pupil")),maxDist:3,body:document.getElementById("char4")},
-    // Register chars
-    {eyesEl:document.getElementById("rc1-eyes"),pupils:Array.from(document.querySelectorAll("#rc1 .char-pupil")),maxDist:5,body:document.getElementById("rc1")},
-    {eyesEl:document.getElementById("rc2-eyes"),pupils:Array.from(document.querySelectorAll("#rc2 .char-pupil")),maxDist:3,body:document.getElementById("rc2")},
-    {eyesEl:document.getElementById("rc3-eyes"),pupils:Array.from(document.querySelectorAll("#rc3 .char-pupil")),maxDist:4,body:document.getElementById("rc3")},
-  ];
-}
-
-function updateCharEyes(){
-  getCharConfigs().forEach(({eyesEl,pupils,maxDist,body})=>{
-    if(!eyesEl||!pupils.length)return;
-    // Per-eye tracking using each eye's own bounding rect
-    const eyes=eyesEl.querySelectorAll('.char-eye');
-    eyes.forEach((eye,i)=>{
-      const pupil=eye.querySelector('.char-pupil');
-      if(!pupil)return;
-      if(pwVisible||regPwVisible){
-        // Looking down (covering eyes)
-        pupil.style.transform='translate(0,'+Math.round(maxDist*.8)+'px)';
-        return;
-      }
-      if(pwTyping&&!pwVisible&&!regPwVisible){
-        pupil.style.transform='translate(0,'+Math.round(maxDist)+'px)';
-        return;
-      }
-      const rect=eye.getBoundingClientRect();
-      if(rect.width===0)return;
-      const cx=rect.left+rect.width/2;
-      const cy=rect.top+rect.height/2;
-      const dx=charMouseX-cx;
-      const dy=charMouseY-cy;
-      const dist=Math.sqrt(dx*dx+dy*dy);
-      const angle=Math.atan2(dy,dx);
-      const d=Math.min(dist*.18,maxDist);
-      pupil.style.transform=`translate(${(Math.cos(angle)*d).toFixed(2)}px,${(Math.sin(angle)*d).toFixed(2)}px)`;
-    });
-    // Subtle body lean toward mouse
-    if(body){
-      const brect=body.getBoundingClientRect();
-      if(brect.width===0)return;
-      const bcx=brect.left+brect.width/2;
-      const bcy=brect.top+brect.height/2;
-      const leanX=Math.max(-3,Math.min(3,(charMouseX-bcx)*0.01));
-      body.style.transform=`rotate(${leanX.toFixed(2)}deg)`;
-    }
-  });
-}
-
-// Blink randomly
-function scheduleBlinking(){
-  const eyeGroups=[
-    Array.from(document.querySelectorAll("#char1 .char-eye")),
-    Array.from(document.querySelectorAll("#char2 .char-eye")),
-    Array.from(document.querySelectorAll("#rc1 .char-eye")),
-    Array.from(document.querySelectorAll("#rc2 .char-eye")),
-  ];
-  eyeGroups.forEach(group=>{
-    if(!group.length)return;
-    function doBlink(){
-      group.forEach(e=>{
-        const orig=e.style.height||getComputedStyle(e).height||'16px';
-        e.style.height='2px';
-        setTimeout(()=>{e.style.height=orig;},140);
-      });
-      setTimeout(doBlink,3000+Math.random()*4000);
-    }
-    setTimeout(doBlink,Math.random()*3000);
-  });
-}
-
-// ── Password visibility toggles ────────────────────────────────
-function toggleLoginPw(){
-  const inp=document.getElementById('li-pw');
-  const btn=document.getElementById('li-pw-toggle');
-  if(!inp)return;
-  pwVisible=inp.type==='password';
-  inp.type=pwVisible?'text':'password';
-  if(btn)btn.textContent=pwVisible?'🙈':'👁';
-  updateCharEyes();
-}
-function toggleRegPw(){
-  const inp=document.getElementById('rg-pw');
-  const btn=document.getElementById('rg-pw-toggle');
-  if(!inp)return;
-  regPwVisible=inp.type==='password';
-  inp.type=regPwVisible?'text':'password';
-  if(btn)btn.textContent=regPwVisible?'🙈':'👁';
-  updateCharEyes();
-}
-
-// ══════════════════════════════════════════════════════════════
-// C) LOGIN → REGISTER TRANSITION
-// ══════════════════════════════════════════════════════════════
-function transitionToRegister(){
-  const loginScreen=document.getElementById('screen-login');
-  const left=document.getElementById('login-left');
-  const right=document.getElementById('login-right');
-  // Phase 1: expand left full width, characters scale up and center
-  loginScreen.classList.add('expanding');
-  left.style.flex='1';
-  right.style.width='0';
-  right.style.opacity='0';
-  right.style.overflow='hidden';
-  right.style.padding='0';
-  // Phase 2: characters slide slightly right
-  setTimeout(()=>{
-    loginScreen.classList.remove('expanding');
-    loginScreen.classList.add('sliding');
-  },300);
-  // Phase 3: go to register
-  setTimeout(()=>{
-    loginScreen.classList.remove('sliding');
-    // Reset login panel styles
-    left.style.flex='';
-    right.style.width='';
-    right.style.opacity='';
-    right.style.overflow='';
-    right.style.padding='';
-    go('screen-register');
-  },700);
-}
-
-// ══════════════════════════════════════════════════════════════
-// E) ADMIN PANEL - tab highlight system
-// ══════════════════════════════════════════════════════════════
-function ppAdminSwitchTab(el,tab){
-  document.querySelectorAll('.pp-admin-tabs .btn-admin-tab').forEach(b=>{
-    b.classList.remove('tab-fill');
-    b.classList.add('tab-outline');
-  });
-  el.classList.remove('tab-outline');
-  el.classList.add('tab-fill');
-  if(tab==='bookings')ppAdminLoadBookings();
-  else ppAdminLoadParlours(tab);
-}
-
-// ══════════════════════════════════════════════════════════════
-// G) GLOW CARD CURSOR CLAMPING
-// ══════════════════════════════════════════════════════════════
-document.addEventListener("pointermove",e=>{
-  document.querySelectorAll(".glow-card").forEach(card=>{
-    const rect=card.getBoundingClientRect();
-    // Clamp cursor position inside card bounds for proper glow alignment
-    const clampedX=Math.max(rect.left,Math.min(rect.right,e.clientX));
-    const clampedY=Math.max(rect.top,Math.min(rect.bottom,e.clientY));
-    const relX=clampedX-rect.left;
-    const relY=clampedY-rect.top;
-    card.style.setProperty("--x",relX.toFixed(2));
-    card.style.setProperty("--xp",(relX/rect.width).toFixed(2));
-    card.style.setProperty("--y",relY.toFixed(2));
-    card.style.setProperty("--yp",(relY/rect.height).toFixed(2));
-  });
-});
-
 // ── Dark Mode ─────────────────────────────────────────────────
 function toggleDarkMode(){
   isDarkMode=!isDarkMode;
@@ -1658,15 +1457,16 @@ function toggleDarkMode(){
   applyDarkMode();
 }
 function applyDarkMode(){
+  const bb=document.getElementById("bubbles-bg");
   if(isDarkMode){
     document.body.classList.add("dark-mode");
     document.querySelectorAll(".dark-toggle").forEach(b=>b.textContent="☀️");
     initStars();
-    const bb=document.getElementById('bubbles-bg');if(bb)bb.style.display='none';
+    if(bb)bb.style.display="none";
   } else {
     document.body.classList.remove("dark-mode");
     document.querySelectorAll(".dark-toggle").forEach(b=>b.textContent="🌙");
-    const bb=document.getElementById('bubbles-bg');if(bb)bb.style.display='';
+    if(bb)bb.style.display="";
   }
 }
 function initStars(){
@@ -1683,6 +1483,141 @@ function initStars(){
   bg.appendChild(layer);
 }
 
+// ── Glow card spotlight — clamped to each card bounds ─────────
+document.addEventListener("pointermove",e=>{
+  document.querySelectorAll(".glow-card").forEach(card=>{
+    const r=card.getBoundingClientRect();
+    const cx=Math.max(0,Math.min(e.clientX-r.left,r.width));
+    const cy=Math.max(0,Math.min(e.clientY-r.top,r.height));
+    card.style.setProperty("--x",cx.toFixed(2));
+    card.style.setProperty("--xp",(cx/r.width).toFixed(2));
+    card.style.setProperty("--y",cy.toFixed(2));
+    card.style.setProperty("--yp",(cy/r.height).toFixed(2));
+  });
+});
+
+// ── CHARACTER SYSTEM ──────────────────────────────────────────
+// Smooth mouse tracking via lerp
+let _rawMX=window.innerWidth/2, _rawMY=window.innerHeight/2;
+let charMouseX=_rawMX, charMouseY=_rawMY;
+document.addEventListener("mousemove",e=>{_rawMX=e.clientX;_rawMY=e.clientY;});
+
+// pwVisible: ONLY eye-toggle ON makes chars look away. Typing = no change.
+let pwVisible=false;
+let regPwVisible=false;
+
+// Character definitions: login + register
+// isMain: tallens on hover/active; leanDir: +1 = lean right (toward form)
+const CHAR_DEFS=[
+  // LOGIN
+  {eyesId:"c1-eyes",charId:"char1",  maxDist:6,  isMain:true,  baseH:190, tallH:245, leanDir:1,  isReg:false},
+  {eyesId:"c2-eyes",charId:"char2",  maxDist:4,  isMain:false, leanDir:1,  isReg:false},
+  {eyesId:"c3-eyes",charId:"char3",  maxDist:4,  isMain:false, leanDir:1,  isReg:false},
+  {eyesId:"c4-eyes",charId:"char4",  maxDist:3,  isMain:false, leanDir:1,  isReg:false},
+  // REGISTER
+  {eyesId:"rc1-eyes",charId:"rc1",   maxDist:6,  isMain:true,  baseH:168, tallH:218, leanDir:1,  isReg:true},
+  {eyesId:"rc2-eyes",charId:"rc2",   maxDist:4,  isMain:false, leanDir:1,  isReg:true},
+  {eyesId:"rc3-eyes",charId:"rc3",   maxDist:4,  isMain:false, leanDir:1,  isReg:true},
+  {eyesId:"rc4-eyes",charId:"rc4",   maxDist:3,  isMain:false, leanDir:1,  isReg:true},
+];
+
+function charRAF(){
+  // Smooth interpolate
+  charMouseX+=(_rawMX-charMouseX)*0.1;
+  charMouseY+=(_rawMY-charMouseY)*0.1;
+
+  CHAR_DEFS.forEach(cfg=>{
+    const eyesEl=document.getElementById(cfg.eyesId);
+    const charEl=document.getElementById(cfg.charId);
+    if(!eyesEl||!charEl)return;
+
+    const lookAway = cfg.isReg ? regPwVisible : pwVisible;
+
+    // Main character height grow + rightward lean
+    if(cfg.isMain){
+      charEl.style.height=(lookAway ? cfg.baseH : cfg.tallH)+'px';
+      if(!lookAway){
+        const r=charEl.getBoundingClientRect();
+        if(r.width>0){
+          // Lean TOWARD right (positive skewX = lean right)
+          const dx=charMouseX-(r.left+r.width/2);
+          // When mouse is to the right (form side), lean right; mouse left, lean slightly left
+          const lean=Math.max(-3,Math.min(5,dx/60));
+          charEl.style.transform=`skewX(${lean.toFixed(2)}deg)`;
+        }
+      } else {
+        charEl.style.transform='skewX(0deg)';
+      }
+    }
+
+    // Per-eye pupil tracking
+    const eyeEls=eyesEl.querySelectorAll('.char-eye');
+    eyeEls.forEach(eye=>{
+      const pupil=eye.querySelector('.char-pupil');
+      if(!pupil)return;
+      if(lookAway){
+        pupil.style.transform='translate(0,'+Math.round(cfg.maxDist*.9)+'px)';
+        return;
+      }
+      const er=eye.getBoundingClientRect();
+      if(er.width===0)return;
+      const dx=charMouseX-(er.left+er.width/2);
+      const dy=charMouseY-(er.top+er.height/2);
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      const angle=Math.atan2(dy,dx);
+      const d=Math.min(dist*.15,cfg.maxDist);
+      pupil.style.transform=`translate(${(Math.cos(angle)*d).toFixed(2)}px,${(Math.sin(angle)*d).toFixed(2)}px)`;
+    });
+  });
+
+  requestAnimationFrame(charRAF);
+}
+
+// Password visibility toggle (shared for login + register)
+function togglePwVisibility(inputId, btnId){
+  const inp=document.getElementById(inputId);
+  const btn=document.getElementById(btnId);
+  if(!inp)return;
+  const nowVisible = inp.type==='password';
+  inp.type = nowVisible ? 'text' : 'password';
+  if(btn) btn.textContent = nowVisible ? '🙈' : '👁';
+  // Update the correct flag
+  if(inputId==='li-pw') pwVisible=nowVisible;
+  else regPwVisible=nowVisible;
+}
+
+// Blink randomly for login chars and register chars
+function scheduleBlinking(){
+  const groups=[
+    {sel:"#char1 .char-eye", orig:"20px"},
+    {sel:"#char2 .char-eye", orig:"14px"},
+    {sel:"#rc1 .char-eye",   orig:"18px"},
+    {sel:"#rc2 .char-eye",   orig:"13px"},
+  ];
+  groups.forEach(({sel,orig})=>{
+    const els=document.querySelectorAll(sel);
+    if(!els.length)return;
+    function doBlink(){
+      els.forEach(e=>{
+        const h=e.style.height||orig;
+        e.style.height="2px";
+        setTimeout(()=>e.style.height=h,150);
+      });
+      setTimeout(doBlink,3000+Math.random()*4000);
+    }
+    setTimeout(doBlink,Math.random()*3000);
+  });
+}
+
+// ── Register transition (3-phase, unchanged logic) ────────────
+function transitionToRegister(){
+  const left=document.getElementById("login-left");
+  const right=document.getElementById("login-right");
+  left.style.transition="all .6s cubic-bezier(.4,0,.2,1)";
+  right.style.transition="all .6s cubic-bezier(.4,0,.2,1)";
+  left.style.flex="1.4";right.style.width="380px";
+  setTimeout(()=>go("screen-register"),400);
+}
 
 // ── Password confirm visual ───────────────────────────────────
 function updatePwConfirm(){
@@ -1692,7 +1627,6 @@ function updatePwConfirm(){
   const bg=document.getElementById("pw-confirm-bg");
   if(pw.length<8){wrap.style.display="none";return;}
   wrap.style.display="block";
-  pwTyping=true;updateCharEyes();
   // Render dots
   dots.innerHTML=pw.split("").map(()=>`<div class="pw-confirm-dot"></div>`).join("");
   // Update confirm field visual
@@ -1715,7 +1649,7 @@ function checkLoginBtn(){
   const btn=document.getElementById("li-btn");
   const ready=email.length>0&&pw.length>0;
   btn.disabled=!ready;btn.classList.toggle("ready",ready);
-  pwTyping=pw.length>0;updateCharEyes();
+  // Typing does NOT affect eyes — only the visibility toggle does
 }
 function checkRegisterBtn(){
   const name=document.getElementById("rg-name").value.trim();
@@ -1752,14 +1686,58 @@ function setLoading(id,on,label){
   if(!on&&label)b.dataset.label=label;
 }
 
+// ── Floating Bubble system ─────────────────────────────────────
+function initBubbles(){
+  const COLORS=[
+    'rgba(255,182,193,.55)','rgba(255,192,203,.5)','rgba(255,155,175,.45)',
+    'rgba(173,216,230,.5)','rgba(135,206,250,.42)','rgba(176,196,222,.45)',
+    'rgba(216,180,254,.48)','rgba(196,168,232,.44)','rgba(255,210,225,.52)',
+  ];
+  function spawnBubble(){
+    const bb=document.getElementById('bubbles-bg');
+    if(!bb||document.body.classList.contains('dark-mode'))return;
+    const el=document.createElement('div');
+    el.className='bubble';
+    const sz=28+Math.random()*85;
+    const dur=14+Math.random()*14;
+    const delay=Math.random()*4;
+    el.style.cssText=[
+      `width:${sz}px`,`height:${sz}px`,
+      `background:${COLORS[Math.floor(Math.random()*COLORS.length)]}`,
+      `left:${Math.random()*100}%`,`bottom:-${sz+10}px`,
+      `animation:bubbleFloat ${dur}s ${delay}s ease-in forwards`,
+      `filter:blur(${.4+Math.random()*1.2}px)`,
+    ].join(';');
+    bb.appendChild(el);
+    setTimeout(()=>el.remove(),(dur+delay+1)*1000);
+  }
+  // Initial burst
+  for(let i=0;i<18;i++) setTimeout(spawnBubble,i*200);
+  // Continuous spawn loop
+  (function loop(){
+    spawnBubble();
+    setTimeout(loop,700+Math.random()*600);
+  })();
+}
+
+// ── Admin tab highlight switching ──────────────────────────────
+function ppAdminSwitchTab(tab){
+  ['pending','approved','rejected','bookings'].forEach(t=>{
+    const btn=document.getElementById('pp-atab-'+t);
+    if(!btn)return;
+    btn.className=(t===tab)?'btn-nav-fill':'btn-nav-outline';
+  });
+  if(tab==='bookings') ppAdminLoadBookings();
+  else ppAdminLoadParlours(tab);
+}
+
 // ── App init ──────────────────────────────────────────────────
 window.onload=async()=>{
   applyDarkMode();
   scheduleBlinking();
-  startCharRaf();
+  requestAnimationFrame(charRAF);
+  initBubbles();
   if(new URLSearchParams(window.location.search).get("reset_token")){go("screen-reset");return;}
-  // Always start from the login/welcome screen when localhost is opened.
-  // This prevents an old saved session from jumping directly to Home.
   clearSession();
   go("screen-login");
 };
@@ -2711,19 +2689,13 @@ function ppAdminOpenDoc(key){
   }catch(e){toast('Unable to open document. Please upload the CNIC file again.','err');}
 }
 function ppAdminParlourCard(p){
-  const isPending=!p.status||p.status==='pending';
-  const isApproved=p.status==='approved';
-  const isRejected=p.status==='rejected';
+  const st=p.status||'pending';
   let actions='';
-  if(isPending){
-    actions=`<button class="btn-nav-fill" onclick="ppAdminSetParlourStatus(${p.id},'approved')">Approve</button>
-      <button style="padding:.45rem 1rem;border:1.5px solid #F44336;border-radius:var(--r-pill);background:transparent;color:#F44336;font-size:.78rem;font-weight:800;cursor:pointer;" onclick="ppAdminSetParlourStatus(${p.id},'rejected')">Reject</button>`;
-  } else if(isApproved){
-    actions=`<button class="btn-nav-outline" style="opacity:.6;cursor:default;" disabled>Approved</button>
-      <button class="btn-nav-outline" style="padding:.45rem 1rem;font-size:.78rem;" onclick="ppAdminSetParlourStatus(${p.id},'pending')">Mark Pending</button>`;
-  } else if(isRejected){
-    actions=`<button class="btn-nav-outline" style="opacity:.6;cursor:default;" disabled>Rejected</button>
-      <button class="btn-nav-outline" style="padding:.45rem 1rem;font-size:.78rem;" onclick="ppAdminSetParlourStatus(${p.id},'pending')">Mark Pending</button>`;
+  if(st==='pending'){
+    actions=`<button class="btn-nav-fill" onclick="ppAdminSetParlourStatus(${p.id},'approved')">Approve</button><button style="padding:.45rem 1rem;border:1.5px solid #F44336;border-radius:var(--r-pill);background:transparent;color:#F44336;font-size:.78rem;font-weight:800;cursor:pointer;" onclick="ppAdminSetParlourStatus(${p.id},'rejected')">Reject</button>`;
+  } else {
+    // Approved or Rejected — show disabled status + mark pending only
+    actions=`<button class="btn-nav-outline" style="opacity:.5;cursor:default;pointer-events:none;">${st==='approved'?'Approved ✓':'Rejected'}</button><button class="btn-nav-outline" onclick="ppAdminSetParlourStatus(${p.id},'pending')">Mark Pending</button>`;
   }
   return `<div class="glow-card" style="padding:1.1rem;border-radius:var(--r);"><div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;"><div><h3 style="font-family:var(--font-s);font-size:1.1rem;color:var(--text-main);">${p.name}</h3><div style="font-size:.8rem;color:var(--text-med);line-height:1.7;"><strong>Owner:</strong> ${p.owner} · <strong>Phone:</strong> ${p.phone}<br><strong>CNIC:</strong> ${p.masked_cnic||p.cnic||'—'} · <strong>City:</strong> ${p.city}${p.area?' / '+p.area:''}<br><strong>Services:</strong> ${(p.services||[]).join(', ')||'—'}<br><strong>Documents:</strong> ${ppAdminDocLink(p.cnic_front_file,'Open CNIC Front',`front_${p.id}`)} · ${ppAdminDocLink(p.cnic_back_file,'Open CNIC Back',`back_${p.id}`)}</div></div><div>${ppStatusBadge(p.status)}</div></div><div style="display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.85rem;">${actions}</div></div>`;
 }
@@ -2900,16 +2872,16 @@ async function ppCancelBooking(id){
   const b=ppMyBookings.find(x=>x.id===id);if(!b)return;
   if(!ppBookingCanCancel(b)){toast('This booking cannot be cancelled now.','err');return;}
   if(!confirm('Cancel this booking request?'))return;
-  // Optimistic UI removal
+  // Optimistic instant UI update
+  const prevStatus=b.status,prevChat=b.can_chat,prevCancel=b.can_cancel;
   b.status='cancelled';b.can_chat=false;b.can_cancel=false;
-  ppLoadMyBookings(); // instant UI update
+  ppLoadMyBookings();
   try{
     const{data,ok}=await api(`/parlour/booking/${id}/cancel`,'PUT',{});
     if(!ok)throw new Error(data.error||'Cancel failed');
     toast('Booking cancelled. Notification sent.','ok');
   }catch(e){
-    // Revert on failure
-    b.status='pending';b.can_cancel=true;
+    b.status=prevStatus;b.can_chat=prevChat;b.can_cancel=prevCancel;
     ppLoadMyBookings();
     toast(e.message,'err');
   }
