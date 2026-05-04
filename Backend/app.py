@@ -51,6 +51,7 @@ def init_db():
             undertone  TEXT,
             body_type  TEXT,
             face_shape TEXT,
+            is_admin   INTEGER DEFAULT 0,
             created    TEXT DEFAULT(datetime('now'))
         );
         CREATE TABLE IF NOT EXISTS wardrobe(
@@ -132,6 +133,13 @@ def init_db():
         );            
     """)
     c.commit()
+
+    # ── Migrate: add is_admin column if it doesn't exist ─────────
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0")
+        c.commit()
+    except Exception:
+        pass  # Column already exists
 
     # ── Seed style_suggestions if empty ──────────────────────────
     if not c.execute("SELECT 1 FROM style_suggestions LIMIT 1").fetchone():
@@ -237,6 +245,23 @@ def init_db():
             "INSERT INTO product_recommendations(category,sub_category,undertone,brand,product_name,shade_name,swatch_color,product_link) VALUES(?,?,?,?,?,?,?,?)",
             products
         )
+        c.commit()
+
+    # ── Seed default admin account ────────────────────────────────
+    existing_admin = c.execute("SELECT id FROM users WHERE email=?", ("glammatch0@gmail.com",)).fetchone()
+    if not existing_admin:
+        import hashlib as _hl
+        admin_pw = _hl.sha256("aSdfg9521*".encode()).hexdigest()
+        c.execute(
+            "INSERT INTO users(name, email, password, is_admin) VALUES(?,?,?,1)",
+            ("GlamMatch Admin", "glammatch0@gmail.com", admin_pw)
+        )
+        c.commit()
+    else:
+        # Ensure admin flag is set even if account already existed
+        c.execute("UPDATE users SET is_admin=1 WHERE email=?", ("glammatch0@gmail.com",))
+        # Remove admin from NU ID if present
+        c.execute("UPDATE users SET is_admin=0 WHERE email=?", ("l242585@lhr.nu.edu.pk",))
         c.commit()
 
     c.close()
@@ -511,13 +536,14 @@ def login():
     if not u: return jsonify({"error":"Incorrect email or password"}), 401
     return jsonify({"token":make_token(u["id"]),"name":u["name"],
                     "undertone":u["undertone"],"body_type":u["body_type"],
-                    "face_shape":u["face_shape"]})
+                    "face_shape":u["face_shape"],
+                    "is_admin":bool(u["is_admin"])})
 
 @app.route("/api/profile", methods=["GET"])
 @auth
 def profile():
     c = db()
-    u = c.execute("SELECT id,name,email,undertone,body_type,face_shape,created FROM users WHERE id=?",
+    u = c.execute("SELECT id,name,email,undertone,body_type,face_shape,is_admin,created FROM users WHERE id=?",
                   (request.uid,)).fetchone()
     bm = [r["tip_id"] for r in c.execute("SELECT tip_id FROM bookmarks WHERE user_id=?",
                                           (request.uid,)).fetchall()]
@@ -526,6 +552,7 @@ def profile():
     return jsonify({"id":u["id"],"name":u["name"],"email":u["email"],
                     "undertone":u["undertone"],"body_type":u["body_type"],
                     "face_shape":u["face_shape"],
+                    "is_admin":bool(u["is_admin"]),
                     "created":u["created"],"bookmarks":bm})
 
 # ════════════════════════════════════════════════════════════════
@@ -1321,9 +1348,20 @@ def _admin_ok():
 def admin_required(f):
     @functools.wraps(f)
     def w(*a, **kw):
-        if not _admin_ok():
-            return jsonify({"error": "Invalid admin code"}), 401
-        return f(*a, **kw)
+        # Check admin code header/param first
+        if _admin_ok():
+            return f(*a, **kw)
+        # Also accept logged-in users with is_admin=1
+        t = request.headers.get("Authorization", "").replace("Bearer ", "")
+        if t:
+            uid = decode_token(t)
+            if uid:
+                c = db()
+                u = c.execute("SELECT is_admin FROM users WHERE id=?", (uid,)).fetchone()
+                c.close()
+                if u and u["is_admin"]:
+                    return f(*a, **kw)
+        return jsonify({"error": "Admin access only"}), 403
     return w
 
 
@@ -1898,11 +1936,52 @@ def parlour_chat():
     return jsonify({"reply": reply})
 
 
+# ── Admin portal: verify session user is admin ────────────────────
+@app.route("/api/admin/verify", methods=["GET"])
+@auth
+def admin_verify():
+    c = db()
+    u = c.execute("SELECT is_admin FROM users WHERE id=?", (request.uid,)).fetchone()
+    c.close()
+    if not u or not u["is_admin"]:
+        return jsonify({"error": "Admin access only"}), 403
+    return jsonify({"ok": True, "is_admin": True})
+
+# ── One-time CLI helper: python app.py make_admin <email> ─────────
+@app.route("/api/admin/make-admin", methods=["POST"])
+def make_admin_route():
+    """Only callable when FLASK_ADMIN_SETUP env var is set to 'allow'."""
+    if os.environ.get("FLASK_ADMIN_SETUP") != "allow":
+        return jsonify({"error": "Not available"}), 404
+    email = ((request.get_json() or {}).get("email") or "").strip().lower()
+    if not email:
+        return jsonify({"error": "email required"}), 400
+    c = db()
+    u = c.execute("SELECT id FROM users WHERE email=?", (email,)).fetchone()
+    if not u:
+        c.close()
+        return jsonify({"error": "User not found"}), 404
+    c.execute("UPDATE users SET is_admin=1 WHERE email=?", (email,))
+    c.commit(); c.close()
+    return jsonify({"ok": True, "message": f"{email} is now an admin."})
+
 # ── Admin portal endpoints ───────────────────────────────────────
 @app.route("/api/admin/login", methods=["POST"])
 def admin_login():
-    if not _admin_ok():
-        return jsonify({"error": "Invalid admin code"}), 401
+    # Allow access if either: valid admin code OR logged-in user has is_admin=1
+    code_ok = _admin_ok()
+    # Also check JWT token for is_admin
+    token_admin = False
+    t = request.headers.get("Authorization", "").replace("Bearer ", "")
+    if t:
+        uid = decode_token(t)
+        if uid:
+            c = db()
+            u = c.execute("SELECT is_admin FROM users WHERE id=?", (uid,)).fetchone()
+            c.close()
+            token_admin = bool(u and u["is_admin"])
+    if not code_ok and not token_admin:
+        return jsonify({"error": "Admin access denied"}), 401
     return jsonify({"ok": True, "message": "Admin access granted"})
 
 

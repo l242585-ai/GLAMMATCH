@@ -1029,7 +1029,7 @@ body.dark-mode .pp-choice-card.glow-card:hover{background-color:rgba(40,20,48,.9
     <div class="nav-right">
       <button class="dark-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
       <button class="btn-nav-outline" onclick="go('screen-home')">Home</button>
-      <button class="btn-nav-outline" onclick="go('screen-admin-portal')">Admin Portal</button>
+      <button class="btn-nav-outline admin-nav-btn" style="display:none;" onclick="goAdminPortal()">Admin Portal</button>
     </div>
   </nav>
   <div style="flex:1;background:var(--bg-main);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
@@ -1449,6 +1449,7 @@ let paletteData=null,palTab="clothing";
 let analysisTab="skin";
 let wardrobeItems=[];
 let isDarkMode=localStorage.getItem("gm_dark")==="1";
+let isAdmin=false;
 
 // ── Dark Mode ─────────────────────────────────────────────────
 function toggleDarkMode(){
@@ -1720,7 +1721,43 @@ function initBubbles(){
   })();
 }
 
-// ── Admin tab highlight switching ──────────────────────────────
+// ── Admin portal visibility ───────────────────────────────────
+function updateAdminVisibility(){
+  // Show/hide the Admin Portal button in the nav
+  document.querySelectorAll(".admin-nav-btn").forEach(el=>{
+    el.style.display=isAdmin?"":"none";
+  });
+}
+function goAdminPortal(){
+  if(!isAdmin){toast("Admin access only.","err");return;}
+  _baseGo("screen-admin-portal");
+  ppAdminResetLogin();
+  // Auto-login admin using JWT (no code needed for is_admin users)
+  ppAdminAutoLogin();
+}
+async function ppAdminAutoLogin(){
+  // For is_admin users, login is validated server-side via JWT
+  const msg=document.getElementById('pp-admin-msg');
+  const panel=document.getElementById('pp-admin-panel');
+  const box=document.getElementById('pp-admin-content');
+  // Use empty admin code — server will accept via JWT is_admin check
+  ppAdminCode='';
+  const h={'Content-Type':'application/json'};
+  if(token)h['Authorization']='Bearer '+token;
+  try{
+    const r=await fetch(API+'/admin/login',{method:'POST',headers:h,body:JSON.stringify({})});
+    const data=await r.json();
+    if(r.ok){
+      if(msg){msg.textContent='Admin panel — logged in as '+userName;msg.style.color='#4CAF50';}
+      if(panel)panel.style.display='flex';
+      ppAdminLoadParlours('pending');
+    } else {
+      if(msg){msg.textContent=data.error||'Access denied';msg.style.color='#F44336';}
+    }
+  }catch(e){
+    if(msg){msg.textContent='Could not connect to server';msg.style.color='#F44336';}
+  }
+}
 function ppAdminSwitchTab(tab){
   ['pending','approved','rejected','bookings'].forEach(t=>{
     const btn=document.getElementById('pp-atab-'+t);
@@ -1750,7 +1787,8 @@ function clearSession(){
     userUndertone=null;
     userBodyType=null;
     faceShape=null;
-    
+    isAdmin=false;
+    updateAdminVisibility();
     document.getElementById('li-email').value='';
     document.getElementById('li-pw').value='';
     document.getElementById('rg-name').value='';
@@ -1770,7 +1808,9 @@ async function doLogin(){
   if(!ok){errEl.textContent=data.error;errEl.style.display="block";return;}
   token=data.token;userName=data.name;userUndertone=data.undertone;userBodyType=data.body_type;
   if(data.face_shape)faceShape=data.face_shape;
+  isAdmin=!!data.is_admin;
   localStorage.setItem("gm_tok",token);
+  updateAdminVisibility();
   toast("Welcome back, "+userName+"!");setNavNames();go("screen-home");
 }
 async function doRegister(){
@@ -2433,7 +2473,7 @@ window.go=function(id){
   if(id==="screen-parlour-mybookings"){ppLoadMyBookings();}
   if(id==="screen-parlour-register")ppResetRegForm();
   if(id==="screen-parlour-owner-dashboard")ppLoadOwnerDashboard();
-  if(id==="screen-admin-portal"){ppAdminResetLogin();}
+  if(id==="screen-admin-portal"){if(!isAdmin){toast("Admin access only.","err");_baseGo("screen-home");return;}ppAdminResetLogin();ppAdminAutoLogin();}
   // Apply dark toggle icons after nav change
   document.querySelectorAll(".dark-toggle").forEach(b=>b.textContent=isDarkMode?"☀️":"🌙");
 };
@@ -2657,7 +2697,13 @@ async function ppLoadApprovedParlours(){
   ppRenderList();ppRenderPins();
 }
 
-async function ppAdminApi(ep,method='GET',body=null){const h={'Content-Type':'application/json','X-Admin-Code':ppAdminCode};const r=await fetch(API+ep,{method,headers:h,body:body?JSON.stringify(body):null});let data={};try{data=await r.json();}catch(e){}return{data,ok:r.ok};}
+async function ppAdminApi(ep,method='GET',body=null){
+  const h={'Content-Type':'application/json','X-Admin-Code':ppAdminCode};
+  if(token)h['Authorization']='Bearer '+token;
+  const r=await fetch(API+ep,{method,headers:h,body:body?JSON.stringify(body):null});
+  let data={};try{data=await r.json();}catch(e){}
+  return{data,ok:r.ok};
+}
 function ppAdminResetLogin(){ppAdminCode='';const code=document.getElementById('pp-admin-code'),msg=document.getElementById('pp-admin-msg'),panel=document.getElementById('pp-admin-panel'),box=document.getElementById('pp-admin-content');if(code)code.value='';if(msg){msg.textContent='Enter admin code every time to open this panel.';msg.style.color='var(--text-light)';}if(panel)panel.style.display='none';if(box)box.innerHTML='';}
 async function ppAdminLogin(){const entered=document.getElementById('pp-admin-code').value.trim();const msg=document.getElementById('pp-admin-msg');const panel=document.getElementById('pp-admin-panel');const box=document.getElementById('pp-admin-content');ppAdminCode=entered;const{data,ok}=await ppAdminApi('/admin/login','POST',{admin_code:entered});if(ok){msg.textContent='Admin access granted.';msg.style.color='#4CAF50';panel.style.display='flex';ppAdminLoadParlours('pending');}else{ppAdminCode='';if(panel)panel.style.display='none';if(box)box.innerHTML='';msg.textContent=data.error||'Invalid admin code';msg.style.color='#F44336';}}
 const ppAdminDocs={};
