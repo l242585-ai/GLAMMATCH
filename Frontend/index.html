@@ -1182,6 +1182,22 @@ body.dark-mode .pp-choice-card.glow-card:hover{background-color:rgba(40,20,48,.9
               <input type="file" id="pp-cnic-back-inp" accept="image/*,.pdf" style="display:none;" onchange="ppFileChosen(this,'pp-cnic-back-lbl')"/>
             </div>
           </div>
+          <div class="pp-field-group" style="margin-top:.5rem;">
+            <label>Selfie Holding CNIC *
+              <span style="font-size:.72rem;color:var(--text-light);font-weight:400;margin-left:.4rem;">— hold your CNIC next to your face</span>
+            </label>
+            <div class="pp-doc-upload" onclick="document.getElementById('pp-selfie-inp').click()" style="border-color:#9B59B6;">
+              <div style="font-size:1.8rem;">🤳</div>
+              <strong id="pp-selfie-lbl" style="font-size:.8rem;">Click to upload selfie with CNIC</strong>
+              <span style="font-size:.74rem;color:var(--text-light);">Clear photo of your face + CNIC · JPG or PNG</span>
+              <input type="file" id="pp-selfie-inp" accept="image/*" style="display:none;" onchange="ppFileChosen(this,'pp-selfie-lbl')"/>
+            </div>
+          </div>
+          <div class="pp-field-group" style="margin-top:.5rem;">
+            <label>Google Maps Link <span style="font-size:.72rem;color:var(--text-light);font-weight:400;">— helps verify your parlour exists at this location</span></label>
+            <input type="url" class="field" id="pp-r-maps" placeholder="https://maps.google.com/?q=Your+Parlour+Name" style="font-size:.82rem;"/>
+            <div style="font-size:.72rem;color:var(--text-light);margin-top:.3rem;">Open Google Maps → search your parlour → tap Share → Copy Link</div>
+          </div>
         </div>
         <div class="pp-form-section">
           <h4>Price Range and Description</h4>
@@ -2566,7 +2582,7 @@ async function ppSubmitRegistration(){
   if(pmin&&pmax&&pmin>pmax){err.textContent='Starting price cannot be greater than maximum price.';err.style.display='block';return;}
   err.style.display='none';const btn=document.getElementById('pp-submit-btn');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Submitting…';
   try{
-    const payload={name:document.getElementById('pp-r-name').value.trim(),owner:document.getElementById('pp-r-owner').value.trim(),phone:document.getElementById('pp-r-phone').value.trim(),email:document.getElementById('pp-r-email').value.trim(),address:document.getElementById('pp-r-address').value.trim(),city:document.getElementById('pp-r-city').value,area:document.getElementById('pp-r-area').value.trim(),services:ppSelectedServices,open_time:document.getElementById('pp-r-open').value,close_time:document.getElementById('pp-r-close').value,days:document.getElementById('pp-r-days').value,cnic,business_type:document.getElementById('pp-r-btype').value,price_min:parseInt(document.getElementById('pp-r-pmin').value)||0,price_max:parseInt(document.getElementById('pp-r-pmax').value)||0,description:document.getElementById('pp-r-desc').value.trim(),cnic_front_file:await ppReadFileBase64(front),cnic_back_file:await ppReadFileBase64(back)};
+    const payload={name:document.getElementById('pp-r-name').value.trim(),owner:document.getElementById('pp-r-owner').value.trim(),phone:document.getElementById('pp-r-phone').value.trim(),email:document.getElementById('pp-r-email').value.trim(),address:document.getElementById('pp-r-address').value.trim(),city:document.getElementById('pp-r-city').value,area:document.getElementById('pp-r-area').value.trim(),services:ppSelectedServices,open_time:document.getElementById('pp-r-open').value,close_time:document.getElementById('pp-r-close').value,days:document.getElementById('pp-r-days').value,cnic,business_type:document.getElementById('pp-r-btype').value,price_min:parseInt(document.getElementById('pp-r-pmin').value)||0,price_max:parseInt(document.getElementById('pp-r-pmax').value)||0,description:document.getElementById('pp-r-desc').value.trim(),cnic_front_file:await ppReadFileBase64(front),cnic_back_file:await ppReadFileBase64(back),selfie_file:await ppReadFileBase64(document.getElementById('pp-selfie-inp').files[0]),maps_url:(document.getElementById('pp-r-maps').value||'').trim()};
     const{data,ok}=await api('/parlour/register','POST',payload);
     if(!ok)throw new Error(data.error||'Registration failed');
     toast('Parlour submitted for admin verification!','ok');
@@ -2635,12 +2651,13 @@ async function ppLoadOwnerDashboard(){
 }
 function ppRenderOwnerDashboard(editMode=false){
   const wrap=document.getElementById('pp-owner-dashboard-wrap'),p=ppOwnerData.parlour,bookings=ppOwnerData.bookings||[];if(!wrap||!p)return;
-  const help=p.status==='approved'?'Your listing is visible in Find Parlours.':p.status==='pending'?'Admin will check CNIC front/back and approve the listing.':'Update details or contact admin for re-verification.';
+  const rejNote=p.status==='rejected'&&p.cnic_verification_note?`<div style="margin-top:.5rem;padding:.55rem .8rem;background:#FFF5F5;border:1px solid #F4433633;border-radius:var(--r-sm);font-size:.78rem;color:#F44336;"><strong>Reason:</strong> ${p.cnic_verification_note}</div>`:'';
+  const help=p.status==='approved'?'Your listing is live and visible in Find Parlours.':p.status==='pending'?'Under review — admin will verify your CNIC, selfie, and Google Maps location within 24–48 hours.':'Your listing was rejected. See reason below and re-submit or contact admin.';
   const bookingsHtml=bookings.length?bookings.map(b=>ppOwnerBookingCard(b)).join(''):`<div style="text-align:center;padding:2rem;color:var(--text-light);"><div style="font-size:2rem;margin-bottom:.4rem;">📅</div>No bookings received yet.</div>`;
   wrap.innerHTML=`
     ${ppNotificationsHtml()}
     <div class="glow-card" style="padding:1.2rem;border-radius:var(--r);display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
-      <div><h3 style="font-family:var(--font-s);font-size:1.25rem;color:var(--text-main);margin-bottom:.25rem;">${p.name}</h3><p style="font-size:.8rem;color:var(--text-light);line-height:1.6;">${help}</p></div>
+      <div><h3 style="font-family:var(--font-s);font-size:1.25rem;color:var(--text-main);margin-bottom:.25rem;">${p.name}</h3><p style="font-size:.8rem;color:var(--text-light);line-height:1.6;">${help}</p>${rejNote}</div>
       <div style="display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;">${ppStatusBadge(p.status)}<button class="btn-nav-outline" onclick="ppRenderOwnerDashboard(${!editMode})">${editMode?'Cancel Edit':'Edit Details'}</button></div>
     </div>
     ${editMode?ppOwnerEditForm(p):ppOwnerDetailsCard(p)}
@@ -2749,15 +2766,50 @@ function ppAdminOpenDoc(key){
 function ppAdminParlourCard(p){
   const st=p.status||'pending';
   let actions='';
+  const cid=`chk_${p.id}`;
   if(st==='pending'){
-    actions=`<button class="btn-nav-fill" onclick="ppAdminSetParlourStatus(${p.id},'approved')">Approve</button><button style="padding:.45rem 1rem;border:1.5px solid #F44336;border-radius:var(--r-pill);background:transparent;color:#F44336;font-size:.78rem;font-weight:800;cursor:pointer;" onclick="ppAdminSetParlourStatus(${p.id},'rejected')">Reject</button>`;
+    actions=`
+      <div style="background:var(--rose-bg);border:1.5px solid var(--border-main);border-radius:var(--r);padding:.85rem 1rem;margin-bottom:.75rem;width:100%;">
+        <div style="font-size:.78rem;font-weight:800;color:var(--text-main);margin-bottom:.65rem;">🔍 Verification Checklist — tick all before approving</div>
+        <label style="display:flex;align-items:center;gap:.55rem;font-size:.8rem;color:var(--text-med);margin-bottom:.45rem;cursor:pointer;"><input type="checkbox" id="${cid}_cnic_front" onchange="ppAdminChecklistChanged(${p.id})"> CNIC front image is valid and clearly readable</label>
+        <label style="display:flex;align-items:center;gap:.55rem;font-size:.8rem;color:var(--text-med);margin-bottom:.45rem;cursor:pointer;"><input type="checkbox" id="${cid}_cnic_back" onchange="ppAdminChecklistChanged(${p.id})"> CNIC back image is valid and clearly readable</label>
+        <label style="display:flex;align-items:center;gap:.55rem;font-size:.8rem;color:var(--text-med);margin-bottom:.45rem;cursor:pointer;"><input type="checkbox" id="${cid}_selfie" onchange="ppAdminChecklistChanged(${p.id})"> Selfie photo matches the face on the CNIC</label>
+        <label style="display:flex;align-items:center;gap:.55rem;font-size:.8rem;color:var(--text-med);cursor:pointer;"><input type="checkbox" id="${cid}_maps" onchange="ppAdminChecklistChanged(${p.id})"> Google Maps link confirmed — parlour physically exists</label>
+      </div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+        <button id="${cid}_approve_btn" class="btn-nav-fill" disabled style="opacity:.4;cursor:not-allowed;" onclick="ppAdminApproveWithChecklist(${p.id})">✓ Approve Parlour</button>
+        <button style="padding:.45rem 1rem;border:1.5px solid #F44336;border-radius:var(--r-pill);background:transparent;color:#F44336;font-size:.78rem;font-weight:800;cursor:pointer;" onclick="ppAdminRejectWithNote(${p.id})">✗ Reject</button>
+      </div>`;
   } else {
-    // Approved or Rejected — show disabled status + mark pending only
-    actions=`<button class="btn-nav-outline" style="opacity:.5;cursor:default;pointer-events:none;">${st==='approved'?'Approved ✓':'Rejected'}</button><button class="btn-nav-outline" onclick="ppAdminSetParlourStatus(${p.id},'pending')">Mark Pending</button>`;
+    actions=`<button class="btn-nav-outline" style="opacity:.5;cursor:default;pointer-events:none;">${st==='approved'?'Approved ✓':'Rejected ✗'}</button><button class="btn-nav-outline" onclick="ppAdminSetParlourStatus(${p.id},'pending')">Mark Pending</button>`;
   }
-  return `<div class="glow-card" style="padding:1.1rem;border-radius:var(--r);"><div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;"><div><h3 style="font-family:var(--font-s);font-size:1.1rem;color:var(--text-main);">${p.name}</h3><div style="font-size:.8rem;color:var(--text-med);line-height:1.7;"><strong>Owner:</strong> ${p.owner} · <strong>Phone:</strong> ${p.phone}<br><strong>CNIC:</strong> ${p.masked_cnic||p.cnic||'—'} · <strong>City:</strong> ${p.city}${p.area?' / '+p.area:''}<br><strong>Services:</strong> ${(p.services||[]).join(', ')||'—'}<br><strong>Documents:</strong> ${ppAdminDocLink(p.cnic_front_file,'Open CNIC Front',`front_${p.id}`)} · ${ppAdminDocLink(p.cnic_back_file,'Open CNIC Back',`back_${p.id}`)}</div></div><div>${ppStatusBadge(p.status)}</div></div><div style="display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.85rem;">${actions}</div></div>`;
+  const mapsBtn=p.maps_url?`<a href="${p.maps_url}" target="_blank" style="color:#1976D2;font-weight:800;font-size:.8rem;">🗺 Open Google Maps</a> · `:'';
+  const selfieDoc=p.selfie_file?ppAdminDocLink(p.selfie_file,'🤳 View Selfie',`selfie_${p.id}`):'<span style="color:var(--text-light);font-size:.75rem;">No selfie uploaded</span>';
+  const note=p.cnic_verification_note?`<div style="margin-top:.35rem;font-size:.74rem;color:#E69A1E;font-style:italic;">Note: ${p.cnic_verification_note}</div>`:'';
+  return `<div class="glow-card" style="padding:1.1rem;border-radius:var(--r);margin-bottom:.75rem;"><div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;"><div style="flex:1;"><h3 style="font-family:var(--font-s);font-size:1.1rem;color:var(--text-main);">${p.name}</h3><div style="font-size:.8rem;color:var(--text-med);line-height:1.9;"><strong>Owner:</strong> ${p.owner} · <strong>Phone:</strong> ${p.phone}<br><strong>CNIC:</strong> ${p.masked_cnic||p.cnic||'—'} · <strong>City:</strong> ${p.city}${p.area?' / '+p.area:''}<br><strong>Services:</strong> ${(p.services||[]).join(', ')||'—'}<br><strong>Docs:</strong> ${ppAdminDocLink(p.cnic_front_file,'📄 CNIC Front',`front_${p.id}`)} · ${ppAdminDocLink(p.cnic_back_file,'📄 CNIC Back',`back_${p.id}`)} · ${selfieDoc}<br>${mapsBtn}${p.description?`<em style="color:var(--text-light);">${p.description.slice(0,80)}${p.description.length>80?'…':''}</em>`:''}${note}</div></div><div>${ppStatusBadge(p.status)}</div></div><div style="margin-top:.85rem;">${actions}</div></div>`;
 }
-async function ppAdminSetParlourStatus(id,status){const note=status==='approved'?'CNIC documents checked and approved.':'Admin updated verification status.';const{data,ok}=await ppAdminApi(`/admin/parlours/${id}/status`,'PUT',{status,note});if(ok){toast('Admin status updated.','ok');ppAdminLoadParlours(status==='approved'?'pending':'all');ppLoadApprovedParlours();}else toast(data.error||'Status update failed','err');}
+function ppAdminChecklistChanged(pid){
+  const cid=`chk_${pid}`;
+  const allChecked=['cnic_front','cnic_back','selfie','maps'].every(k=>document.getElementById(`${cid}_${k}`)?.checked);
+  const btn=document.getElementById(`${cid}_approve_btn`);
+  if(btn){btn.disabled=!allChecked;btn.style.opacity=allChecked?'1':'.4';btn.style.cursor=allChecked?'pointer':'not-allowed';}
+}
+function ppAdminGetChecklist(pid){
+  const cid=`chk_${pid}`;
+  return{cnic_front:!!document.getElementById(`${cid}_cnic_front`)?.checked,cnic_back:!!document.getElementById(`${cid}_cnic_back`)?.checked,selfie:!!document.getElementById(`${cid}_selfie`)?.checked,maps:!!document.getElementById(`${cid}_maps`)?.checked};
+}
+async function ppAdminApproveWithChecklist(pid){
+  const checklist=ppAdminGetChecklist(pid);
+  const{data,ok}=await ppAdminApi(`/admin/parlours/${pid}/status`,'PUT',{status:'approved',note:'All verification checks passed and confirmed by admin.',checklist});
+  if(ok){toast('Parlour approved successfully!','ok');ppAdminLoadParlours('pending');ppLoadApprovedParlours();}else toast(data.error||'Approval failed','err');
+}
+async function ppAdminRejectWithNote(pid){
+  const reason=prompt('Enter rejection reason (will be shown to the parlour owner):','Documents unclear or information could not be verified.');
+  if(reason===null)return;
+  const{data,ok}=await ppAdminApi(`/admin/parlours/${pid}/status`,'PUT',{status:'rejected',note:reason||'Rejected by admin.',checklist:ppAdminGetChecklist(pid)});
+  if(ok){toast('Parlour rejected.','ok');ppAdminLoadParlours('pending');}else toast(data.error||'Rejection failed','err');
+}
+async function ppAdminSetParlourStatus(id,status){const note=status==='pending'?'Marked as pending by admin for re-review.':'Admin updated status.';const{data,ok}=await ppAdminApi(`/admin/parlours/${id}/status`,'PUT',{status,note});if(ok){toast('Status updated.','ok');ppAdminLoadParlours('pending');ppLoadApprovedParlours();}else toast(data.error||'Status update failed','err');}
 async function ppAdminLoadBookings(){const box=document.getElementById('pp-admin-content');box.innerHTML='<div class="glow-card" style="padding:1rem;border-radius:var(--r);color:var(--text-light);">Loading bookings…</div>';const{data,ok}=await ppAdminApi('/admin/bookings');if(!ok){box.innerHTML=`<div style="color:#F44336;">${data.error||'Unable to load bookings'}</div>`;return;}const rows=data.bookings||[];box.innerHTML=rows.length?rows.map(b=>`<div class="glow-card" style="padding:1rem;border-radius:var(--r);"><strong style="color:var(--text-main);">${b.client_name}</strong> booked <strong>${b.service}</strong> at <strong>${b.parlour_name}</strong><div style="font-size:.78rem;color:var(--text-light);margin-top:.25rem;">${b.datetime} · ${b.client_phone} · Status: ${b.status}</div></div>`).join(''):`<div class="glow-card" style="padding:1.4rem;border-radius:var(--r);text-align:center;color:var(--text-light);">No bookings found.</div>`;}
 
 function ppStarsHtml(r){const full=Math.floor(r),half=(r%1)>=.5;let s='';for(let i=0;i<full;i++)s+='★';if(half)s+='½';return s;}

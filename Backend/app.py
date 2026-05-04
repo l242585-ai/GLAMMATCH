@@ -1385,7 +1385,10 @@ def init_parlour_db():
             cnic          TEXT,
             cnic_front_file TEXT,
             cnic_back_file  TEXT,
+            selfie_file     TEXT,
+            maps_url        TEXT,
             cnic_verification_note TEXT,
+            verification_checklist TEXT,
             business_type TEXT,
             price_min     INTEGER DEFAULT 0,
             price_max     INTEGER DEFAULT 0,
@@ -1435,7 +1438,10 @@ def init_parlour_db():
         "user_id": "INTEGER",
         "cnic_front_file": "TEXT",
         "cnic_back_file": "TEXT",
+        "selfie_file": "TEXT",
+        "maps_url": "TEXT",
         "cnic_verification_note": "TEXT",
+        "verification_checklist": "TEXT",
         "updated_at": "TEXT"
     })
     _ensure_columns(c, "parlour_chat_log", {
@@ -1479,8 +1485,8 @@ def parlour_register():
     c.execute(
         """INSERT INTO parlours
            (user_id,name,owner,phone,email,address,city,area,services,open_time,close_time,
-            days,cnic,cnic_front_file,cnic_back_file,business_type,price_min,price_max,description,status)
-           VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            days,cnic,cnic_front_file,cnic_back_file,selfie_file,maps_url,business_type,price_min,price_max,description,status)
+           VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
             request.uid,
             d.get("name", "").strip(),
@@ -1497,6 +1503,8 @@ def parlour_register():
             cnic_digits,
             d.get("cnic_front_file", ""),
             d.get("cnic_back_file", ""),
+            d.get("selfie_file", ""),
+            d.get("maps_url", "").strip(),
             d.get("business_type", ""),
             int(d.get("price_min", 0) or 0),
             int(d.get("price_max", 0) or 0),
@@ -2005,6 +2013,7 @@ def admin_update_parlour_status(pid):
     d = request.get_json() or {}
     status = (d.get("status") or "").strip().lower()
     note = (d.get("note") or "").strip()
+    checklist = d.get("checklist")  # dict of checkbox states
     if status not in ["pending", "approved", "rejected"]:
         return jsonify({"error": "Status must be pending, approved, or rejected"}), 400
     c = db()
@@ -2012,7 +2021,11 @@ def admin_update_parlour_status(pid):
     if not row:
         c.close()
         return jsonify({"error": "Parlour not found"}), 404
-    c.execute("UPDATE parlours SET status=?, cnic_verification_note=?, updated_at=datetime('now') WHERE id=?", (status, note, pid))
+    checklist_json = json.dumps(checklist) if checklist else None
+    c.execute(
+        "UPDATE parlours SET status=?, cnic_verification_note=?, verification_checklist=?, updated_at=datetime('now') WHERE id=?",
+        (status, note, checklist_json, pid)
+    )
     c.commit(); c.close()
     return jsonify({"message": "Parlour verification status updated", "status": status})
 
